@@ -1,0 +1,20 @@
+Music:
+
+	Alice Theme (original)
+	https://www.youtube.com/watch?v=prrTrpn4mBk
+
+	Alice Theme Piano
+	https://www.youtube.com/watch?v=qg8RFpXJRMk
+	
+	"Finding Alice [Fantasy Soundtrack 2015 | Alice In Wonderland Anniversary]"
+	https://www.youtube.com/watch?v=CqwnT7VQpRo
+
+All Sounds effect where created by me (Gabriel Lewis).
+All code is original.
+All models are created by myself (Gabriel Lewis) using the Unity Engine's primitive objects.
+All textures were created by me (Gabriel Lewis) except for Unity's "Knob" texture used for the Grenade Count background. 
+
+
+
+
+Gabriel Lewis, Q5094111
