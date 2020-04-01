@@ -25,7 +25,8 @@ public class CheckpointManager : MonoBehaviour
     [SerializeField]
     private CheckpointData _lastCheckPoint;
 
-    private Text _checkpointReachedText = null;
+    [SerializeField]
+    private Animator checkpointReachedAnimator = null;
 
 
     void Awake()
@@ -43,13 +44,6 @@ public class CheckpointManager : MonoBehaviour
         if (_lastCheckPoint.enemyPositions == null || _lastCheckPoint.enemyPositions.Length == 0)
             Reset();
     }
-
-    void OnEnable()
-    {
-        _checkpointReachedText = GameObject.FindGameObjectWithTag("CheckpointLabel").GetComponent<Text>();
-        _checkpointReachedText.gameObject.SetActive(false);
-    }
-
 
     public void CheckpointReached(int currentCheckpoint)
     {
@@ -70,24 +64,7 @@ public class CheckpointManager : MonoBehaviour
         _lastCheckPoint.playerPosition = GameObject.FindGameObjectWithTag("Player").transform.position;
         _lastCheckPoint.playerRotation = GameObject.FindGameObjectWithTag("Player").transform.rotation;
 
-        StartCoroutine(CheckpointReachedText());
-    }
-
-    private IEnumerator CheckpointReachedText()
-    {
-       // Debug.Log("Start");
-        if(_checkpointReachedText == null)
-            _checkpointReachedText = GameObject.FindGameObjectWithTag("CheckpointLabel").GetComponent<Text>();
-
-        _checkpointReachedText.gameObject.SetActive(true);
-        _checkpointReachedText.canvasRenderer.SetAlpha(0.0f);
-        _checkpointReachedText.CrossFadeAlpha(255.0f, 0.5f, false);
-        yield return new WaitForSeconds(3.0f);
-        //_checkpointReachedText.canvasRenderer.SetAlpha(1.0f);
-        _checkpointReachedText.CrossFadeAlpha(1.0f, 0.5f, false);
-        yield return new WaitForSeconds(0.5f);
-        _checkpointReachedText.gameObject.SetActive(false);
-       // Debug.Log("end");
+        this.checkpointReachedAnimator.SetTrigger("ShowCheckpoint");
     }
 
     public void LoadWhenSceneLoaded()
