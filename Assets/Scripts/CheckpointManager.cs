@@ -1,122 +1,124 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using ALICE.Utils.Animation;
 
-public class CheckpointManager : MonoBehaviour
+namespace ALICE.Checkpoint
 {
-    private static CheckpointManager _instance;
-    public static CheckpointManager instance { get { return _instance; } }
+    // todo: Get rid of Find()
 
-    [System.Serializable]
-    private struct CheckpointData
+    public class CheckpointManager : MonoBehaviour
     {
-        public int index;
-        public Vector3[] enemyPositions;
-        public Vector3 playerPosition;
-        public Quaternion playerRotation;
-        //todo ammo
-        // todo health
-        // todo grenades
-        // todo guns?
-    };
+        private static CheckpointManager _instance;
+        public static CheckpointManager instance { get { return _instance; } }
+                
+        private CheckpointData lastCheckPoint;
 
-    [SerializeField]
-    private CheckpointData _lastCheckPoint;
-
-    [SerializeField]
-    private Animator checkpointReachedAnimator = null;
-
-
-    void Awake()
-    {
-        if (_instance != null && _instance != this)
-            Destroy(this.gameObject);
-        else
-            _instance = this;
-
-        DontDestroyOnLoad(this.gameObject);
-    }
-
-    void Start()
-    {
-        if (_lastCheckPoint.enemyPositions == null || _lastCheckPoint.enemyPositions.Length == 0)
-            Reset();
-    }
-
-    public void CheckpointReached(int currentCheckpoint)
-    {
-        if (currentCheckpoint <= _lastCheckPoint.index)
-            return;
-
-        _lastCheckPoint = new CheckpointData();
-
-        _lastCheckPoint.index = currentCheckpoint;
-
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        _lastCheckPoint.enemyPositions = new Vector3[enemies.Length];
-        for (int i = 0; i < enemies.Length; i++)
+        [SerializeField]
+        private Animator checkpointReachedAnimator = null;
+        
+        /* Singleton pattern */
+        private void Awake()
         {
-            //Debug.Log("Saved: " + enemies[i].transform.position);
-            _lastCheckPoint.enemyPositions[i] = enemies[i].transform.position;
-        }
-        _lastCheckPoint.playerPosition = GameObject.FindGameObjectWithTag("Player").transform.position;
-        _lastCheckPoint.playerRotation = GameObject.FindGameObjectWithTag("Player").transform.rotation;
+            if (_instance != null && _instance != this)
+                Destroy(this.gameObject);
+            else
+                _instance = this;
 
-        this.checkpointReachedAnimator.SetTrigger("ShowCheckpoint");
-    }
-
-    public void LoadWhenSceneLoaded()
-    {
-       // Debug.Log("Subscribed");
-        SceneManager.sceneLoaded += LoadLastCheckpoint;
-    }
-
-    public void Reset()
-    {
-        //Debug.Log("RESET");
-        _lastCheckPoint = new CheckpointData();
-        _lastCheckPoint.index = -1;
-    }
-
-    private void LoadLastCheckpoint(Scene scene, LoadSceneMode mode)
-    {
-       // Debug.Log("ENTERED");
-        if (_lastCheckPoint.index < 0)
-            return;
-       // Debug.Log("LOAD CHECKPOINT");
-  
-        // Ensure only desired amount of enemies are alive
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        for (int i = 0; i < (enemies.Length - _lastCheckPoint.enemyPositions.Length); i++)
-        {
-           // Debug.Log("DESTROYED");
-            Destroy(enemies[i]);
-            enemies[i] = null;
-        }
-        // Remove null objects
-        List<GameObject> unassignedEnemies = new List<GameObject>();
-        for(int i = 0; i < enemies.Length; i++)
-        {
-            if (enemies[i] == null)
-                continue;
-           // Debug.Log("ADDED");
-            unassignedEnemies.Add(enemies[i]);
+            DontDestroyOnLoad(this.gameObject);
         }
 
-        // Assign enemy positions
-        for(int i = 0; i < unassignedEnemies.Count; i++)
+        private void Start()
         {
-          //  Debug.Log("Loaded: " + _lastCheckPoint.enemyPositions[i]);
-            unassignedEnemies[i].transform.position = _lastCheckPoint.enemyPositions[i];
+            if (this.lastCheckPoint.enemyPositions == null || this.lastCheckPoint.enemyPositions.Length == 0)
+                ClearLastCheckpoint();
         }
 
-        // Assign player position
-        GameObject.FindGameObjectWithTag("Player").transform.position = _lastCheckPoint.playerPosition;
-        GameObject.FindGameObjectWithTag("Player").transform.rotation = _lastCheckPoint.playerRotation;
+        public void CheckpointReached(int currentCheckpoint)
+        {
+            if (currentCheckpoint <= this.lastCheckPoint.index)
+                return;
 
-        SceneManager.sceneLoaded -= LoadLastCheckpoint;
+            this.SaveLastCheckpoint(currentCheckpoint);
+
+            AnimationUtils.SetTrigger(this.checkpointReachedAnimator, "ShowCheckpoint");
+        }
+
+        private void SaveLastCheckpoint(int currentCheckpoint)
+        {
+            Transform player = GameObject.FindGameObjectWithTag("Player").transform;
+
+            this.lastCheckPoint = new CheckpointData
+            {
+                index = currentCheckpoint,
+                enemyPositions = this.GetEnemyPositions(),
+                playerPosition = player.position,
+                playerRotation = player.rotation
+            };
+        }
+
+        private Vector3[] GetEnemyPositions()
+        {
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+            Vector3[] enemyPositions = new Vector3[enemies.Length];
+            for (int i = 0; i < enemies.Length; i++)
+                enemyPositions[i] = enemies[i].transform.position;
+
+            return enemyPositions;
+        }
+
+        public void LoadWhenSceneLoaded()
+        {
+            Debug.Log("!!SUBSCRIBED!!");
+            SceneManager.sceneLoaded += this.LoadLastCheckpoint;
+        }
+
+        private void LoadLastCheckpoint(Scene scene, LoadSceneMode mode)
+        {
+            // Debug.Log("ENTERED");
+            if (this.lastCheckPoint.index < 0)
+                return;
+            // Debug.Log("LOAD CHECKPOINT");
+
+            // Ensure only desired amount of enemies are alive
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+            for (int i = 0; i < (enemies.Length - this.lastCheckPoint.enemyPositions.Length); i++)
+            {
+                // Debug.Log("DESTROYED");
+                Destroy(enemies[i]);
+                enemies[i] = null;
+            }
+            // Remove null objects
+            List<GameObject> unassignedEnemies = new List<GameObject>();
+            for (int i = 0; i < enemies.Length; i++)
+            {
+                if (enemies[i] == null)
+                    continue;
+                // Debug.Log("ADDED");
+                unassignedEnemies.Add(enemies[i]);
+            }
+
+            // Assign enemy positions
+            for (int i = 0; i < unassignedEnemies.Count; i++)
+            {
+                //  Debug.Log("Loaded: " + _lastCheckPoint.enemyPositions[i]);
+                unassignedEnemies[i].transform.position = this.lastCheckPoint.enemyPositions[i];
+            }
+
+            // Assign player position
+            GameObject.FindGameObjectWithTag("Player").transform.position = this.lastCheckPoint.playerPosition;
+            GameObject.FindGameObjectWithTag("Player").transform.rotation = this.lastCheckPoint.playerRotation;
+
+            SceneManager.sceneLoaded -= LoadLastCheckpoint;
+        }
+
+        public void ClearLastCheckpoint()
+        {
+            // Note: Not clearing other data as will use allocate memory.
+            this.lastCheckPoint = new CheckpointData
+            {
+                index = -1
+            };
+        }
     }
-   
 }
