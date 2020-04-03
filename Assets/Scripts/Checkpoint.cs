@@ -1,22 +1,35 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.Events;
 
 namespace ALICE.Checkpoint
 {
+    public class CheckpointReachedEvent : UnityEvent<int> { }
+    
     public class Checkpoint : MonoBehaviour
     {
-        [SerializeField] private int _currentCheckpoint = 0;
+        [SerializeField]
+        private int currentCheckpoint = 0;
 
+        private CheckpointReachedEvent checkpointReachedEvent = new CheckpointReachedEvent();
 
         private void OnTriggerEnter(Collider other)
         {
             if (other.tag != "Player")
                 return;
 
-            CheckpointManager.instance.CheckpointReached(_currentCheckpoint);
+            this.CheckpointReached();
+        }
 
-            // Destroy(this.gameObject);
+        private void CheckpointReached()
+        {
+            this.checkpointReachedEvent.Invoke(this.currentCheckpoint);
+
+            // todo: Destroy checkpoint?
+        }
+
+        public void AddListener(UnityAction<int> callback)
+        {
+            this.checkpointReachedEvent.AddListener(callback);
         }
 
     }

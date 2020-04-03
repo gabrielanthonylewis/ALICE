@@ -24,7 +24,7 @@ public class ButtonManager : MonoBehaviour
 	
     public void LoadLastCheckpoint()
     {
-        CheckpointManager.instance.LoadWhenSceneLoaded();
+        CheckpointManager.instance.LoadLastCheckpointOnReload();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         Time.timeScale = 1.0f;
     }

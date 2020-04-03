@@ -6,17 +6,18 @@ using ALICE.Utils.Animation;
 namespace ALICE.Checkpoint
 {
     // todo: Get rid of Find()
+    // todo: as this is a singleton I need to clear it next level, add in the new checkpoints
 
     public class CheckpointManager : MonoBehaviour
     {
         private static CheckpointManager _instance;
         public static CheckpointManager instance { get { return _instance; } }
                 
-        private CheckpointData lastCheckPoint;
+        private CheckpointData lastCheckPoint = new CheckpointData();
 
         [SerializeField]
         private Animator checkpointReachedAnimator = null;
-        
+
         /* Singleton pattern */
         private void Awake()
         {
@@ -30,16 +31,19 @@ namespace ALICE.Checkpoint
 
         private void Start()
         {
-            if (this.lastCheckPoint.enemyPositions == null || this.lastCheckPoint.enemyPositions.Length == 0)
-                ClearLastCheckpoint();
+            // Attach CheckpointReached callback to every Checkpoint in the current level
+            foreach (Checkpoint checkpoint in GameObject.FindObjectsOfType<Checkpoint>())
+                checkpoint.AddListener(this.CheckpointReached);
         }
 
-        public void CheckpointReached(int currentCheckpoint)
+        public void CheckpointReached(int checkpointIndex)
         {
-            if (currentCheckpoint <= this.lastCheckPoint.index)
+            // todo: maybe I should just delete the checkpoint once it is reached?
+            // then I dont have to do this and also the scene reloads anyways
+            if (checkpointIndex <= this.lastCheckPoint.index)
                 return;
 
-            this.SaveLastCheckpoint(currentCheckpoint);
+            this.SaveLastCheckpoint(checkpointIndex);
 
             AnimationUtils.SetTrigger(this.checkpointReachedAnimator, "ShowCheckpoint");
         }
@@ -67,24 +71,20 @@ namespace ALICE.Checkpoint
             return enemyPositions;
         }
 
-        public void LoadWhenSceneLoaded()
+        public void LoadLastCheckpointOnReload()
         {
-            Debug.Log("!!SUBSCRIBED!!");
             SceneManager.sceneLoaded += this.LoadLastCheckpoint;
         }
 
         private void LoadLastCheckpoint(Scene scene, LoadSceneMode mode)
         {
-            // Debug.Log("ENTERED");
             if (this.lastCheckPoint.index < 0)
                 return;
-            // Debug.Log("LOAD CHECKPOINT");
 
             // Ensure only desired amount of enemies are alive
             GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
             for (int i = 0; i < (enemies.Length - this.lastCheckPoint.enemyPositions.Length); i++)
             {
-                // Debug.Log("DESTROYED");
                 Destroy(enemies[i]);
                 enemies[i] = null;
             }
@@ -94,22 +94,19 @@ namespace ALICE.Checkpoint
             {
                 if (enemies[i] == null)
                     continue;
-                // Debug.Log("ADDED");
+
                 unassignedEnemies.Add(enemies[i]);
             }
 
             // Assign enemy positions
             for (int i = 0; i < unassignedEnemies.Count; i++)
-            {
-                //  Debug.Log("Loaded: " + _lastCheckPoint.enemyPositions[i]);
                 unassignedEnemies[i].transform.position = this.lastCheckPoint.enemyPositions[i];
-            }
 
             // Assign player position
             GameObject.FindGameObjectWithTag("Player").transform.position = this.lastCheckPoint.playerPosition;
             GameObject.FindGameObjectWithTag("Player").transform.rotation = this.lastCheckPoint.playerRotation;
 
-            SceneManager.sceneLoaded -= LoadLastCheckpoint;
+            SceneManager.sceneLoaded -= this.LoadLastCheckpoint;
         }
 
         public void ClearLastCheckpoint()
