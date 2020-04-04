@@ -22,15 +22,16 @@ namespace ALICE.Checkpoint
 
         private void CheckpointReached()
         {
+            Debug.Log("CheckpointReached");
+
             this.checkpointReachedEvent.Invoke(this.currentCheckpoint);
 
-            // todo: Destroy checkpoint?
+            Destroy(this.gameObject);
         }
 
         public void AddListener(UnityAction<int> callback)
         {
             this.checkpointReachedEvent.AddListener(callback);
         }
-
     }
 }

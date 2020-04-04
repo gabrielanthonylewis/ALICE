@@ -6,7 +6,6 @@ using ALICE.Utils.Animation;
 namespace ALICE.Checkpoint
 {
     // todo: Get rid of Find()
-    // todo: as this is a singleton I need to clear it next level, add in the new checkpoints
 
     public class CheckpointManager : MonoBehaviour
     {
@@ -18,33 +17,53 @@ namespace ALICE.Checkpoint
         [SerializeField]
         private Animator checkpointReachedAnimator = null;
 
+        private int currentSceneIndex = -1;
+
         /* Singleton pattern */
         private void Awake()
         {
-            if (_instance != null && _instance != this)
-                Destroy(this.gameObject);
-            else
+            if (_instance == null)
                 _instance = this;
-
-            DontDestroyOnLoad(this.gameObject);
-        }
-
-        private void Start()
-        {
-            // Attach CheckpointReached callback to every Checkpoint in the current level
-            foreach (Checkpoint checkpoint in GameObject.FindObjectsOfType<Checkpoint>())
-                checkpoint.AddListener(this.CheckpointReached);
-        }
-
-        public void CheckpointReached(int checkpointIndex)
-        {
-            // todo: maybe I should just delete the checkpoint once it is reached?
-            // then I dont have to do this and also the scene reloads anyways
-            if (checkpointIndex <= this.lastCheckPoint.index)
+            else if (_instance != this)
+            {
+                Destroy(this.gameObject);
                 return;
+            }
+            else
+                return;
+                        
+            DontDestroyOnLoad(this.gameObject);
 
+            this.gameObject.name += "NOWWOT";
+
+            /* Start will only get called once as this is a singleton.
+             * I need to find all the remaining checkpoints every time a level is loaded. */
+            SceneManager.sceneLoaded += this.OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // New level
+            if (scene.buildIndex != this.currentSceneIndex)
+            {
+                this.currentSceneIndex = scene.buildIndex;
+                
+                // Reset data
+                this.ClearLastCheckpoint();
+                this.Initialise();
+            }
+        }
+
+        private void Initialise()
+        {
+            // Attach OnCheckpointReached callback to every Checkpoint in the current level
+            foreach (Checkpoint checkpoint in GameObject.FindObjectsOfType<Checkpoint>())
+                checkpoint.AddListener(this.OnCheckpointReached);
+        }
+
+        public void OnCheckpointReached(int checkpointIndex)
+        {
             this.SaveLastCheckpoint(checkpointIndex);
-
             AnimationUtils.SetTrigger(this.checkpointReachedAnimator, "ShowCheckpoint");
         }
 

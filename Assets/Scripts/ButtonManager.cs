@@ -24,6 +24,7 @@ public class ButtonManager : MonoBehaviour
 	
     public void LoadLastCheckpoint()
     {
+        // todo: move this into checkpointmanager somehow
         CheckpointManager.instance.LoadLastCheckpointOnReload();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         Time.timeScale = 1.0f;
@@ -31,6 +32,7 @@ public class ButtonManager : MonoBehaviour
 
 	public void ReloadLevel()
 	{
+        // todo: move this into checkpointmanager somehow
         CheckpointManager.instance.ClearLastCheckpoint();
 
         // Reload the current level.
