@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEngine.SceneManagement;
 using ALICE.Checkpoint;
 
@@ -24,20 +23,17 @@ public class ButtonManager : MonoBehaviour
 	
     public void LoadLastCheckpoint()
     {
-        // todo: move this into checkpointmanager somehow
-        CheckpointManager.instance.LoadLastCheckpointOnReload();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         Time.timeScale = 1.0f;
     }
 
 	public void ReloadLevel()
 	{
-        // todo: move this into checkpointmanager somehow
-        CheckpointManager.instance.ClearLastCheckpoint();
+        CheckpointManager.instance.OnRestartLevel();
 
         // Reload the current level.
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-
+        
         // Reset Inventory to inital state.
         Inventory.instance.Initialise();
 

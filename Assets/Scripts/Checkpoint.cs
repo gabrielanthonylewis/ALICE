@@ -2,15 +2,12 @@
 using UnityEngine.Events;
 
 namespace ALICE.Checkpoint
-{
-    public class CheckpointReachedEvent : UnityEvent<int> { }
-    
+{   
+    [RequireComponent(typeof(BoxCollider))]
     public class Checkpoint : MonoBehaviour
     {
-        [SerializeField]
-        private int currentCheckpoint = 0;
-
-        private CheckpointReachedEvent checkpointReachedEvent = new CheckpointReachedEvent();
+        [HideInInspector]
+        public UnityEvent checkpointReachedEvent = new UnityEvent();
 
         private void OnTriggerEnter(Collider other)
         {
@@ -22,16 +19,12 @@ namespace ALICE.Checkpoint
 
         private void CheckpointReached()
         {
-            Debug.Log("CheckpointReached");
+            if (this.checkpointReachedEvent != null)
+                this.checkpointReachedEvent.Invoke();
 
-            this.checkpointReachedEvent.Invoke(this.currentCheckpoint);
-
+            // todo: why does this checkpoint stay deleted when I load last checkpoint? 
+            // Shouldnt it still be there??
             Destroy(this.gameObject);
-        }
-
-        public void AddListener(UnityAction<int> callback)
-        {
-            this.checkpointReachedEvent.AddListener(callback);
         }
     }
 }

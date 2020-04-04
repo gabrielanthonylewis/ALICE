@@ -5,18 +5,17 @@ using ALICE.Utils.Animation;
 
 namespace ALICE.Checkpoint
 {
-    // todo: Get rid of Find()
-
     public class CheckpointManager : MonoBehaviour
     {
         private static CheckpointManager _instance;
-        public static CheckpointManager instance { get { return _instance; } }
+        public static CheckpointManager instance { get { return _instance;  } }
                 
         private CheckpointData lastCheckPoint = new CheckpointData();
 
         [SerializeField]
         private Animator checkpointReachedAnimator = null;
 
+        private Transform player = null;
         private int currentSceneIndex = -1;
 
         /* Singleton pattern */
@@ -34,15 +33,19 @@ namespace ALICE.Checkpoint
                         
             DontDestroyOnLoad(this.gameObject);
 
-            this.gameObject.name += "NOWWOT";
-
             /* Start will only get called once as this is a singleton.
              * I need to find all the remaining checkpoints every time a level is loaded. */
             SceneManager.sceneLoaded += this.OnSceneLoaded;
         }
 
+        /* Like Start except called every time 
+         * a scene is loaded (as this is a singleton) */
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
+            this.player = GameObject.FindGameObjectWithTag("Player").transform;
+            if (this.player == null)
+                Debug.LogError("Player not found");
+
             // New level
             if (scene.buildIndex != this.currentSceneIndex)
             {
@@ -52,31 +55,39 @@ namespace ALICE.Checkpoint
                 this.ClearLastCheckpoint();
                 this.Initialise();
             }
+            // Same level so load last checkpoint
+            else
+                this.LoadLastCheckpoint();
+        }
+
+        public void OnRestartLevel()
+        {
+            this.ClearLastCheckpoint();
+            this.currentSceneIndex = -1;
         }
 
         private void Initialise()
         {
+            // todo: Second checkpoint deletes but the callback isnt called.
             // Attach OnCheckpointReached callback to every Checkpoint in the current level
-            foreach (Checkpoint checkpoint in GameObject.FindObjectsOfType<Checkpoint>())
-                checkpoint.AddListener(this.OnCheckpointReached);
+            Checkpoint[] checkpoints = GameObject.FindObjectsOfType<Checkpoint>();
+            foreach (Checkpoint checkpoint in checkpoints)
+                checkpoint.checkpointReachedEvent.AddListener(this.OnCheckpointReached);
         }
 
-        public void OnCheckpointReached(int checkpointIndex)
+        private void OnCheckpointReached()
         {
-            this.SaveLastCheckpoint(checkpointIndex);
+            this.SaveLastCheckpoint();
             AnimationUtils.SetTrigger(this.checkpointReachedAnimator, "ShowCheckpoint");
         }
 
-        private void SaveLastCheckpoint(int currentCheckpoint)
+        private void SaveLastCheckpoint()
         {
-            Transform player = GameObject.FindGameObjectWithTag("Player").transform;
-
             this.lastCheckPoint = new CheckpointData
             {
-                index = currentCheckpoint,
                 enemyPositions = this.GetEnemyPositions(),
-                playerPosition = player.position,
-                playerRotation = player.rotation
+                playerPosition = this.player.position,
+                playerRotation = this.player.rotation
             };
         }
 
@@ -90,16 +101,26 @@ namespace ALICE.Checkpoint
             return enemyPositions;
         }
 
-        public void LoadLastCheckpointOnReload()
+        private void LoadLastCheckpoint()
         {
-            SceneManager.sceneLoaded += this.LoadLastCheckpoint;
-        }
-
-        private void LoadLastCheckpoint(Scene scene, LoadSceneMode mode)
-        {
-            if (this.lastCheckPoint.index < 0)
+            if (this.lastCheckPoint == null)
                 return;
 
+            this.LoadEnemies();
+            this.LoadPlayer();
+        }
+
+        private void LoadPlayer()
+        {
+            // Assign player position
+            this.player.position = this.lastCheckPoint.playerPosition;
+            this.player.rotation = this.lastCheckPoint.playerRotation;
+            // todo: call sceneSetup.SpawnPlayer(position, rotation) ?? this means I need to call this if not got a checkpoint though.
+            // unless if not got last checkpoint then do SpawnPlayer() and it will use spawnpoint
+        }
+
+        private void LoadEnemies()
+        {
             // Ensure only desired amount of enemies are alive
             GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
             for (int i = 0; i < (enemies.Length - this.lastCheckPoint.enemyPositions.Length); i++)
@@ -120,21 +141,11 @@ namespace ALICE.Checkpoint
             // Assign enemy positions
             for (int i = 0; i < unassignedEnemies.Count; i++)
                 unassignedEnemies[i].transform.position = this.lastCheckPoint.enemyPositions[i];
-
-            // Assign player position
-            GameObject.FindGameObjectWithTag("Player").transform.position = this.lastCheckPoint.playerPosition;
-            GameObject.FindGameObjectWithTag("Player").transform.rotation = this.lastCheckPoint.playerRotation;
-
-            SceneManager.sceneLoaded -= this.LoadLastCheckpoint;
         }
 
-        public void ClearLastCheckpoint()
+        private void ClearLastCheckpoint()
         {
-            // Note: Not clearing other data as will use allocate memory.
-            this.lastCheckPoint = new CheckpointData
-            {
-                index = -1
-            };
+            this.lastCheckPoint = null;
         }
     }
 }
