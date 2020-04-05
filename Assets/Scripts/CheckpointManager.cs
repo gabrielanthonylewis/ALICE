@@ -15,6 +15,10 @@ namespace ALICE.Checkpoint
         [SerializeField]
         private Animator checkpointReachedAnimator = null;
 
+        private readonly string enemyTag = "Enemy";
+        private readonly string playerTag = "Player";
+        private readonly string checkpointReachedAnimationParam = "ShowCheckpoint";
+
         private Transform player = null;
         private int currentSceneIndex = -1;
         private bool skipNextCheckpoint = false;
@@ -43,7 +47,7 @@ namespace ALICE.Checkpoint
          * a scene is loaded (as this is a singleton) */
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            this.player = GameObject.FindGameObjectWithTag("Player").transform;
+            this.player = GameObject.FindGameObjectWithTag(this.playerTag).transform;
             if (this.player == null)
                 Debug.LogError("Player not found");
 
@@ -86,7 +90,8 @@ namespace ALICE.Checkpoint
             }
 
             this.SaveLastCheckpoint();
-            AnimationUtils.SetTrigger(this.checkpointReachedAnimator, "ShowCheckpoint");
+            AnimationUtils.SetTrigger(this.checkpointReachedAnimator,
+                this.checkpointReachedAnimationParam);
         }
 
         private void SaveLastCheckpoint()
@@ -101,7 +106,7 @@ namespace ALICE.Checkpoint
 
         private Vector3[] GetEnemyPositions()
         {
-            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag(this.enemyTag);
             Vector3[] enemyPositions = new Vector3[enemies.Length];
             for (int i = 0; i < enemies.Length; i++)
                 enemyPositions[i] = enemies[i].transform.position;
@@ -130,7 +135,7 @@ namespace ALICE.Checkpoint
         private void LoadEnemies()
         {
             // Ensure only desired amount of enemies are alive
-            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag(this.enemyTag);
             for (int i = 0; i < (enemies.Length - this.lastCheckPoint.enemyPositions.Length); i++)
             {
                 Destroy(enemies[i]);
