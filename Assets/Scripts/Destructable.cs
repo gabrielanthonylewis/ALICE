@@ -126,6 +126,8 @@ public class Destructable : MonoBehaviour
 		// If a Camera is assigned then activate it.
 		if (Cam) 
 		{
+            Cam.transform.SetParent(null);
+
 			// Begin slomo effect
 			Time.timeScale = 0.4f;
 			Time.fixedDeltaTime = (Time.fixedDeltaTime * 0.4f);
