@@ -17,6 +17,7 @@ namespace ALICE.Checkpoint
 
         private Transform player = null;
         private int currentSceneIndex = -1;
+        private bool skipNextCheckpoint = false;
 
         /* Singleton pattern */
         private void Awake()
@@ -46,18 +47,19 @@ namespace ALICE.Checkpoint
             if (this.player == null)
                 Debug.LogError("Player not found");
 
-            // New level
-            if (scene.buildIndex != this.currentSceneIndex)
-            {
-                this.currentSceneIndex = scene.buildIndex;
-                
-                // Reset data
-                this.ClearLastCheckpoint();
-                this.Initialise();
-            }
-            // Same level so load last checkpoint
-            else
+            this.AddCheckpointListeners();
+
+            bool hasReloaded = (scene.buildIndex == this.currentSceneIndex);
+            this.skipNextCheckpoint = hasReloaded;
+
+            if (hasReloaded)
                 this.LoadLastCheckpoint();
+            else
+            {
+                // New level
+                this.currentSceneIndex = scene.buildIndex;
+                this.ClearLastCheckpoint();
+            }                
         }
 
         public void OnRestartLevel()
@@ -66,9 +68,8 @@ namespace ALICE.Checkpoint
             this.currentSceneIndex = -1;
         }
 
-        private void Initialise()
+        private void AddCheckpointListeners()
         {
-            // todo: Second checkpoint deletes but the callback isnt called.
             // Attach OnCheckpointReached callback to every Checkpoint in the current level
             Checkpoint[] checkpoints = GameObject.FindObjectsOfType<Checkpoint>();
             foreach (Checkpoint checkpoint in checkpoints)
@@ -77,6 +78,13 @@ namespace ALICE.Checkpoint
 
         private void OnCheckpointReached()
         {
+            // This is required to skip saving the current checkpoint when reloading.
+            if(this.skipNextCheckpoint)
+            {
+                this.skipNextCheckpoint = false;
+                return;
+            }
+
             this.SaveLastCheckpoint();
             AnimationUtils.SetTrigger(this.checkpointReachedAnimator, "ShowCheckpoint");
         }

@@ -22,8 +22,6 @@ namespace ALICE.Checkpoint
             if (this.checkpointReachedEvent != null)
                 this.checkpointReachedEvent.Invoke();
 
-            // todo: why does this checkpoint stay deleted when I load last checkpoint? 
-            // Shouldnt it still be there??
             Destroy(this.gameObject);
         }
     }
