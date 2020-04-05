@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
 
+// todo: before using this I need to update the prefab,
+// in doing this I need to assign the death camera properly
 namespace ALICE.Checkpoint
 {   
     [RequireComponent(typeof(BoxCollider))]
