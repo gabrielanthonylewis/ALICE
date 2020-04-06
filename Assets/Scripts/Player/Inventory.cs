@@ -26,13 +26,13 @@ public class Inventory
 	#endregion
 	
 	// List of guns (maximum of 3)
-	[SerializeField] private GameObject[] Guns = new GameObject[3];
+	private GameObject[] Guns = new GameObject[3];
 
 	// Total ammount of Assault Rifle ammo (NOTE that this represents all ammo at this point).
-	[SerializeField] private int _AR_ammo = 300;
+	private int _AR_ammo = 300;
 
 	// Reference to the Player's WeaponController component.
-	[SerializeField] private WeaponController _WeaponController = null;
+	private WeaponController _WeaponController = null;
 
 	// Ammount of grenades (default at 3)
 	private int _Grenades = 3;
