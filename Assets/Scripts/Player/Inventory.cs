@@ -77,9 +77,9 @@ public class Inventory
 		// Display how many grenades the player has.
 		_GrenadesUIText.text = _Grenades.ToString();
 
-		// Calculates how many full clips there are..
-		_ClipsUIText.text = Mathf.RoundToInt((_AR_ammo + 30) / 30f).ToString();
-	}
+        // Calculates how many full clips there are..
+        _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+    }
 
 	public bool EquipWeapon(int slotIndex)
 	{
@@ -273,8 +273,8 @@ public class Inventory
 	public int GetAmmo(Weapon.WeaponType weaponType)
 	{	// Calculates how many full clips there are..
 		if(_ClipsUIText)
-			_ClipsUIText.text = Mathf.RoundToInt((_AR_ammo + 30) / 30f).ToString();	
-		switch (weaponType) {
+            _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+        switch (weaponType) {
 		case Weapon.WeaponType.AssaultRifle:
 			return _AR_ammo;
 			
@@ -339,10 +339,10 @@ public class Inventory
 		// Get reference to the Clips UI Text component.
 		if (!_ClipsUIText)
 			_ClipsUIText = GameObject.FindGameObjectWithTag ("ClipsText").GetComponent<Text>();
-		
-		// Calculates how many full clips there are..
-		_ClipsUIText.text = Mathf.RoundToInt((_AR_ammo + 30) / 30f).ToString();
-	}
+
+        // Calculates how many full clips there are..
+        _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+    }
 
 	public void ManipulateAmmo(Weapon.WeaponType weaponType, int value)
 	{
@@ -353,8 +353,10 @@ public class Inventory
 		
 				_AR_ammo += value;
 
-				// Enforce lower bound limit.
-				if (_AR_ammo < 0)
+                _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+
+                // Enforce lower bound limit.
+                if (_AR_ammo < 0)
 				{
 					_AR_ammo = 0;
 					_ClipsUIText.text = "0"; // Ensure Clips Text displays 0.
@@ -397,8 +399,8 @@ public class Inventory
 
 		// Calculates how many full clips there are..
 		if(_ClipsUIText)
-			_ClipsUIText.text = Mathf.RoundToInt((_AR_ammo + 30) / 30f).ToString();	
-	}
+            _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+    }
 	
 	public int GetGrenades()
 	{

@@ -47,10 +47,6 @@ namespace ALICE.Checkpoint
          * a scene is loaded (as this is a singleton) */
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            this.player = GameObject.FindGameObjectWithTag(this.playerTag).transform;
-            if (this.player == null)
-                Debug.LogError("Player not found");
-
             this.AddCheckpointListeners();
 
             bool hasReloaded = (scene.buildIndex == this.currentSceneIndex);
@@ -63,6 +59,8 @@ namespace ALICE.Checkpoint
                 // New level
                 this.currentSceneIndex = scene.buildIndex;
                 this.ClearLastCheckpoint();
+
+                this.player = GameObject.FindObjectOfType<PlayerSpawnPoint>().SpawnPlayer().transform;
             }                
         }
 
@@ -100,7 +98,9 @@ namespace ALICE.Checkpoint
             {
                 enemyPositions = this.GetEnemyPositions(),
                 playerPosition = this.player.position,
-                playerRotation = this.player.rotation
+                playerRotation = this.player.rotation,
+                ammo = Inventory.instance.GetAmmo(Weapon.WeaponType.AssaultRifle),
+                grenades = Inventory.instance.GetGrenades()
             };
         }
 
@@ -120,16 +120,17 @@ namespace ALICE.Checkpoint
                 return;
 
             this.LoadEnemies();
-            this.LoadPlayer();
+
+            this.player = GameObject.FindObjectOfType<PlayerSpawnPoint>().SpawnPlayer(
+                this.lastCheckPoint.playerPosition, this.lastCheckPoint.playerRotation).transform;
+
+            this.LoadInventory();
         }
 
-        private void LoadPlayer()
+        private void LoadInventory()
         {
-            // Assign player position
-            this.player.position = this.lastCheckPoint.playerPosition;
-            this.player.rotation = this.lastCheckPoint.playerRotation;
-            // todo: call sceneSetup.SpawnPlayer(position, rotation) ?? this means I need to call this if not got a checkpoint though.
-            // unless if not got last checkpoint then do SpawnPlayer() and it will use spawnpoint
+            Inventory.instance.SetAmmo(Weapon.WeaponType.AssaultRifle, this.lastCheckPoint.ammo);
+            Inventory.instance.SetGrenades(this.lastCheckPoint.grenades);
         }
 
         private void LoadEnemies()
