@@ -100,7 +100,8 @@ namespace ALICE.Checkpoint
                 playerPosition = this.player.position,
                 playerRotation = this.player.rotation,
                 ammo = Inventory.instance.GetAmmo(Weapon.WeaponType.AssaultRifle),
-                grenades = Inventory.instance.GetGrenades()
+                grenades = Inventory.instance.GetGrenades(),
+                health = this.player.GetComponent<Destructable>().GetHealth()
             };
         }
 
@@ -123,6 +124,8 @@ namespace ALICE.Checkpoint
 
             this.player = GameObject.FindObjectOfType<PlayerSpawnPoint>().SpawnPlayer(
                 this.lastCheckPoint.playerPosition, this.lastCheckPoint.playerRotation).transform;
+
+            this.player.GetComponent<Destructable>().SetHealth(this.lastCheckPoint.health);
 
             this.LoadInventory();
         }
