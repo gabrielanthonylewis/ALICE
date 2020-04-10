@@ -11,6 +11,7 @@ namespace ALICE.Checkpoint
         public int ammo;
         public int grenades;
         public float health;
+        public float slowmo;
         // todo guns
     };
 }

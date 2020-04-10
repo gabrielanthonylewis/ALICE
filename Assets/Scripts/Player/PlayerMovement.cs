@@ -1,9 +1,6 @@
 ﻿using UnityEngine;
-using System.Collections;
-using UnityEngine.UI;
 
 // The PlayerMovement script moves the object depending on the player inputs, also providing crouch and prone functionality.
-// The script also provides the Slow Motion effect functionality by changing the timescale.
 public class PlayerMovement : MonoBehaviour
 {
 	// Vertical Speed multiplier
@@ -14,100 +11,13 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField] private float _sprintMultiplier = 2.0f;
 
-	// Reference to the Slomo Bar UI element.
-	[SerializeField] private RectTransform _SlomoBar;
-
-	// Reference to the Slomo Fill Image.
-	[SerializeField] private RawImage _SlomoFillImg;
-
-	// Total Slomo value in seconds.
-	[SerializeField] private float _TotalSlomo = 7f;
-
-	// Current Slomo value.
-	[SerializeField] private float _CurrentSlomo;
-
-	// A scaled value (representing 1 slomo unit) for use of scaling the UI Bar.
-	private float scaledUnit = 0f;
-
 	// Is the Player Crouched?
 	private bool isCrouching = false;
 
     private bool _isSprinting = false;
 
-
-	void Start()
-	{
-		if (!_SlomoBar) 
-		{
-			_SlomoBar = GameObject.FindGameObjectWithTag ("UI_SlomoBar").GetComponent<RectTransform> ();
-			// Calculate a scaled value.
-			scaledUnit = _SlomoBar.rect.width / _TotalSlomo;
-		}
-		
-		if (!_SlomoFillImg)
-			_SlomoFillImg = GameObject.FindGameObjectWithTag ("SlomoFill").GetComponent<RawImage> ();
-		
-
-		// Set the current slomo value to the total slomo value.
-		_CurrentSlomo = _TotalSlomo;
-	}
-
 	void Update()
 	{
-		if (!_SlomoBar) 
-		{
-			_SlomoBar = GameObject.FindGameObjectWithTag ("UI_SlomoBar").GetComponent<RectTransform> ();
-			// Calculate a scaled value.
-			scaledUnit = _SlomoBar.rect.width / _TotalSlomo;
-		}
-
-		if (!_SlomoFillImg)
-			_SlomoFillImg = GameObject.FindGameObjectWithTag ("SlomoFill").GetComponent<RawImage> ();
-
-
-		// If there is Slomo time left...
-		if(_CurrentSlomo > 0f)
-		{
-			if (Input.GetKeyUp (KeyCode.Space)) 
-			{
-				// Reset timescale back to normal.
-				Time.timeScale = 1f;
-				//Time.fixedDeltaTime = (Time.fixedDeltaTime * 2.5f);	
-				Time.fixedDeltaTime = 0.02F * Time.timeScale;
-
-				_SlomoFillImg.enabled = false;
-				return;
-			}
-			
-			if (Input.GetKeyDown (KeyCode.Space)) 
-			{
-				// Slow time down.
-				Time.timeScale = 0.4f;
-				//Time.fixedDeltaTime = (Time.fixedDeltaTime * 0.4f);
-				Time.fixedDeltaTime = 0.02F * Time.timeScale;
-
-				_SlomoFillImg.enabled = true;
-			}
-
-			if(Input.GetKey(KeyCode.Space))
-			{
-				// Reduce the current Slomo time every second. "* (1f / Time.timeScale)" is to counter the slowed time.
-				_CurrentSlomo -= Time.deltaTime * (1f / Time.timeScale);
-				// Adjust the Slomo Bar accordingly.
-				_SlomoBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 18f, _CurrentSlomo * scaledUnit);
-			}
-
-			// If there is no more slomo left then reset the timescale back to normal.
-			if(_CurrentSlomo <= 0)
-			{
-				Time.timeScale = 1f;
-				//Time.fixedDeltaTime = (Time.fixedDeltaTime * 2.5f);
-				Time.fixedDeltaTime = 0.02F * Time.timeScale;
-
-				_SlomoFillImg.enabled = false;
-			}
-		}
-
         // Sprint
         _isSprinting = Input.GetKey(KeyCode.LeftShift);
 
