@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEngine.SceneManagement;
+using ALICE.Checkpoint;
 
 // The ButtonManager script provides many different functions that will be used upon button press.
 // Examples including reloading the level, loading a level and quitting the game.
@@ -23,18 +23,17 @@ public class ButtonManager : MonoBehaviour
 	
     public void LoadLastCheckpoint()
     {
-        CheckpointManager.instance.LoadWhenSceneLoaded();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         Time.timeScale = 1.0f;
     }
 
 	public void ReloadLevel()
 	{
-        CheckpointManager.instance.Reset();
+        CheckpointManager.instance.OnRestartLevel();
 
         // Reload the current level.
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-
+        
         // Reset Inventory to inital state.
         Inventory.instance.Initialise();
 

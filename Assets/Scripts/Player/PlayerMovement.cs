@@ -32,9 +32,6 @@ public class PlayerMovement : MonoBehaviour
 	// Is the Player Crouched?
 	private bool isCrouching = false;
 
-	// Is the player Prone?
-	private bool isProne = false;
-
     private bool _isSprinting = false;
 
 
@@ -132,31 +129,7 @@ public class PlayerMovement : MonoBehaviour
 			this.GetComponent<CapsuleCollider>().height = 1.6f;
 			this.GetComponent<CapsuleCollider>().center = new Vector3(0f,0.2f,0f);
 			isCrouching = true;
-			isProne = false;
-		}
-
-		// Prone/Stand back up depending on the current stance.
-		if(Input.GetKeyDown(KeyCode.LeftAlt))
-		{
-			if(isProne)
-			{
-				// return to original size
-				this.GetComponent<CapsuleCollider>().center = new Vector3(0f,0f,0f);
-				this.GetComponent<CapsuleCollider>().height = 2f;
-				isProne = false;
-				return;
-			}
-
-			// New size (Crouch)
-			// NOTE: Prone works by simply changing the size of the collider and moving it up 
-			// letting the player fall beneath the floor more so than before.
-			this.GetComponent<CapsuleCollider>().height /= 10f;
-			this.GetComponent<CapsuleCollider>().center = new Vector3(0f,0.5f,0f);
-			isProne = true;
-			isCrouching = false;
-			return;
-		}
-		
+		}		
 	}
 
     void FixedUpdate()
@@ -173,7 +146,6 @@ public class PlayerMovement : MonoBehaviour
 		// Move/Translate the player on each axis.
         transform.Translate(new Vector3(horizontal, 0f, 0f) * Time.fixedDeltaTime * sprintMulti); 
         transform.Translate(new Vector3(0, 0f, vertical) * Time.fixedDeltaTime * sprintMulti);
-
     }
 	
 }

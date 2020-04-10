@@ -47,7 +47,7 @@ public class Destructable : MonoBehaviour
 	// A scaled value (representing 1 health) for use of scaling the UI Bar.
 	private float _UIScaledUnit = 0f;
 	
-	void Start()
+	void Awake()
 	{
 		// If a reference to a UI element exists then calculate a scaled value.
 		if (UIhealth)
@@ -61,6 +61,19 @@ public class Destructable : MonoBehaviour
 		if (UIText)
 			UIText.text = Health.ToString () + "/" + _MaxHealth.ToString ();
 	}
+
+    public void SetHealth(float health)
+    {
+        this.Health = health;
+
+        if (UIhealth)
+            UIhealth.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 18f, Health * _UIScaledUnit);
+    }
+
+    public float GetHealth()
+    {
+        return this.Health;
+    }
 
 	public bool ManipulateHealth(float val)
 	{
@@ -126,6 +139,8 @@ public class Destructable : MonoBehaviour
 		// If a Camera is assigned then activate it.
 		if (Cam) 
 		{
+            Cam.transform.SetParent(null);
+
 			// Begin slomo effect
 			Time.timeScale = 0.4f;
 			Time.fixedDeltaTime = (Time.fixedDeltaTime * 0.4f);
