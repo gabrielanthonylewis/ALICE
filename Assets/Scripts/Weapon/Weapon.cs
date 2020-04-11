@@ -10,20 +10,13 @@ namespace ALICE.Weapon
     {
         [SerializeField] private int _Damage = 1;
         private float _range = 35.0f;
-        [SerializeField] private Vector3 PickUpPos = Vector3.zero;
-
-
 
         // temp(for compiler)
-        public Vector3 GetPickUpPosition()
-        {
-            return PickUpPos;
-        }
         public void SetAnimation(Animation anim)
         {
           //  _Animation = anim;
         }
-
+        
 
         /*
         // todo: put in AIWeaponController?

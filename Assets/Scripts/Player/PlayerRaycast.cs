@@ -114,7 +114,7 @@ public class PlayerRaycast : MonoBehaviour
 		{
 			// If the hit object is a Weapon, add it to the Inventory.
 			if(hit.transform.gameObject.GetComponent<Weapon>() != null)
-				Inventory.instance.AddWeapon(hit.transform.gameObject);
+				Inventory.instance.AddWeapon(hit.transform.gameObject.GetComponent<Weapon>());
 
 			// If the script has a bonus... (it must be value based)
 			if(hit.transform.gameObject.GetComponent<PickUpBonus>())

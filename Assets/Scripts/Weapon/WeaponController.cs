@@ -15,6 +15,57 @@ public class WeaponController : MonoBehaviour
     {
         _CurrentWeapon = weapon;
     }
+
+    public void PickupWeapon(Weapon weapon)
+    {
+        Transform mainCameraTransform = Camera.main.transform;
+
+        // Hide weapon (not equiped on default).
+        weapon.gameObject.SetActive(false);
+
+        // Turn off colliders and physics.
+        if (weapon.transform.GetComponent<BoxCollider>())
+            weapon.transform.GetComponent<BoxCollider>().enabled = false;
+        if (weapon.transform.GetComponent<Rigidbody>())
+            weapon.transform.GetComponent<Rigidbody>().isKinematic = true;
+
+        weapon.name = "Gun";
+        weapon.transform.SetParent(mainCameraTransform);
+        weapon.transform.localRotation = Quaternion.identity;
+        weapon.transform.localPosition = Vector3.zero;
+
+        // Assign reference to the Player's animation component.
+        weapon.SetAnimation(mainCameraTransform.GetComponent<Animation>());
+
+        // Set the weapon's children's layers to "GunLayer" so that the gun will not clip through objects (from the player's perspective).
+        Transform[] children = weapon.GetComponentsInChildren<Transform>();
+        for (int j = 0; j < children.Length; j++)
+            children[j].gameObject.layer = 10;
+
+        // Automatically equip weapon if the Player hasn't already got a weapon equipted.
+        if (this._CurrentWeapon == null)
+            EquipWeapon(weapon);
+    }
+
+    public bool EquipWeapon(Weapon weapon)
+    {
+        // If the gun is already active then return.
+        if (this._CurrentWeapon == weapon)
+            return false;
+
+        if(this._CurrentWeapon != null)
+            this._CurrentWeapon.gameObject.SetActive(false);
+
+        // Activate/show new gun, parenting and positioning the gun in the correct position.
+        this._CurrentWeapon = weapon;
+        this._CurrentWeapon.transform.SetParent(Camera.main.transform);
+        this._CurrentWeapon.transform.localRotation = Quaternion.identity;
+        this._CurrentWeapon.transform.localPosition = Vector3.zero;
+        this._CurrentWeapon.transform.gameObject.SetActive(true);
+        
+        return true;
+    }
+
     /*
 	// The ParticleSystem to be instantiated upon a bullet hitting an object.
 	[SerializeField] private ParticleSystem ObjectHitParticle;
