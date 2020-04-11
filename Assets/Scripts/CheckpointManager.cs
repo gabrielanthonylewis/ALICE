@@ -101,7 +101,8 @@ namespace ALICE.Checkpoint
                 playerRotation = this.player.rotation,
                 ammo = Inventory.instance.GetAmmo(Weapon.WeaponType.AssaultRifle),
                 grenades = Inventory.instance.GetGrenades(),
-                health = this.player.GetComponent<Destructable>().GetHealth()
+                health = this.player.GetComponent<Destructable>().GetHealth(),
+                slowmo = this.player.GetComponent<SlowmoController>().GetRemainingTime()
             };
         }
 
@@ -126,6 +127,7 @@ namespace ALICE.Checkpoint
                 this.lastCheckPoint.playerPosition, this.lastCheckPoint.playerRotation).transform;
 
             this.player.GetComponent<Destructable>().SetHealth(this.lastCheckPoint.health);
+            this.player.GetComponent<SlowmoController>().SetRemainingTime(this.lastCheckPoint.slowmo);
 
             this.LoadInventory();
         }
