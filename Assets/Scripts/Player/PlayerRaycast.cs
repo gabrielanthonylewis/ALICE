@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using ALICE.Weapon;
+using ALICE.Weapon.Gun;
 
 // The PlayerRaycast script provides optional behaviour to Interact with objects (have to have an Interact layer)
 // and Pick up objects (have to have a PickUp layer).
@@ -111,7 +113,7 @@ public class PlayerRaycast : MonoBehaviour
 		if (Input.GetKeyDown (KeyCode.F))
 		{
 			// If the hit object is a Weapon, add it to the Inventory.
-			if(hit.transform.gameObject.GetComponent<Weapon>())
+			if(hit.transform.gameObject.GetComponent<Weapon>() != null)
 				Inventory.instance.AddWeapon(hit.transform.gameObject);
 
 			// If the script has a bonus... (it must be value based)
@@ -120,7 +122,7 @@ public class PlayerRaycast : MonoBehaviour
 				// If ammo is rewarded, add the ammo to the Inventory and destroy the pick up object.
 				if(hit.transform.gameObject.GetComponent<PickUpBonus>().ammo > 0)
 				{
-					Inventory.instance.ManipulateAmmo(Weapon.WeaponType.AssaultRifle, hit.transform.gameObject.GetComponent<PickUpBonus>().ammo);
+					Inventory.instance.ManipulateAmmo(WeaponType.AssaultRifle, hit.transform.gameObject.GetComponent<PickUpBonus>().ammo);
 					Destroy(hit.transform.gameObject);
 				}
 

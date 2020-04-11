@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEngine.UI;
+using ALICE.Weapon;
+using ALICE.Weapon.Gun;
 
 // The Inventory script is a Singleton implementation that holds the ammo count, an array of guns, grenade count etc.
 // Also providing Accessors to these values and functionality to drop, add or equipt a weapon.
@@ -270,23 +271,23 @@ public class Inventory
 		return true;
 	}
 
-	public int GetAmmo(Weapon.WeaponType weaponType)
+	public int GetAmmo(WeaponType weaponType)
 	{	// Calculates how many full clips there are..
 		if(_ClipsUIText)
             _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
         switch (weaponType) {
-		case Weapon.WeaponType.AssaultRifle:
+		case WeaponType.AssaultRifle:
 			return _AR_ammo;
 			
-		case Weapon.WeaponType.Pistol:
+		case WeaponType.Pistol:
 			Debug.Log("Inventory.cs/GetAmmo(): TODO - Pistol Case");
 			break;
 			
-		case Weapon.WeaponType.Shotgun:
+		case WeaponType.Shotgun:
 			Debug.Log("Inventory.cs/GetAmmo(): TODO - Shotgun Case");
 			break;
 			
-		case Weapon.WeaponType.Sniper:
+		case WeaponType.Sniper:
 			Debug.Log("Inventory.cs/SetAmmo(): TODO - Sniper Case");
 			return _AR_ammo;
 			
@@ -299,10 +300,10 @@ public class Inventory
 		return -1;
 	}
 
-	public void SetAmmo(Weapon.WeaponType weaponType, int value)
+	public void SetAmmo(WeaponType weaponType, int value)
 	{
 		switch (weaponType) {
-		case Weapon.WeaponType.AssaultRifle:
+		case WeaponType.AssaultRifle:
 
 			_AR_ammo = value;
 
@@ -312,15 +313,15 @@ public class Inventory
 
 			break;
 			
-		case Weapon.WeaponType.Pistol:
+		case WeaponType.Pistol:
 			Debug.Log("Inventory.cs/SetAmmo(): TODO - Pistol Case");
 			break;
 			
-		case Weapon.WeaponType.Shotgun:
+		case WeaponType.Shotgun:
 			Debug.Log("Inventory.cs/SetAmmo(): TODO - Shotgun Case");
 			break;
 			
-		case Weapon.WeaponType.Sniper:
+		case WeaponType.Sniper:
 			Debug.Log("Inventory.cs/SetAmmo(): TODO - Sniper Case");
 
 			_AR_ammo = value;
@@ -344,12 +345,12 @@ public class Inventory
         _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
     }
 
-	public void ManipulateAmmo(Weapon.WeaponType weaponType, int value)
+	public void ManipulateAmmo(WeaponType weaponType, int value)
 	{
 
 		switch (weaponType) 
 		{
-			case Weapon.WeaponType.AssaultRifle:
+			case WeaponType.AssaultRifle:
 		
 				_AR_ammo += value;
 
@@ -364,15 +365,15 @@ public class Inventory
 
 				break;
 				
-			case Weapon.WeaponType.Pistol:
+			case WeaponType.Pistol:
 				Debug.Log("Inventory.cs/ManupulateAmmo(): TODO - Pistol Case");
 				break;
 				
-			case Weapon.WeaponType.Shotgun:
+			case WeaponType.Shotgun:
 				Debug.Log("Inventory.cs/ManupulateAmmo(): TODO - Shotgun Case");
 				break;
 				
-			case Weapon.WeaponType.Sniper:
+			case WeaponType.Sniper:
 				//Debug.Log("Inventory.cs/ManupulateAmmo(): TODO - Sniper Case");
 
 				_AR_ammo += value;

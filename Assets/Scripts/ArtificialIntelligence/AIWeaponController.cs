@@ -6,7 +6,20 @@ using UnityEngine.UI;
 // It deal with Reloading and firing as well as Spotting the targets through multiple ray casts.
 public class AIWeaponController : MonoBehaviour 
 {
-	// Reference to the current weapon being used.
+
+    
+    //temp (for compilier)
+    public GameObject GetTarget()
+    {
+        return null;
+    }
+
+    public bool GetSpottedPlayer()
+    {
+        return false;
+    }
+
+    /*// Reference to the current weapon being used.
 	[SerializeField] private Weapon _CurrentWeapon = null;
 
 	// The ParticleSystem to be instantiated upon hitting an object.
@@ -285,6 +298,6 @@ public class AIWeaponController : MonoBehaviour
 		return SpottedPlayer;
 	}
 
-
+    */
 
 }

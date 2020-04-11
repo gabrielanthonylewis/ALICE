@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UnityEngine.UI;
+using ALICE.Weapon;
 
 // The WeaponController script provides/give access to (through input and references) all of the functionallity to operate the current weapon.
 // This includes reloading, changing the firing mode, aiming, tilting, throwing grenades, switching weapons etc.
@@ -9,6 +9,13 @@ public class WeaponController : MonoBehaviour
 	// Reference to the current weapon being used.
 	[SerializeField] private Weapon	_CurrentWeapon = null;
 
+
+    // temp (for compiler)
+    public void SetCurrentWeapon(Weapon weapon)
+    {
+        _CurrentWeapon = weapon;
+    }
+    /*
 	// The ParticleSystem to be instantiated upon a bullet hitting an object.
 	[SerializeField] private ParticleSystem ObjectHitParticle;
 
@@ -462,10 +469,10 @@ public class WeaponController : MonoBehaviour
 		Vector3 pos = this.transform.position;
 
 		_CurrentWeapon.FireBullet (randomVector, pos, forward, HitMarker);
-	}
+	}*/
 
-	#region bin
-	/*
+    #region bin
+    /*
 	 * 	// Actually fires a bullet (ray) playing all the appropriate animations and sounds.
 	private void FireBullet(Vector3 randomVector)
 	{
@@ -543,6 +550,6 @@ public class WeaponController : MonoBehaviour
 		_CurrentWeapon.ManipulateClip (-1);
 
 	}*/
-	#endregion
+    #endregion
 
 }

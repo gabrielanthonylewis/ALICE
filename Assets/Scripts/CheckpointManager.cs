@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using ALICE.Utils.Animation;
+using ALICE.Weapon.Gun;
 
 namespace ALICE.Checkpoint
 {
@@ -99,7 +100,7 @@ namespace ALICE.Checkpoint
                 enemyPositions = this.GetEnemyPositions(),
                 playerPosition = this.player.position,
                 playerRotation = this.player.rotation,
-                ammo = Inventory.instance.GetAmmo(Weapon.WeaponType.AssaultRifle),
+                ammo = Inventory.instance.GetAmmo(WeaponType.AssaultRifle),
                 grenades = Inventory.instance.GetGrenades(),
                 health = this.player.GetComponent<Destructable>().GetHealth(),
                 slowmo = this.player.GetComponent<SlowmoController>().GetRemainingTime()
@@ -134,7 +135,7 @@ namespace ALICE.Checkpoint
 
         private void LoadInventory()
         {
-            Inventory.instance.SetAmmo(Weapon.WeaponType.AssaultRifle, this.lastCheckPoint.ammo);
+            Inventory.instance.SetAmmo(WeaponType.AssaultRifle, this.lastCheckPoint.ammo);
             Inventory.instance.SetGrenades(this.lastCheckPoint.grenades);
         }
 
