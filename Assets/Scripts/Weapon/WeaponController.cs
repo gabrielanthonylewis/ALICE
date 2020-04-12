@@ -35,9 +35,6 @@ public class WeaponController : MonoBehaviour
         weapon.transform.localRotation = Quaternion.identity;
         weapon.transform.localPosition = Vector3.zero;
 
-        // Assign reference to the Player's animation component.
-        weapon.SetAnimation(mainCameraTransform.GetComponent<Animation>());
-
         // Set the weapon's children's layers to "GunLayer" so that the gun will not clip through objects (from the player's perspective).
         Transform[] children = weapon.GetComponentsInChildren<Transform>();
         for (int j = 0; j < children.Length; j++)
@@ -109,6 +106,21 @@ public class WeaponController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.X))
             this.DropWeapon(_CurrentWeapon);
+
+        if(Input.GetKey(KeyCode.Mouse0))
+            this.Attack();
+    }
+
+    private void Attack()
+    {
+        if (_CurrentWeapon == null)
+            return;
+
+        // Can we "pull the trigger" or are we currently doing something? 
+        if (_CurrentWeapon.IsBusy())
+            return;
+
+        _CurrentWeapon.OnFireInput();
     }
 
     /*
@@ -398,25 +410,6 @@ public class WeaponController : MonoBehaviour
             }
         }
 
-        // Shoot gun (if not busy and the Player actually has a gun).
-        if (_CurrentWeapon != null && _CurrentWeapon.GetAnimation ().isPlaying == false && !fireRou)
-        {
-            // If the weapon is fully automatic then Fire the weapon constantly whilst the Mouse is down.
-            if (_CurrentWeapon.GetFireType () == Weapon.FireType.Auto) 
-            {
-                if (Input.GetKey (KeyCode.Mouse0)) 
-                        StartCoroutine ("Fire");
-            } 
-            // else If the weapon can only be shot once on Mouse Down (Note that the burst is activated on mouse down). 
-            else if (_CurrentWeapon.GetFireType () == Weapon.FireType.Single 
-                        || _CurrentWeapon.GetFireType () == Weapon.FireType.Sniper  
-                        || _CurrentWeapon.GetFireType() == Weapon.FireType.Burst) 
-            {
-                if (Input.GetKeyDown (KeyCode.Mouse0)) 
-                        StartCoroutine ("Fire");
-            }
-        }
-
         // If not firing then turn off the Muzzle Flash.
         if (!Input.GetKey (KeyCode.Mouse0) && _CurrentWeapon && !fireRou) 
         {
@@ -546,87 +539,6 @@ public class WeaponController : MonoBehaviour
         Vector3 pos = this.transform.position;
 
         _CurrentWeapon.FireBullet (randomVector, pos, forward, HitMarker);
-    }*/
-
-    #region bin
-    /*
-        * 	// Actually fires a bullet (ray) playing all the appropriate animations and sounds.
-    private void FireBullet(Vector3 randomVector)
-    {
-        // Activate and Play the Muzzle Flash as the gun is now firing.
-        _CurrentWeapon.GetMuzzleFlashPS ().Play ();
-        _CurrentWeapon.GetMuzzleFlashPS ().enableEmission = true;
-        _CurrentWeapon.GetMuzzleFlashPS().playbackSpeed = 1f *(1f / Time.timeScale);
-        _CurrentWeapon.GetMuzzleFlashGO ().SetActive (true);
-
-        // Different recoil animation played depending on if Aiming or not and if the Sniper is being used (more dramatic).
-        if (ads)
-        {
-            _CurrentWeapon.GetAnimation()["recoilads"].speed = (1f / Time.timeScale);
-            _CurrentWeapon.GetAnimation ().Play ("recoilads");
-        }
-        else if(_CurrentWeapon.GetWeaponType() != Weapon.WeaponType.Sniper)
-        {
-            _CurrentWeapon.GetAnimation()["recoil"].speed = (1f / Time.timeScale);
-            _CurrentWeapon.GetAnimation ().Play ("recoil");
-
-        }
-        else if(_CurrentWeapon.GetWeaponType() == Weapon.WeaponType.Sniper)
-        {
-            _CurrentWeapon.GetAnimation()["recoilSniper"].speed = (1f / Time.timeScale);
-            _CurrentWeapon.GetAnimation ().Play ("recoilSniper");
-        }
-
-        // Stores the forward vector (optimisation and cleanliness)
-        Vector3 forward = this.transform.forward;
-        // Stores the Player's position (optimisation and cleanliness)
-        Vector3 pos = this.transform.position;
-
-        // If the weapon has a scope then fire it from that position.
-        if(_CurrentWeapon.GetScope() != null)
-        {
-            forward =_CurrentWeapon.GetScope().gameObject.transform.forward;
-            pos = _CurrentWeapon.GetScope().transform.position;
-        }
-
-        // Dramatically bigger offset if the sniper is being used (hip fire).
-        if(_CurrentWeapon.GetWeaponType() == Weapon.WeaponType.Sniper)
-            randomVector *= 10f;
-
-        // If the weapon has a projectile to fire then Fire it.
-        if(_CurrentWeapon.transform.GetComponent<FireObject>())
-            _CurrentWeapon.transform.GetComponent<FireObject>().Fire(pos);
-
-        // If the gun fires a ray bullet...
-        if (_CurrentWeapon.GetUseRayBullet() == true) {
-            // If the bullet hits an object add a force and deal damage.
-            RaycastHit hit;
-            if (Physics.Raycast (pos, forward + randomVector, out hit, 25f)) {
-                // Spawn a hit particle (if one exists) where the bullet hit (on the surface).
-                if (ObjectHitParticle)
-                    Instantiate (ObjectHitParticle, hit.point - transform.forward * 0.02f, Quaternion.Euler (hit.normal));
-
-                // Add a forwards force (from the players perspective) to the hit object.
-                if (hit.transform.GetComponent<Rigidbody> ())
-                    hit.transform.GetComponent<Rigidbody> ().AddForce (this.transform.forward * 10000f * Time.deltaTime);
-
-                if (hit.transform.GetComponent<Destructable> ()) {
-                    // Increase the size of the HitMarker to show that an object with health has been hit.
-                    HitMarker.sizeDelta = new Vector2 (10, 10);
-                    // Deal damage to the hit object (depends on the damage of the weapon).
-                    hit.transform.GetComponent<Destructable> ().ManipulateHealth (_CurrentWeapon.GetDamage ());
-                }
-            }
-        }
-
-        // Play firing sound clip.
-        _AudioSource.clip = AssaultRifleFireSound;
-        _AudioSource.Play();
-
-        // Reduce the current gun's clip by 1.
-        _CurrentWeapon.ManipulateClip (-1);
-
-    }*/
-        #endregion
-
     }
+    */
+}

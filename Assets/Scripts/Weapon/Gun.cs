@@ -25,13 +25,43 @@ namespace ALICE.Weapon.Gun
 
         private int currentClip = 0; // remainingAmmo
 
+        private void Start()
+        {
+            // Current Clip fully loaded.
+            this.SetRemainingAmmo(clipSize);
+        }
+
+        public override void OnFireInput()
+        {
+            base.OnFireInput();
+
+            Debug.Log("FIRE");
+        }
+
         public override void OnDropped()
         {
             base.OnDropped();
 
             // If the weapon is dropped then firing has stopped so stop & hide the Muzzle Flash.
-            MuzzleFlash.Stop();
-            muzzleflashgo.SetActive(false);
+            this.EnableMuzzleFlash(false);
+        }
+
+        private void SetRemainingAmmo(int ammo)
+        {
+            this.currentClip = ammo;
+
+            if (ClipDisplayText)
+                ClipDisplayText.text = currentClip.ToString();
+        }
+
+        private void EnableMuzzleFlash(bool enable)
+        {
+            if (enable)
+                MuzzleFlash.Play();
+            else
+                MuzzleFlash.Stop();
+
+            muzzleflashgo.SetActive(enable);
         }
     }
 }

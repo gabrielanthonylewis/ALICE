@@ -9,15 +9,20 @@ namespace ALICE.Weapon
     public class Weapon: MonoBehaviour
     {
         [SerializeField] private int _Damage = 1;
+        private Animation _Animation = null;
         private float _range = 35.0f;
 
-        // temp(for compiler)
-        public void SetAnimation(Animation anim)
-        {
-          //  _Animation = anim;
-        }
-
         public virtual void OnDropped() { }
+        public virtual void OnFireInput() { }
+
+        public bool IsBusy()
+        {
+            // todo: Should have animator on the weapon itself
+            if (this._Animation == null)
+                this._Animation = Camera.main.transform.GetComponent<Animation>();
+
+            return this._Animation.isPlaying;
+        }
 
         /*
         // todo: put in AIWeaponController?
@@ -26,19 +31,9 @@ namespace ALICE.Weapon
         // is AI? (decided automatically).
         private bool isAI = false;
 
-        // todo: Put in controlelr
-        [SerializeField] private Animation _Animation = null;
-
-        
-     
-        
-
         // todo: controller
         // Dependent on whether the Reload Coroutine is being run.
         private bool reloadRou = false;
-
-
-
 
         void Start()
         {
@@ -50,18 +45,7 @@ namespace ALICE.Weapon
                 isAI = true;
             else
                 isAI = false;
-
-            // Hide MuzzleFlash
-            muzzleflashgo.SetActive(false);
-            MuzzleFlash.enableEmission = false;
-
-            // Current Clip fully loaded.
-            currentClip = clipSize;
-
-            // Display the current clip.
-            if (ClipDisplayText)
-                ClipDisplayText.text = currentClip.ToString();
-
+               
             // Manipulate ammo (because we initially load the clip).
             if (isAI)
                 AIManipulateAmmo(-clipSize);
