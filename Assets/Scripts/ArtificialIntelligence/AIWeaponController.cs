@@ -35,7 +35,7 @@ public class AIWeaponController : MonoBehaviour
 	[SerializeField] private string TargetTag = "Player";
 
 	// Sound clip played when shooting.
-	[SerializeField] private AudioClip AssaultRifleFireSound;
+	[SerializeField] private AudioClip fireSound;
 
 	// Sound clip played when reloading.
 	[SerializeField] private AudioClip ReloadSound;
@@ -58,13 +58,13 @@ public class AIWeaponController : MonoBehaviour
 	private bool stop = false;
 
 	// Reference to the AudioSource component (optimisation purposes).
-	private AudioSource _AudioSource = null;
+	private AudioSource audioSource = null;
 
 	
 	void Start () 
 	{
 		// Get reference to AudioSource component (optimisation purposes).
-		_AudioSource = this.GetComponent<AudioSource> ();
+		audioSource = this.GetComponent<AudioSource> ();
 
 		// If a Player target hasn't been set then find one.
 		if(Player == null)
@@ -199,14 +199,14 @@ public class AIWeaponController : MonoBehaviour
 			if (currentWeapon.AIGetAmmo() > 0)
 			{
 				// Play Reload sound.
-				if(_AudioSource)
+				if(audioSource)
 				{
-					_AudioSource.clip = ReloadSound;
+					audioSource.clip = ReloadSound;
 					
-					if(_AudioSource.isPlaying == false)
+					if(audioSource.isPlaying == false)
 					{
-						if(_AudioSource.enabled == true)
-							_AudioSource.Play();
+						if(audioSource.enabled == true)
+							audioSource.Play();
 					}
 				}
 
@@ -235,12 +235,12 @@ public class AIWeaponController : MonoBehaviour
 				this.GetComponent<Animation> ().Play ("recoil");
 
 				// Play shoot/fire sound.
-				if(_AudioSource)
+				if(audioSource)
 				{
-					_AudioSource.clip = AssaultRifleFireSound;
+					audioSource.clip = fireSound;
 					
-					if(_AudioSource.enabled == true)
-						_AudioSource.Play();
+					if(audioSource.enabled == true)
+						audioSource.Play();
 				}
 
 				// Activate/Show muzzle flash.

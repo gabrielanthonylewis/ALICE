@@ -8,9 +8,9 @@ namespace ALICE.Weapon
     // It also stores the information such as the damage of the bullets and the current bullets in the clip.
     public class Weapon: MonoBehaviour
     {
-        [SerializeField] private int damage = 1;
+        [SerializeField] protected int damage = 1;
         private Animation _Animation = null; // todo: use Animator
-        private float range = 35.0f;
+        protected float range = 35.0f;
 
         public virtual void OnDropped() { }
         public virtual void OnFireInput() { }
@@ -271,94 +271,7 @@ namespace ALICE.Weapon
             }
 
         }
-
-        // Actually fires a bullet (ray) playing all the appropriate animations and sounds.
-        public void FireBullet(Vector3 randomVector, Vector3 rayPos, Vector3 forward, RectTransform HitMarker)
-        {
-            //To update ammo UI
-            this.ManipulateClip(0);
-
-            // Activate and Play the Muzzle Flash as the gun is now firing.
-            if (GetClip() > 0)
-            {
-                this.GetMuzzleFlashPS().Play();
-                this.GetMuzzleFlashPS().enableEmission = true;
-                this.GetMuzzleFlashPS().playbackSpeed = 1f * (1f / Time.timeScale);
-                this.GetMuzzleFlashGO().SetActive(true);
-            }
-
-            // If the weapon has a scope then fire it from that position.
-            if (this.GetScope() != null)
-            {
-                forward = this.GetScope().gameObject.transform.forward;
-                rayPos = this.GetScope().transform.position;
-            }
-
-            // Dramatically bigger offset if the sniper is being used (hip fire).
-            if (this.GetWeaponType() == Weapon.GunType.Sniper)
-                randomVector *= 10f;
-
-            // If the weapon has a projectile to fire then Fire it.
-            if (GetClip() > 0)
-            {
-                if (this.transform.GetComponent<FireObject>())
-                    this.transform.GetComponent<FireObject>().Fire(rayPos);
-            }
-
-
-            // If the gun fires a ray bullet...
-            if (this.GetUseRayBullet() == true)
-            {
-                // If the bullet hits an object add a force and deal damage.
-                RaycastHit hit;
-                if (Physics.Raycast(rayPos, forward + randomVector, out hit, range))
-                {
-                    // Spawn a hit particle (if one exists) where the bullet hit (on the surface).
-
-                    //UNCOMMENT
-                    //if (ObjectHitParticle)
-                    //	Instantiate (ObjectHitParticle, hit.point - transform.forward * 0.02f, Quaternion.Euler (hit.normal));
-
-
-                    if (powerup == PowerUp.Shrink)
-                    {
-                        if (Shrink(hit.transform, 1f))
-                            HitMarker.sizeDelta = new Vector2(10, 10);
-                        return;
-                    }
-                    if (powerup == PowerUp.Transparency)
-                    {
-                        if (ReduceAlpha(hit.transform, 0.05f))
-                            HitMarker.sizeDelta = new Vector2(10, 10);
-                        return;
-                    }
-
-                    if (GetClip() <= 0)
-                        return;
-
-                    // Add a forwards force (from the players perspective) to the hit object.
-                    if (hit.transform.tag != "Enemy")
-                    {
-                        if (hit.transform.GetComponent<Rigidbody>())
-                            hit.transform.GetComponent<Rigidbody>().AddForce(this.transform.forward * 10000f * Time.deltaTime);
-                    }
-
-                    if (hit.transform.GetComponent<Destructable>())
-                    {
-                        // Increase the size of the HitMarker to show that an object with health has been hit.
-                        HitMarker.sizeDelta = new Vector2(10, 10);
-
-                        // Deal damage to the hit object (depends on the damage of the weapon).
-                        hit.transform.GetComponent<Destructable>().ManipulateHealth(this.GetDamage());
-                    }
-                }
-            }
-
-            // Reduce the current gun's clip by 1.
-            if (GetClip() > 0)
-                this.ManipulateClip(-1);
-        }
-
+              
         private bool Shrink(Transform target, float val)
         {
             if (target.tag != "Resizable")
