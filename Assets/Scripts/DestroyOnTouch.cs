@@ -14,7 +14,7 @@ public class DestroyOnTouch : MonoBehaviour
         if (!other.GetComponent<Destructable>())
             return;
 
-        // If the object has an animation component and it's not playing return.
+        // If the object has an _Animation component and it's not playing return.
         // (Used in the case of the boss level where damage should only be dealt when the water rises)
         if (this.GetComponent<Animation>() && !this.GetComponent<Animation>().isPlaying)
 			return;

@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// The OpenGate script plays an animation to open a "gate" type object when the function is called.
+// The OpenGate script plays an _Animation to open a "gate" type object when the function is called.
 public class OpenGate : MonoBehaviour 
 {
-	// Open gate animation.
+	// Open gate _Animation.
 	[SerializeField] private Animation OpenGateAnim;
 
 	// Is the gate opened?

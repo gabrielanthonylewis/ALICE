@@ -166,23 +166,23 @@ public class Inventory
         return null;
     }
 
-    public int GetAmmo(WeaponType weaponType)
+    public int GetAmmo(GunType weaponType)
 	{	// Calculates how many full clips there are..
 		if(_ClipsUIText)
             _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
         switch (weaponType) {
-		case WeaponType.AssaultRifle:
+		case GunType.AssaultRifle:
 			return _AR_ammo;
 			
-		case WeaponType.Pistol:
+		case GunType.Pistol:
 			Debug.Log("Inventory.cs/GetAmmo(): TODO - Pistol Case");
 			break;
 			
-		case WeaponType.Shotgun:
+		case GunType.Shotgun:
 			Debug.Log("Inventory.cs/GetAmmo(): TODO - Shotgun Case");
 			break;
 			
-		case WeaponType.Sniper:
+		case GunType.Sniper:
 			Debug.Log("Inventory.cs/SetAmmo(): TODO - Sniper Case");
 			return _AR_ammo;
 			
@@ -195,10 +195,10 @@ public class Inventory
 		return -1;
 	}
 
-	public void SetAmmo(WeaponType weaponType, int value)
+	public void SetAmmo(GunType weaponType, int value)
 	{
 		switch (weaponType) {
-		case WeaponType.AssaultRifle:
+		case GunType.AssaultRifle:
 
 			_AR_ammo = value;
 
@@ -208,15 +208,15 @@ public class Inventory
 
 			break;
 			
-		case WeaponType.Pistol:
+		case GunType.Pistol:
 			Debug.Log("Inventory.cs/SetAmmo(): TODO - Pistol Case");
 			break;
 			
-		case WeaponType.Shotgun:
+		case GunType.Shotgun:
 			Debug.Log("Inventory.cs/SetAmmo(): TODO - Shotgun Case");
 			break;
 			
-		case WeaponType.Sniper:
+		case GunType.Sniper:
 			Debug.Log("Inventory.cs/SetAmmo(): TODO - Sniper Case");
 
 			_AR_ammo = value;
@@ -240,12 +240,12 @@ public class Inventory
         _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
     }
 
-	public void ManipulateAmmo(WeaponType weaponType, int value)
+	public void ManipulateAmmo(GunType weaponType, int value)
 	{
 
 		switch (weaponType) 
 		{
-			case WeaponType.AssaultRifle:
+			case GunType.AssaultRifle:
 		
 				_AR_ammo += value;
 
@@ -260,15 +260,15 @@ public class Inventory
 
 				break;
 				
-			case WeaponType.Pistol:
+			case GunType.Pistol:
 				Debug.Log("Inventory.cs/ManupulateAmmo(): TODO - Pistol Case");
 				break;
 				
-			case WeaponType.Shotgun:
+			case GunType.Shotgun:
 				Debug.Log("Inventory.cs/ManupulateAmmo(): TODO - Shotgun Case");
 				break;
 				
-			case WeaponType.Sniper:
+			case GunType.Sniper:
 				//Debug.Log("Inventory.cs/ManupulateAmmo(): TODO - Sniper Case");
 
 				_AR_ammo += value;

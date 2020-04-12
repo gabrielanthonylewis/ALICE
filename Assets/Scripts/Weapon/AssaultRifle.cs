@@ -10,10 +10,10 @@ namespace ALICE.Weapon.Gun
     public class AssaultRifle : Gun
     {
         // todo: Move to weapon as all weapons should allow the powerup?
-        [SerializeField] private ParticleSystem _ShrinkPS = null;
-        [SerializeField] private ParticleSystem _TransparencyPS = null;
-        [SerializeField] private AudioClip _PowerUpSound = null;
-        private PowerUp _PowerUp = PowerUp.NULL;
+        [SerializeField] private ParticleSystem shrinkPS = null;
+        [SerializeField] private ParticleSystem transparencyPS = null;
+        [SerializeField] private AudioClip powerupSound = null;
+        private PowerUp powerup = PowerUp.NULL;
 
     }
 }

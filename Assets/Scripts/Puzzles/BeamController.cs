@@ -14,7 +14,7 @@ public class BeamController : MonoBehaviour
 	// (optional) If true then the beam is automatically active and cannot be deactivated. 
 	[SerializeField] private bool constantlyOn;
 
-	// (optional) If true then an "action" will be performed (an animation or event). 
+	// (optional) If true then an "action" will be performed (an _Animation or event). 
 	[SerializeField] private bool _PerformAction = false;
 
 	// (optional) Animation to be played when powered.
@@ -60,7 +60,7 @@ public class BeamController : MonoBehaviour
 
 	public void PerformAction()
 	{
-		// If there is an animation, play it.
+		// If there is an _Animation, play it.
 		if (_ActionAnimation)
 			_ActionAnimation.Play();
 

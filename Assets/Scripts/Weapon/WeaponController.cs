@@ -8,14 +8,8 @@ using System;
 public class WeaponController : MonoBehaviour
 {
 	// Reference to the current weapon being used.
-	[SerializeField] private Weapon	_CurrentWeapon = null;
+	[SerializeField] private Weapon	currentWeapon = null;
 
-
-    // temp (for compiler)
-    public void SetCurrentWeapon(Weapon weapon)
-    {
-        _CurrentWeapon = weapon;
-    }
 
     public void PickupWeapon(Weapon weapon)
     {
@@ -41,27 +35,27 @@ public class WeaponController : MonoBehaviour
             children[j].gameObject.layer = 10;
 
         // Automatically equip weapon if the Player hasn't already got a weapon equipted.
-        if (this._CurrentWeapon == null)
+        if (this.currentWeapon == null)
             EquipWeapon(weapon);
     }
 
     public Weapon EquipWeapon(Weapon weapon)
     {
         // If the gun is already active then return.
-        if (this._CurrentWeapon == weapon)
-            return this._CurrentWeapon;
+        if (this.currentWeapon == weapon)
+            return this.currentWeapon;
 
-        if(this._CurrentWeapon != null)
-            this._CurrentWeapon.gameObject.SetActive(false);
+        if(this.currentWeapon != null)
+            this.currentWeapon.gameObject.SetActive(false);
 
         // Activate/show new gun, parenting and positioning the gun in the correct position.
-        this._CurrentWeapon = weapon;
-        this._CurrentWeapon.transform.SetParent(Camera.main.transform);
-        this._CurrentWeapon.transform.localRotation = Quaternion.identity;
-        this._CurrentWeapon.transform.localPosition = Vector3.zero;
-        this._CurrentWeapon.transform.gameObject.SetActive(true);
+        this.currentWeapon = weapon;
+        this.currentWeapon.transform.SetParent(Camera.main.transform);
+        this.currentWeapon.transform.localRotation = Quaternion.identity;
+        this.currentWeapon.transform.localPosition = Vector3.zero;
+        this.currentWeapon.transform.gameObject.SetActive(true);
         
-        return this._CurrentWeapon;
+        return this.currentWeapon;
     }
 
     private bool DropWeapon(Weapon weapon)
@@ -94,10 +88,10 @@ public class WeaponController : MonoBehaviour
         // Sets the weapon's layer to "PickUp" so that the player can pick it back up.
         weapon.gameObject.layer = 8;
 
-        this._CurrentWeapon.OnDropped();
+        this.currentWeapon.OnDropped();
 
         // If another gun is in the Inventory then equip it, otherwise will be null.
-        this._CurrentWeapon = Inventory.instance.DropWeapon(weapon);
+        this.currentWeapon = Inventory.instance.DropWeapon(weapon);
         
         return true;
     }
@@ -105,7 +99,7 @@ public class WeaponController : MonoBehaviour
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.X))
-            this.DropWeapon(_CurrentWeapon);
+            this.DropWeapon(currentWeapon);
 
         if(Input.GetKey(KeyCode.Mouse0))
             this.Attack();
@@ -113,14 +107,14 @@ public class WeaponController : MonoBehaviour
 
     private void Attack()
     {
-        if (_CurrentWeapon == null)
+        if (currentWeapon == null)
             return;
 
         // Can we "pull the trigger" or are we currently doing something? 
-        if (_CurrentWeapon.IsBusy())
+        if (currentWeapon.IsBusy())
             return;
 
-        _CurrentWeapon.OnFireInput();
+        currentWeapon.OnFireInput();
     }
 
     /*
@@ -171,7 +165,7 @@ public class WeaponController : MonoBehaviour
         _AudioSource = this.GetComponent<AudioSource> ();
 
         // Add the current weapon to the Inventory.
-        Inventory.instance.AddWeapon (_CurrentWeapon.gameObject);
+        Inventory.instance.AddWeapon (currentWeapon.gameObject);
     }
 
     void Update ()
@@ -222,7 +216,7 @@ public class WeaponController : MonoBehaviour
         }
 
         // Attempt to change weapon depending on the key pressed (1, 2 or 3).
-        if (_CurrentWeapon && !_CurrentWeapon.GetAnimation ().isPlaying) 
+        if (currentWeapon && !currentWeapon.GetAnimation ().isPlaying) 
         {
             if (Input.GetKeyDown (KeyCode.Alpha1) || Input.GetKeyDown (KeyCode.Alpha2) || Input.GetKeyDown (KeyCode.Alpha3))
                 fireRou = false;
@@ -237,27 +231,27 @@ public class WeaponController : MonoBehaviour
 
         // Switch Power Up
         if (Input.GetKeyDown (KeyCode.T))
-            _CurrentWeapon.SwitchPowerUp();
+            currentWeapon.SwitchPowerUp();
 
         // Return the HitMarker's size back to it's orginal size. 
         HitMarker.sizeDelta = Vector2.Lerp(HitMarker.sizeDelta, new Vector2(4,4), Time.deltaTime * 20f);
 
         // If there is no Current weapon then weapon behaviour is not possible so return.
-        if(_CurrentWeapon == null) return;
+        if(currentWeapon == null) return;
                
         // Melee
         if (Input.GetKeyDown (KeyCode.V)) 
         {
             // If idle then can melee.
-            if(_CurrentWeapon.GetAnimation ().isPlaying == false)
+            if(currentWeapon.GetAnimation ().isPlaying == false)
             {
                 fireRou = false;
 
-                // Play a different Melee animation depending on whether or not the current weapon is a Sniper.
-                if(_CurrentWeapon.GetWeaponType() == Weapon.WeaponType.Sniper)
-                    _CurrentWeapon.GetAnimation ().Play ("meleeSniper");
+                // Play a different Melee _Animation depending on whether or not the current weapon is a Sniper.
+                if(currentWeapon.GetWeaponType() == Weapon.GunType.Sniper)
+                    currentWeapon.GetAnimation ().Play ("meleeSniper");
                 else
-                    _CurrentWeapon.GetAnimation ().Play ("melee");
+                    currentWeapon.GetAnimation ().Play ("melee");
 
                 // If an object is hit then apply force and reduce it's health.
                 RaycastHit hit;
@@ -282,37 +276,37 @@ public class WeaponController : MonoBehaviour
         }
 
         // If weapon exists and NOT reloading...
-        if (_CurrentWeapon != null && !_CurrentWeapon.GetAnimation ().IsPlaying ("reloadads") 
+        if (currentWeapon != null && !currentWeapon.GetAnimation ().IsPlaying ("reloadads") 
             // (Allows the player the aim down sight whilst shooting the gun but not when doing anything else like changing fire mode)
-            && ((_CurrentWeapon.GetAnimation ().IsPlaying ("recoil") || (_CurrentWeapon.GetAnimation ().IsPlaying ("recoilads"))
-                || !_CurrentWeapon.GetAnimation().isPlaying)))
+            && ((currentWeapon.GetAnimation ().IsPlaying ("recoil") || (currentWeapon.GetAnimation ().IsPlaying ("recoilads"))
+                || !currentWeapon.GetAnimation().isPlaying)))
         {
             // Start/Stop Aiming Down the Gun's Sight depending on the current state.
             if (Input.GetKeyDown (KeyCode.Mouse1))
             {
                 ads = !ads;
 
-                // Play animation forwards/backwards depending on the current state.
+                // Play _Animation forwards/backwards depending on the current state.
                 if (ads == true)
                 {
-                    _CurrentWeapon.GetAnimation () ["ads"].speed = 1;
-                    _CurrentWeapon.GetAnimation () ["adsSniper"].speed = 1;
+                    currentWeapon.GetAnimation () ["ads"].speed = 1;
+                    currentWeapon.GetAnimation () ["adsSniper"].speed = 1;
                 }
                 else
                 {
-                    _CurrentWeapon.GetAnimation () ["ads"].speed = -1;
-                    _CurrentWeapon.GetAnimation () ["adsSniper"].speed = -1;
+                    currentWeapon.GetAnimation () ["ads"].speed = -1;
+                    currentWeapon.GetAnimation () ["adsSniper"].speed = -1;
                 }
 
                 // If the current weapon is a sniper then activate the Scope.
-                if(_CurrentWeapon.GetWeaponType() == Weapon.WeaponType.Sniper)
+                if(currentWeapon.GetWeaponType() == Weapon.GunType.Sniper)
                 {
-                    _CurrentWeapon.GetScope().SetActive(ads);	
-                    _CurrentWeapon.GetAnimation ().Play ("adsSniper");	
+                    currentWeapon.GetScope().SetActive(ads);	
+                    currentWeapon.GetAnimation ().Play ("adsSniper");	
                 }
                 else
                 {
-                    _CurrentWeapon.GetAnimation ().Play ("ads");
+                    currentWeapon.GetAnimation ().Play ("ads");
                 }
             }
 
@@ -323,11 +317,11 @@ public class WeaponController : MonoBehaviour
 
                 // Play backwards/forwards depending on the current tilt state.
                 if (tiltRight == true)
-                    _CurrentWeapon.GetAnimation () ["tiltRight"].speed = 1;
+                    currentWeapon.GetAnimation () ["tiltRight"].speed = 1;
                 else
-                    _CurrentWeapon.GetAnimation () ["tiltRight"].speed = -1;
+                    currentWeapon.GetAnimation () ["tiltRight"].speed = -1;
 
-                _CurrentWeapon.GetAnimation ().Play ("tiltRight");
+                currentWeapon.GetAnimation ().Play ("tiltRight");
             }
 
             // Tilt Left OR back to the normal state depending on current tilt state.
@@ -337,22 +331,22 @@ public class WeaponController : MonoBehaviour
 
                 // Play backwards/forwards depending on the current tilt state.
                 if (tiltLeft == true)
-                    _CurrentWeapon.GetAnimation () ["tiltLeft"].speed = 1;
+                    currentWeapon.GetAnimation () ["tiltLeft"].speed = 1;
                 else
-                    _CurrentWeapon.GetAnimation () ["tiltLeft"].speed = -1;
+                    currentWeapon.GetAnimation () ["tiltLeft"].speed = -1;
 
-                _CurrentWeapon.GetAnimation ().Play ("tiltLeft");
+                currentWeapon.GetAnimation ().Play ("tiltLeft");
             }
 
             // Change the Fire Type (Fully Automatic, Burst and Single shot).
             if(Input.GetKeyDown(KeyCode.B) && !fireRou) // if not firing
             {
                 // Functionallity only availiable for the Assault Rifle.
-                if(_CurrentWeapon.GetWeaponType() == Weapon.WeaponType.AssaultRifle)
+                if(currentWeapon.GetWeaponType() == Weapon.GunType.AssaultRifle)
                 {
                     _AudioSource.clip = FireRateSound;
                     _AudioSource.Play();
-                    _CurrentWeapon.NextFireType();
+                    currentWeapon.NextFireType();
 
                     // Aiming is interupted so set it to false.
                     ads = false;
@@ -362,69 +356,69 @@ public class WeaponController : MonoBehaviour
         }
 
         // Reload on command or automatically if the clip is empty (and if there is enough ammo).
-        if (_CurrentWeapon != null && (Input.GetKeyDown (KeyCode.R) || (_CurrentWeapon.GetClip() <= 0)) && Inventory.instance.GetAmmo(_CurrentWeapon.GetWeaponType()) > 0 && !_CurrentWeapon.GetAnimation ().isPlaying) 
+        if (currentWeapon != null && (Input.GetKeyDown (KeyCode.R) || (currentWeapon.GetClip() <= 0)) && Inventory.instance.GetAmmo(currentWeapon.GetWeaponType()) > 0 && !currentWeapon.GetAnimation ().isPlaying) 
         {
-            // If has reloaded then play the animation and sound.
-            if (_CurrentWeapon.Reload() && !_CurrentWeapon.GetAnimation().isPlaying) 
+            // If has reloaded then play the _Animation and sound.
+            if (currentWeapon.Reload() && !currentWeapon.GetAnimation().isPlaying) 
             {
                 fireRou = false;
 
-                // Different reload animation played depending on if Aim down sight or if current weapon is sniper.
+                // Different reload _Animation played depending on if Aim down sight or if current weapon is sniper.
                 if (ads)
-                    _CurrentWeapon.GetAnimation ().Play ("reloadads");
-                else if(_CurrentWeapon.GetWeaponType() != Weapon.WeaponType.Sniper)
-                    _CurrentWeapon.GetAnimation ().Play ("reload");
-                else if(_CurrentWeapon.GetWeaponType() == Weapon.WeaponType.Sniper)
-                    _CurrentWeapon.GetAnimation ().Play ("reloadSniper");
+                    currentWeapon.GetAnimation ().Play ("reloadads");
+                else if(currentWeapon.GetWeaponType() != Weapon.GunType.Sniper)
+                    currentWeapon.GetAnimation ().Play ("reload");
+                else if(currentWeapon.GetWeaponType() == Weapon.GunType.Sniper)
+                    currentWeapon.GetAnimation ().Play ("reloadSniper");
 
                 _AudioSource.clip = ReloadSound;
                 _AudioSource.Play();
 
                 // Turn off muzzle flash as not firing.
-                _CurrentWeapon.GetMuzzleFlashGO().SetActive (false);
+                currentWeapon.GetMuzzleFlashGO().SetActive (false);
             }
         }
 
-        // If the clip is empty then hide the MuzzleFlash (as not firing).
-        if (_CurrentWeapon != null && _CurrentWeapon.GetClip() <= 0) 
+        // If the clip is empty then hide the muzzleFlashPS (as not firing).
+        if (currentWeapon != null && currentWeapon.GetClip() <= 0) 
         {
-            _CurrentWeapon.GetMuzzleFlashGO().SetActive (false);
+            currentWeapon.GetMuzzleFlashGO().SetActive (false);
         //	return;
         }
 
         // Play Muzzle flash when firing.
         if (Input.GetKeyDown (KeyCode.Mouse0)) 
         {
-            if (_CurrentWeapon != null && _CurrentWeapon.GetClip() > 0) 
+            if (currentWeapon != null && currentWeapon.GetClip() > 0) 
             {
-                if(_CurrentWeapon.GetAnimation ().isPlaying == false && !fireRou)
+                if(currentWeapon.GetAnimation ().isPlaying == false && !fireRou)
                 {
-                    if (!_CurrentWeapon.GetMuzzleFlashPS ().isPlaying) 
+                    if (!currentWeapon.GetMuzzleFlashPS ().isPlaying) 
                     {
-                        _CurrentWeapon.GetMuzzleFlashPS ().Play ();
-                        _CurrentWeapon.GetMuzzleFlashPS().playbackSpeed = 1f *(1f / Time.timeScale); // Counters the Slomo effect.
-                        _CurrentWeapon.GetMuzzleFlashPS ().enableEmission = true;
-                        _CurrentWeapon.GetMuzzleFlashGO ().SetActive (true);
+                        currentWeapon.GetMuzzleFlashPS ().Play ();
+                        currentWeapon.GetMuzzleFlashPS().playbackSpeed = 1f *(1f / Time.timeScale); // Counters the Slomo effect.
+                        currentWeapon.GetMuzzleFlashPS ().enableEmission = true;
+                        currentWeapon.GetMuzzleFlashGO ().SetActive (true);
                     }
                 }
             }
         }
 
         // If not firing then turn off the Muzzle Flash.
-        if (!Input.GetKey (KeyCode.Mouse0) && _CurrentWeapon && !fireRou) 
+        if (!Input.GetKey (KeyCode.Mouse0) && currentWeapon && !fireRou) 
         {
-            _CurrentWeapon.GetMuzzleFlashGO().SetActive (false);
+            currentWeapon.GetMuzzleFlashGO().SetActive (false);
         }
     }
 
     public void SetCurrentWeapon (Weapon weapon)
     {
-        _CurrentWeapon = weapon;
+        currentWeapon = weapon;
     }
 
     public Weapon GetCurrentWeapon()
     {
-        return _CurrentWeapon;
+        return currentWeapon;
     }
 
     IEnumerator Fire()
@@ -434,7 +428,7 @@ public class WeaponController : MonoBehaviour
         // Offset of the ray creating a Recoil effect.
         Vector3 randomVector = Vector3.zero;
 
-        if (_CurrentWeapon.GetFireType () == Weapon.FireType.Burst) 
+        if (currentWeapon.GetFireType () == Weapon.FireType.Burst) 
         {
             // Shoot a burst of 4 bullets.
             for (int i = 0; i < 4; i++) 
@@ -446,20 +440,20 @@ public class WeaponController : MonoBehaviour
                 // Fire a bullet.
                 FireBullet(randomVector);
 
-                // Wait for animation to finish before firing again.
+                // Wait for _Animation to finish before firing again.
                 do
                 {
                     yield return null;
                 } 
-                while ( _CurrentWeapon.GetAnimation ().isPlaying );
+                while ( currentWeapon.GetAnimation ().isPlaying );
 
                 // Stop emitting the Muzzle Flash (as not firing).
-                _CurrentWeapon.GetMuzzleFlashPS ().enableEmission = false;
-                _CurrentWeapon.GetMuzzleFlashPS().playbackSpeed = 1f *(1f / Time.timeScale);
+                currentWeapon.GetMuzzleFlashPS ().enableEmission = false;
+                currentWeapon.GetMuzzleFlashPS().playbackSpeed = 1f *(1f / Time.timeScale);
             }
 
             // Turn off the Muzzle Flash as completely done with it.
-            _CurrentWeapon.GetMuzzleFlashGO ().SetActive (false);
+            currentWeapon.GetMuzzleFlashGO ().SetActive (false);
         } 
         else 
         {
@@ -471,33 +465,33 @@ public class WeaponController : MonoBehaviour
             FireBullet(randomVector);
 
             // Stop emitting the Muzzle Flash (as not firing).
-            _CurrentWeapon.GetMuzzleFlashPS ().enableEmission = false;
-            _CurrentWeapon.GetMuzzleFlashPS().playbackSpeed = 1f *(1f / Time.timeScale);
+            currentWeapon.GetMuzzleFlashPS ().enableEmission = false;
+            currentWeapon.GetMuzzleFlashPS().playbackSpeed = 1f *(1f / Time.timeScale);
 
-            if (_CurrentWeapon && _CurrentWeapon.GetFireType () == Weapon.FireType.Auto) 
+            if (currentWeapon && currentWeapon.GetFireType () == Weapon.FireType.Auto) 
             {
-                // Wait for animation to finish before firing again.
+                // Wait for _Animation to finish before firing again.
                 do
                 {
                     yield return null;
                 }
-                while (_CurrentWeapon && _CurrentWeapon.GetAnimation ().isPlaying );
+                while (currentWeapon && currentWeapon.GetAnimation ().isPlaying );
             }
-            else if(_CurrentWeapon.GetFireType() == Weapon.FireType.Sniper)
+            else if(currentWeapon.GetFireType() == Weapon.FireType.Sniper)
             { 
                 // Wait an extended period of time (game balance reasons).
                 yield return new WaitForSeconds (1.5f *(1f / Time.timeScale));
             }
             // No delay for Assault rifle but delay for a single shot pistol for example.
-            else if (_CurrentWeapon.GetWeaponType() != Weapon.WeaponType.AssaultRifle 
-                        && _CurrentWeapon.GetFireType () == Weapon.FireType.Single)
+            else if (currentWeapon.GetWeaponType() != Weapon.GunType.AssaultRifle 
+                        && currentWeapon.GetFireType () == Weapon.FireType.Single)
             {
                 yield return new WaitForSeconds (0.1f *(1f / Time.timeScale));
             }
 
             // Turn off the Muzzle Flash as completely done with it.
-            if(_CurrentWeapon)
-                _CurrentWeapon.GetMuzzleFlashGO ().SetActive (false);
+            if(currentWeapon)
+                currentWeapon.GetMuzzleFlashGO ().SetActive (false);
         }
 
         fireRou = false;
@@ -507,27 +501,27 @@ public class WeaponController : MonoBehaviour
 
     private void FireBullet(Vector3 randomVector)
     {
-        // Different recoil animation played depending on if Aiming or not and if the Sniper is being used (more dramatic).
+        // Different recoil _Animation played depending on if Aiming or not and if the Sniper is being used (more dramatic).
         if (ads)
         {
-            _CurrentWeapon.GetAnimation()["recoilads"].speed = (1f / Time.timeScale);
-            _CurrentWeapon.GetAnimation ().Play ("recoilads");
+            currentWeapon.GetAnimation()["recoilads"].speed = (1f / Time.timeScale);
+            currentWeapon.GetAnimation ().Play ("recoilads");
         }
-        else if(_CurrentWeapon.GetWeaponType() != Weapon.WeaponType.Sniper)
+        else if(currentWeapon.GetWeaponType() != Weapon.GunType.Sniper)
         {
-            _CurrentWeapon.GetAnimation()["recoil"].speed = (1f / Time.timeScale);
-            _CurrentWeapon.GetAnimation ().Play ("recoil");
+            currentWeapon.GetAnimation()["recoil"].speed = (1f / Time.timeScale);
+            currentWeapon.GetAnimation ().Play ("recoil");
 
         }
-        else if(_CurrentWeapon.GetWeaponType() == Weapon.WeaponType.Sniper)
+        else if(currentWeapon.GetWeaponType() == Weapon.GunType.Sniper)
         {
-            _CurrentWeapon.GetAnimation()["recoilSniper"].speed = (1f / Time.timeScale);
-            _CurrentWeapon.GetAnimation ().Play ("recoilSniper");
+            currentWeapon.GetAnimation()["recoilSniper"].speed = (1f / Time.timeScale);
+            currentWeapon.GetAnimation ().Play ("recoilSniper");
         }
 
 
         // Play firing sound clip.
-        if (_CurrentWeapon != null && _CurrentWeapon.GetClip () > 0)
+        if (currentWeapon != null && currentWeapon.GetClip () > 0)
         {
             _AudioSource.clip = AssaultRifleFireSound;
             _AudioSource.Play ();
@@ -538,7 +532,7 @@ public class WeaponController : MonoBehaviour
         // Stores the Player's position (optimisation and cleanliness)
         Vector3 pos = this.transform.position;
 
-        _CurrentWeapon.FireBullet (randomVector, pos, forward, HitMarker);
+        currentWeapon.FireBullet (randomVector, pos, forward, HitMarker);
     }
     */
 }

@@ -10,7 +10,7 @@ public class RotationPuzzleParent : MonoBehaviour
 	// The attempted sequence made by the player.
 	[SerializeField] private int[] attempt = new int[3];
 
-	// Reference to an animation that will be played upon completion.
+	// Reference to an _Animation that will be played upon completion.
 	[SerializeField] private Animation PlayAnim;
 
 
@@ -40,7 +40,7 @@ public class RotationPuzzleParent : MonoBehaviour
 				correct = false;
 		}
 
-		// If the attempted sequence is correct then play the animation (open door).
+		// If the attempted sequence is correct then play the _Animation (open door).
 		if(correct) 
 		{
 			if(PlayAnim)

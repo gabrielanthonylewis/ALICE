@@ -8,12 +8,13 @@ namespace ALICE.Weapon
     // It also stores the information such as the damage of the bullets and the current bullets in the clip.
     public class Weapon: MonoBehaviour
     {
-        [SerializeField] private int _Damage = 1;
-        private Animation _Animation = null;
-        private float _range = 35.0f;
+        [SerializeField] private int damage = 1;
+        private Animation _Animation = null; // todo: use Animator
+        private float range = 35.0f;
 
         public virtual void OnDropped() { }
         public virtual void OnFireInput() { }
+
 
         public bool IsBusy()
         {
@@ -48,34 +49,34 @@ namespace ALICE.Weapon
                
             // Manipulate ammo (because we initially load the clip).
             if (isAI)
-                AIManipulateAmmo(-clipSize);
+                AIManipulateAmmo(-magSize);
             else
-                Inventory.instance.ManipulateAmmo(_WeaponType, -clipSize);
+                Inventory.instance.ManipulateAmmo(gunType, -magSize);
         }
 
         // Change fire type to the next one, reseting after single shot.
         public void NextFireType()
         {
-            // Play appropriate animation correseponding to the current Fire Type
-            if ((int)_FireType == 1)
+            // Play appropriate _Animation correseponding to the current Fire Type
+            if ((int)fireType == 1)
             {
                 this.GetAnimation()["FireRateToSingle"].speed = -1;
                 this.GetAnimation().Play("FireRateToSingle");
                 this.GetAnimation()["fireRateToSemi"].speed = -1;
                 this.GetAnimation().Play("fireRateToSemi");
-                _FireType = (FireType)((int)_FireType + 1);
+                fireType = (FireType)((int)fireType + 1);
             }
-            else if ((int)_FireType == 2)
+            else if ((int)fireType == 2)
             {
                 this.GetAnimation()["fireRateToSemi"].speed = 1;
                 this.GetAnimation().Play("fireRateToSemi");
-                _FireType = (FireType)((int)_FireType + 1);
+                fireType = (FireType)((int)fireType + 1);
             }
-            else if ((int)_FireType == 3)
+            else if ((int)fireType == 3)
             {
                 this.GetAnimation()["FireRateToSingle"].speed = 1;
                 this.GetAnimation().Play("FireRateToSingle");
-                _FireType = (FireType)((int)_FireType - 2);
+                fireType = (FireType)((int)fireType - 2);
             }
 
         }
@@ -93,49 +94,49 @@ namespace ALICE.Weapon
             }
 
             // Return if clip is full or not empty.
-            if (!(currentClip < clipSize || currentClip <= 0))
+            if (!(remainingAmmo < magSize || remainingAmmo <= 0))
                 return false;
 
-            switch (_WeaponType)
+            switch (gunType)
             {
 
-                case WeaponType.AssaultRifle:
+                case GunType.AssaultRifle:
 
                     // If bullets still in clip, add it back to the ammo.
-                    if (currentClip > 0)
-                        Inventory.instance.ManipulateAmmo(_WeaponType, +currentClip);
+                    if (remainingAmmo > 0)
+                        Inventory.instance.ManipulateAmmo(gunType, +remainingAmmo);
 
                     // If there is ammo, add it to the clip (even if can't fill).
-                    if (Inventory.instance.GetAmmo(_WeaponType) > 0)
+                    if (Inventory.instance.GetAmmo(gunType) > 0)
                     {
-                        if (Inventory.instance.GetAmmo(_WeaponType) < clipSize)
+                        if (Inventory.instance.GetAmmo(gunType) < magSize)
                         {
-                            currentClip = Inventory.instance.GetAmmo(_WeaponType);
-                            Inventory.instance.SetAmmo(_WeaponType, 0);
+                            remainingAmmo = Inventory.instance.GetAmmo(gunType);
+                            Inventory.instance.SetAmmo(gunType, 0);
                         }
                         else
                         {
-                            currentClip = clipSize;
-                            Inventory.instance.ManipulateAmmo(_WeaponType, -clipSize);
+                            remainingAmmo = magSize;
+                            Inventory.instance.ManipulateAmmo(gunType, -magSize);
                         }
 
                         // Update clip UI Text element.
-                        if (ClipDisplayText)
-                            ClipDisplayText.text = currentClip.ToString();
+                        if (ammoText)
+                            ammoText.text = remainingAmmo.ToString();
 
                     }
                     break;
 
-                case WeaponType.Pistol:
+                case GunType.Pistol:
                     Debug.Log("Weapon.cs/Reload(): TODO - Pistol Case");
                     break;
 
-                case WeaponType.Shotgun:
+                case GunType.Shotgun:
                     Debug.Log("Weapon.cs/Reload(): TODO - Shotgun Case");
                     break;
 
                 default:
-                    Debug.Log("Weapon.cs/Reload(): TODO - WeaponType");
+                    Debug.Log("Weapon.cs/Reload(): TODO - GunType");
                     break;
 
             }
@@ -148,22 +149,22 @@ namespace ALICE.Weapon
             reloadRou = true;
 
             // Deactivate muzzle flash.
-            muzzleflashgo.SetActive(false);
+            muzzleFlashGO.SetActive(false);
 
-            // Play Reload animation and wait for it to be complete.
+            // Play Reload _Animation and wait for it to be complete.
             _Animation.Play("reload");
             yield return new WaitForSeconds(_Animation["reload"].length);
 
             // Update clip and AI Ammo (taking into account the case where AI ammo cannot fill the clip).
-            if (AiAmmo < clipSize)
+            if (AiAmmo < magSize)
             {
-                currentClip = AiAmmo;
+                remainingAmmo = AiAmmo;
                 AiAmmo = 0;
             }
             else
             {
-                currentClip = clipSize;
-                AiAmmo -= clipSize;
+                remainingAmmo = magSize;
+                AiAmmo -= magSize;
             }
 
             reloadRou = false;
@@ -184,24 +185,24 @@ namespace ALICE.Weapon
             _Animation = anim;
         }
 
-        public WeaponType GetWeaponType()
+        public GunType GetWeaponType()
         {
-            return _WeaponType;
+            return gunType;
         }
 
 
         public int GetClip()
         {
-            return currentClip;
+            return remainingAmmo;
         }
 
         public void ManipulateClip(int value)
         {
-            currentClip += value;
+            remainingAmmo += value;
 
             // Update clip UI text element.
-            if (ClipDisplayText)
-                ClipDisplayText.text = currentClip.ToString();
+            if (ammoText)
+                ammoText.text = remainingAmmo.ToString();
         }
 
         public void AIManipulateAmmo(int value)
@@ -218,17 +219,17 @@ namespace ALICE.Weapon
 
         public FireType GetFireType()
         {
-            return _FireType;
+            return fireType;
         }
 
         public int GetDamage()
         {
-            return _Damage;
+            return damage;
         }
 
         public GameObject GetScope()
         {
-            return _Scope;
+            return scopeGO;
         }
 
         public Vector3 GetPickUpPosition()
@@ -238,7 +239,7 @@ namespace ALICE.Weapon
 
         public bool GetUseRayBullet()
         {
-            return useRayBullet;
+            return useProjectiles;
         }
 
         public void SwitchPowerUp()
@@ -246,26 +247,26 @@ namespace ALICE.Weapon
             if (!_PowerUpCapable)
                 return;
 
-            _ShrinkPS.gameObject.SetActive(false);
-            _TransparencyPS.gameObject.SetActive(false);
+            shrinkPS.gameObject.SetActive(false);
+            transparencyPS.gameObject.SetActive(false);
 
-            if (_PowerUp == PowerUp.NULL)
+            if (powerup == PowerUp.NULL)
             {
-                _PowerUp = PowerUp.Shrink;
-                _ShrinkPS.gameObject.SetActive(true);
+                powerup = PowerUp.Shrink;
+                shrinkPS.gameObject.SetActive(true);
                 return;
             }
 
-            if (_PowerUp == PowerUp.Shrink)
+            if (powerup == PowerUp.Shrink)
             {
-                _PowerUp = PowerUp.Transparency;
-                _TransparencyPS.gameObject.SetActive(true);
+                powerup = PowerUp.Transparency;
+                transparencyPS.gameObject.SetActive(true);
                 return;
             }
 
-            if (_PowerUp == PowerUp.Transparency)
+            if (powerup == PowerUp.Transparency)
             {
-                _PowerUp = PowerUp.NULL;
+                powerup = PowerUp.NULL;
                 return;
             }
 
@@ -294,7 +295,7 @@ namespace ALICE.Weapon
             }
 
             // Dramatically bigger offset if the sniper is being used (hip fire).
-            if (this.GetWeaponType() == Weapon.WeaponType.Sniper)
+            if (this.GetWeaponType() == Weapon.GunType.Sniper)
                 randomVector *= 10f;
 
             // If the weapon has a projectile to fire then Fire it.
@@ -310,7 +311,7 @@ namespace ALICE.Weapon
             {
                 // If the bullet hits an object add a force and deal damage.
                 RaycastHit hit;
-                if (Physics.Raycast(rayPos, forward + randomVector, out hit, _range))
+                if (Physics.Raycast(rayPos, forward + randomVector, out hit, range))
                 {
                     // Spawn a hit particle (if one exists) where the bullet hit (on the surface).
 
@@ -319,13 +320,13 @@ namespace ALICE.Weapon
                     //	Instantiate (ObjectHitParticle, hit.point - transform.forward * 0.02f, Quaternion.Euler (hit.normal));
 
 
-                    if (_PowerUp == PowerUp.Shrink)
+                    if (powerup == PowerUp.Shrink)
                     {
                         if (Shrink(hit.transform, 1f))
                             HitMarker.sizeDelta = new Vector2(10, 10);
                         return;
                     }
-                    if (_PowerUp == PowerUp.Transparency)
+                    if (powerup == PowerUp.Transparency)
                     {
                         if (ReduceAlpha(hit.transform, 0.05f))
                             HitMarker.sizeDelta = new Vector2(10, 10);
@@ -369,11 +370,11 @@ namespace ALICE.Weapon
                )
             {
                 // Play power up sound to indicate no more can be done.
-                if (_PowerUpSound)
+                if (powerupSound)
                 {
                     if (Camera.main.GetComponent<AudioSource>())
                     {
-                        Camera.main.GetComponent<AudioSource>().clip = _PowerUpSound;
+                        Camera.main.GetComponent<AudioSource>().clip = powerupSound;
                         Camera.main.GetComponent<AudioSource>().Play();
                     }
                 }
@@ -400,11 +401,11 @@ namespace ALICE.Weapon
             {
                 target.GetComponent<Collider>().enabled = false;
                 // Play power up sound to indicate no more can be done.
-                if (_PowerUpSound)
+                if (powerupSound)
                 {
                     if (Camera.main.GetComponent<AudioSource>())
                     {
-                        Camera.main.GetComponent<AudioSource>().clip = _PowerUpSound;
+                        Camera.main.GetComponent<AudioSource>().clip = powerupSound;
                         Camera.main.GetComponent<AudioSource>().Play();
                     }
                 }

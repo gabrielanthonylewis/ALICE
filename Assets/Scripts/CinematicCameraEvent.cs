@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine.Events;
 
-// The CinematicCameraEvent script is to be soley used by an animation event. 
+// The CinematicCameraEvent script is to be soley used by an _Animation event. 
 public class CinematicCameraEvent : MonoBehaviour
 {
 	// The event to be invoked.

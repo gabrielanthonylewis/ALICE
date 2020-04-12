@@ -20,7 +20,7 @@ public class AIWeaponController : MonoBehaviour
     }
 
     /*// Reference to the current weapon being used.
-	[SerializeField] private Weapon _CurrentWeapon = null;
+	[SerializeField] private Weapon currentWeapon = null;
 
 	// The ParticleSystem to be instantiated upon hitting an object.
 	[SerializeField] private ParticleSystem ObjectHitParticle;
@@ -96,7 +96,7 @@ public class AIWeaponController : MonoBehaviour
 				targets = GameObject.FindGameObjectsWithTag(TargetTag);
 
 			// Hide muzzle flash.
-			_CurrentWeapon.GetMuzzleFlashGO().SetActive (false);
+			currentWeapon.GetMuzzleFlashGO().SetActive (false);
 		
 			// Randomly pick a new target from the possible targets. (done 50 times in the case the target is null)
 			for(int i = 0; i < 50; i++)
@@ -158,7 +158,7 @@ public class AIWeaponController : MonoBehaviour
 		// If none of the rays have hit an object, return and hide the muzzle flash (stopped firing).
 		if (!hitBottomBool && !hitMidBool && !hitTopBool) 
 		{
-			_CurrentWeapon.GetMuzzleFlashGO().SetActive (false);
+			currentWeapon.GetMuzzleFlashGO().SetActive (false);
 			return;
 		}
 		// Else if ANY of the three rays have hit the player/a target.
@@ -180,23 +180,23 @@ public class AIWeaponController : MonoBehaviour
 		{
 			//TODO NEXT BUILD // ATEMPT TO SEE TARGET BY CROUCHING OR LEANING
 			
-			_CurrentWeapon.GetMuzzleFlashGO().SetActive (false);
+			currentWeapon.GetMuzzleFlashGO().SetActive (false);
 			return;
 		}
 
 		// If the Muzzle Flash is not playing then activate it.
-		if (!_CurrentWeapon.GetMuzzleFlashPS().isPlaying) {
+		if (!currentWeapon.GetMuzzleFlashPS().isPlaying) {
 			
-			_CurrentWeapon.GetMuzzleFlashPS().Play ();
-			_CurrentWeapon.GetMuzzleFlashPS().enableEmission = true;
-			_CurrentWeapon.GetMuzzleFlashGO().SetActive (true);
+			currentWeapon.GetMuzzleFlashPS().Play ();
+			currentWeapon.GetMuzzleFlashPS().enableEmission = true;
+			currentWeapon.GetMuzzleFlashGO().SetActive (true);
 		}
 
 		// If the weapon's clip is empty.
-		if (_CurrentWeapon.GetClip() <= 0) 
+		if (currentWeapon.GetClip() <= 0) 
 		{
 			// If there is Ammo left then reload.
-			if (_CurrentWeapon.AIGetAmmo() > 0)
+			if (currentWeapon.AIGetAmmo() > 0)
 			{
 				// Play Reload sound.
 				if(_AudioSource)
@@ -211,15 +211,15 @@ public class AIWeaponController : MonoBehaviour
 				}
 
 				//Reload weapon.
-				_CurrentWeapon.Reload();
+				currentWeapon.Reload();
 			}
 
 			// Activate/show Muzzle flash.
-			_CurrentWeapon.GetMuzzleFlashGO().SetActive (false);
+			currentWeapon.GetMuzzleFlashGO().SetActive (false);
 			return;
 		}
 
-		// If no animation is playing (weapon is idle/not being used)
+		// If no _Animation is playing (weapon is idle/not being used)
 		if (this.GetComponent<Animation> ().isPlaying == false)
 		{
 			// Recoil effect implemented using random vector to be used as an offset.
@@ -231,7 +231,7 @@ public class AIWeaponController : MonoBehaviour
 			RaycastHit hit;
 			if (Physics.Raycast (this.transform.position, this.transform.forward + randomVector, out hit, _SightRange)) 
 			{
-				// Play recoil animation
+				// Play recoil _Animation
 				this.GetComponent<Animation> ().Play ("recoil");
 
 				// Play shoot/fire sound.
@@ -244,10 +244,10 @@ public class AIWeaponController : MonoBehaviour
 				}
 
 				// Activate/Show muzzle flash.
-				_CurrentWeapon.GetMuzzleFlashGO().SetActive (true);
+				currentWeapon.GetMuzzleFlashGO().SetActive (true);
 
 				// Reduce clip size by 1 bullet.
-				_CurrentWeapon.ManipulateClip(-1);
+				currentWeapon.ManipulateClip(-1);
 
 
                 // Apply force to the hit object (if it has a Rigidbody component).
@@ -260,7 +260,7 @@ public class AIWeaponController : MonoBehaviour
 			
 				// Reduce object's health by 1 (if it has a Destructable component).
 				if (hit.transform.GetComponent<Destructable> ())
-					hit.transform.GetComponent<Destructable> ().ManipulateHealth (_CurrentWeapon.GetDamage());
+					hit.transform.GetComponent<Destructable> ().ManipulateHealth (currentWeapon.GetDamage());
 
 			}
 			
@@ -271,7 +271,7 @@ public class AIWeaponController : MonoBehaviour
 	// On destruction deactivate the Muzzle Flash.
 	void OnDestroy ()
 	{
-		_CurrentWeapon.GetMuzzleFlashGO().SetActive (false);
+		currentWeapon.GetMuzzleFlashGO().SetActive (false);
 	}
 
 	// Wait a random amount of time before reacting.

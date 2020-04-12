@@ -82,7 +82,7 @@ public class Destructable : MonoBehaviour
 
 		Health -= val;
 
-		// If there is a Hit animation clip then play it.
+		// If there is a Hit _Animation clip then play it.
 		if (HitAnim) 
 		{
 			this.GetComponent<Animation> ().clip = HitAnim;
@@ -145,7 +145,7 @@ public class Destructable : MonoBehaviour
 			Time.timeScale = 0.4f;
 			Time.fixedDeltaTime = (Time.fixedDeltaTime * 0.4f);
 
-			// Set the cameras postion to the objects position (so the animation plays at the right position)
+			// Set the cameras postion to the objects position (so the _Animation plays at the right position)
 			Cam.transform.GetChild(0).transform.position = this.transform.position;
 
 			// Show crusor so that the player can use the UI Buttons.

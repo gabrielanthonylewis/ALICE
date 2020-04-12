@@ -2,8 +2,8 @@
 
 namespace ALICE.Weapon.Gun
 {
-    // todo: do i actually need this?
-    public enum WeaponType
+    // todo: do i actually need this as I have different classes soo?
+    public enum GunType
     {
         NULL, AssaultRifle, Shotgun, Pistol, Sniper
     };
@@ -15,20 +15,20 @@ namespace ALICE.Weapon.Gun
             NULL, Single, Auto, Burst, Sniper
         };
 
-        [SerializeField] private int clipSize = 30; // magSize
-        [SerializeField] private ParticleSystem MuzzleFlash = null;
-        [SerializeField] private GameObject muzzleflashgo = null;
-        [SerializeField] private TextMesh ClipDisplayText = null;
-        [SerializeField] private WeaponType _WeaponType = WeaponType.NULL;
-        [SerializeField] private FireType _FireType = FireType.NULL;
-        [SerializeField] private bool useRayBullet = true; // hasProjectileAmmo
+        [SerializeField] private int magSize = 30;
+        [SerializeField] private ParticleSystem muzzleFlashPS = null;
+        [SerializeField] private TextMesh ammoText = null;
+        [SerializeField] private GunType gunType = GunType.NULL;
+        [SerializeField] private FireType fireType = FireType.NULL;
+        [SerializeField] private bool useProjectiles = true;
 
-        private int currentClip = 0; // remainingAmmo
+        private int remainingAmmo = 0;
+
 
         private void Start()
         {
             // Current Clip fully loaded.
-            this.SetRemainingAmmo(clipSize);
+            this.SetRemainingAmmo(this.magSize);
         }
 
         public override void OnFireInput()
@@ -48,20 +48,20 @@ namespace ALICE.Weapon.Gun
 
         private void SetRemainingAmmo(int ammo)
         {
-            this.currentClip = ammo;
+            this.remainingAmmo = ammo;
 
-            if (ClipDisplayText)
-                ClipDisplayText.text = currentClip.ToString();
+            if (this.ammoText)
+                this.ammoText.text = this.remainingAmmo.ToString();
         }
 
         private void EnableMuzzleFlash(bool enable)
         {
             if (enable)
-                MuzzleFlash.Play();
+                this.muzzleFlashPS.Play();
             else
-                MuzzleFlash.Stop();
+                this.muzzleFlashPS.Stop();
 
-            muzzleflashgo.SetActive(enable);
+            this.muzzleFlashPS.gameObject.SetActive(enable);
         }
     }
 }
