@@ -2,18 +2,19 @@
 
 namespace ALICE.Weapon.Gun
 {
+    // todo: do i actually need this?
     public enum WeaponType
     {
         NULL, AssaultRifle, Shotgun, Pistol, Sniper
     };
-
-    public enum FireType
-    {
-        NULL, Single, Auto, Burst, Sniper
-    };
-
+       
     public class Gun : Weapon
     {
+        private enum FireType
+        {
+            NULL, Single, Auto, Burst, Sniper
+        };
+
         [SerializeField] private int clipSize = 30; // magSize
         [SerializeField] private ParticleSystem MuzzleFlash = null;
         [SerializeField] private GameObject muzzleflashgo = null;
