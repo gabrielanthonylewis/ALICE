@@ -82,7 +82,7 @@ public class Inventory
         _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
     }
 
-	public bool EquipWeapon(int slotIndex)
+	public Weapon EquipWeapon(int slotIndex)
 	{
         WeaponController weaponController = GameObject.FindObjectOfType<WeaponController>();
         return weaponController.EquipWeapon(Guns[slotIndex]);
@@ -116,85 +116,57 @@ public class Inventory
 
     public bool HasWeapon(Weapon weapon)
     {
+        if (weapon == null)
+            return false;
+
         for (int i = 0; i < Guns.Length; i++)
-            if (Guns[i] == weapon) return true;
+        {
+            if (Guns[i] == weapon)
+                return true;
+        }
 
         return false;
     }	
 	
-	public bool DropWeapon(Weapon weapon)
+	public Weapon DropWeapon(Weapon weapon)
 	{
-		// If the weapon doesn't exist, it can't be dropped, so return false.
-		if(weapon == null) return false;
+		if(weapon == null)
+            return null;
 
-		// If a reference to the Main Camera is non-existant then get it (optimisation reasons).
-		if (_MainCamera == null)
-			_MainCamera = Camera.main.transform;
+        for (int i = 0; i < Guns.Length; i++)
+        {
+            if (Guns[i] == weapon)
+            {
+                Guns[i] = null;
 
-		// Check guns in the Inventory for the corresponding weapon.
-		int idx = -1; // "-1" acts as out of range.
-		for(int i = 0; i < Guns.Length; i++)
-		{
-			if(Guns[i] == weapon)
-			{
-				// Deparent the weapon and re-enable the colliders and physics.
-				weapon.transform.SetParent(null);
-			
-				if(weapon.transform.GetComponent<BoxCollider>())
-					weapon.transform.GetComponent<BoxCollider>().enabled = true;
+                // If another gun is in the Inventory then equip it.
+                return this.EquipNextHeldGun(i);
+            }
+        }
 
-				if(weapon.transform.GetComponent<Rigidbody>())
-				{
-					weapon.transform.GetComponent<Rigidbody>().isKinematic = false;
-					// "Throw" weapon forwards.
-					weapon.transform.GetComponent<Rigidbody>().AddForce(_MainCamera.forward * 10000f * Time.deltaTime);
-				}
-
-				// Set the weapon's children's layers to 0 (default) so that the player cannot see the weapon through objects.
-				Transform[] children = weapon.GetComponentsInChildren<Transform>();
-				for(int j = 0; j < children.Length; j++)
-				{
-					children[j].gameObject.layer = 0;
-				}
-
-				// Sets the weapon's layer to "PickUp" so that the player can pick it back up.
-				weapon.gameObject.layer = 8;
-
-				// Inventory slot is empty.
-				Guns[i] = null;
-
-				// Keep track of the slot emptied.
-				idx = i;
-			}
-			
-		}
-
-		// If no corresponding gun was found in the Inventory then return false (couldn't drop). 
-		if(idx == -1)
-			return false;
-
-		// If another gun is in the Inventory then equip it.
-		for(int i = 0; i < Guns.Length; i++)
-		{
-			if(Guns[i] != null)
-			{
-				// possible TODO ?: Move all guns to the left/right.. (fill in the gap in the array)
-				EquipWeapon(i);
-				return true;
-			}
-		}
-
-		// If no reference to the player's WeaponController component is present, get it. 
-		if (_WeaponController == null)
-			_WeaponController = _MainCamera.GetComponent<WeaponController> ();
-
-		// No weapon was found in the Inventory.
-		_WeaponController.SetCurrentWeapon (null);
-		
-		return true;
+        return null;
 	}
 
-	public int GetAmmo(WeaponType weaponType)
+    private Weapon EquipNextHeldGun(int slotIndex)
+    {
+        // Check after
+        for (int i = slotIndex + 1; i < Guns.Length; i++)
+        {
+            if (Guns[i] != null)
+                return this.EquipWeapon(i);
+        }
+
+        // If not found loop around and check from start
+        for (int i = 0; i < slotIndex; i++)
+        {
+            if (Guns[i] != null)
+                return this.EquipWeapon(i);
+        }
+
+        return null;
+    }
+
+    public int GetAmmo(WeaponType weaponType)
 	{	// Calculates how many full clips there are..
 		if(_ClipsUIText)
             _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();

@@ -24,5 +24,13 @@ namespace ALICE.Weapon.Gun
 
         private int currentClip = 0; // remainingAmmo
 
+        public override void OnDropped()
+        {
+            base.OnDropped();
+
+            // If the weapon is dropped then firing has stopped so stop & hide the Muzzle Flash.
+            MuzzleFlash.Stop();
+            muzzleflashgo.SetActive(false);
+        }
     }
 }

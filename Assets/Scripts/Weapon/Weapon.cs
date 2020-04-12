@@ -16,7 +16,8 @@ namespace ALICE.Weapon
         {
           //  _Animation = anim;
         }
-        
+
+        public virtual void OnDropped() { }
 
         /*
         // todo: put in AIWeaponController?
@@ -185,23 +186,7 @@ namespace ALICE.Weapon
         }
 
         // Getter/Setter functions
-
-        public ParticleSystem GetMuzzleFlashPS()
-        {
-            if (MuzzleFlash == null)
-                Debug.LogError("Weapon.cs/GetMuzzleFlashPS(): MuzzleFlash variable == null");
-
-            return MuzzleFlash;
-        }
-
-        public GameObject GetMuzzleFlashGO()
-        {
-            if (muzzleflashgo == null)
-                Debug.LogError("Weapon.cs/GetMuzzleFlashGO(): muzzleflashgo variable == null");
-
-            return muzzleflashgo;
-        }
-
+         
         public Animation GetAnimation()
         {
             if (_Animation == null)
