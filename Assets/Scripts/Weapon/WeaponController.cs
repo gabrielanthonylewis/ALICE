@@ -39,14 +39,22 @@ public class WeaponController : MonoBehaviour
             EquipWeapon(weapon);
     }
 
+    private void OnHit()
+    {
+        hitMarker.sizeDelta = new Vector2(10, 10);
+    }
+
     public Weapon EquipWeapon(Weapon weapon)
     {
         // If the gun is already active then return.
         if (this.currentWeapon == weapon)
             return this.currentWeapon;
 
-        if(this.currentWeapon != null)
+        if (this.currentWeapon != null)
+        {
             this.currentWeapon.gameObject.SetActive(false);
+            this.currentWeapon.onHitEvent.RemoveListener(this.OnHit);
+        }
 
         // Activate/show new gun, parenting and positioning the gun in the correct position.
         this.currentWeapon = weapon;
@@ -54,7 +62,9 @@ public class WeaponController : MonoBehaviour
         this.currentWeapon.transform.localRotation = Quaternion.identity;
         this.currentWeapon.transform.localPosition = Vector3.zero;
         this.currentWeapon.transform.gameObject.SetActive(true);
-        
+
+        this.currentWeapon.onHitEvent.AddListener(this.OnHit);
+
         return this.currentWeapon;
     }
 
@@ -88,7 +98,9 @@ public class WeaponController : MonoBehaviour
         // Sets the weapon's layer to "PickUp" so that the player can pick it back up.
         weapon.gameObject.layer = 8;
 
-        this.currentWeapon.OnDropped();
+        weapon.onHitEvent.RemoveListener(this.OnHit);
+
+        weapon.OnDropped();
 
         // If another gun is in the Inventory then equip it, otherwise will be null.
         this.currentWeapon = Inventory.instance.DropWeapon(weapon);
@@ -103,6 +115,9 @@ public class WeaponController : MonoBehaviour
 
         if(Input.GetKey(KeyCode.Mouse0))
             this.Attack();
+
+        // Return the hitMarker's size back to it's orginal size. 
+        hitMarker.sizeDelta = Vector2.Lerp(hitMarker.sizeDelta, new Vector2(4, 4), Time.deltaTime * 20f);
     }
 
     private void Attack()
@@ -114,16 +129,12 @@ public class WeaponController : MonoBehaviour
         if (currentWeapon.IsBusy())
             return;
 
-        // todo: have onHit event on Weapon, so then I can change hitmarker here
-
         currentWeapon.OnFireInput();
     }
 
     /*
      * IEnumerator Fire()
     {
-        fireRou = true;
-
         // Offset of the ray creating a Recoil effect.
         Vector3 randomVector = Vector3.zero;
 
@@ -133,7 +144,7 @@ public class WeaponController : MonoBehaviour
             for (int i = 0; i < 4; i++) 
             {
                 // If not aiming down the sight add some recoil (less than if fully automatic).
-                if (!ads)
+                if (!isAiming)
                     randomVector = new Vector3 (Random.Range (-0.03f, 0.03f), Random.Range (-0.03f, 0.03f), Random.Range (-0.03f, 0.0f));
 
                 // Fire a bullet.
@@ -156,17 +167,7 @@ public class WeaponController : MonoBehaviour
         } 
         else 
         {
-            // If not aiming down the sight add some recoil (more than if burst fire).
-            if (!ads)
-                randomVector = new Vector3 (Random.Range (-0.05f, 0.05f), Random.Range (-0.05f, 0.05f), Random.Range (-0.05f, 0.05f));
-
-            // Fire a bullet.
-            FireBullet(randomVector);
-
-            // Stop emitting the Muzzle Flash (as not firing).
-            currentWeapon.GetMuzzleFlashPS ().enableEmission = false;
-            currentWeapon.GetMuzzleFlashPS().playbackSpeed = 1f *(1f / Time.timeScale);
-
+          
             if (currentWeapon && currentWeapon.GetFireType () == Weapon.FireType.Auto) 
             {
                 // Wait for _Animation to finish before firing again.
@@ -192,10 +193,6 @@ public class WeaponController : MonoBehaviour
             if(currentWeapon)
                 currentWeapon.GetMuzzleFlashGO ().SetActive (false);
         }
-
-        fireRou = false;
-
-        yield return null;
     }
      */
 
@@ -212,11 +209,8 @@ public class WeaponController : MonoBehaviour
     // GameObject to be instantiated upon throwing a grenade.
     [SerializeField] private GameObject _GrenadePrefab = null;
 
-    // Traks whether the player is aiming down their sight (ads) and/or tiliting left or right.
-    private bool ads = false, tiltRight = false, tiltLeft = false;
-
-    // Tracks whether or not the Fire Coroutine is being used.
-    private bool fireRou = false;
+    // Traks whether the player is tiliting left or right.
+    private bool tiltRight = false, tiltLeft = false;
 
     // A reference to a potential grenade to be thrown.
     private GameObject tempGrenade = null;
@@ -226,9 +220,6 @@ public class WeaponController : MonoBehaviour
 
     void Awake()
     {
-        if (!hitMarker)
-            hitMarker = GameObject.FindGameObjectWithTag("UI_HitMarker").GetComponent<RectTransform>();
-
         Inventory.instance.UpdateUI ();
     }
 
@@ -297,9 +288,6 @@ public class WeaponController : MonoBehaviour
         if (Input.GetKeyDown (KeyCode.T))
             currentWeapon.SwitchPowerUp();
 
-        // Return the hitMarker's size back to it's orginal size. 
-        hitMarker.sizeDelta = Vector2.Lerp(hitMarker.sizeDelta, new Vector2(4,4), Time.deltaTime * 20f);
-
         // If there is no Current weapon then weapon behaviour is not possible so return.
         if(currentWeapon == null) return;
                
@@ -335,7 +323,7 @@ public class WeaponController : MonoBehaviour
                 }
 
                 // Aiming is interupted so set it to false.
-                ads = false;
+                isAiming = false;
             }
         }
 
@@ -348,29 +336,29 @@ public class WeaponController : MonoBehaviour
             // Start/Stop Aiming Down the Gun's Sight depending on the current state.
             if (Input.GetKeyDown (KeyCode.Mouse1))
             {
-                ads = !ads;
+                isAiming = !isAiming;
 
                 // Play _Animation forwards/backwards depending on the current state.
-                if (ads == true)
+                if (isAiming == true)
                 {
-                    currentWeapon.GetAnimation () ["ads"].speed = 1;
+                    currentWeapon.GetAnimation () ["isAiming"].speed = 1;
                     currentWeapon.GetAnimation () ["adsSniper"].speed = 1;
                 }
                 else
                 {
-                    currentWeapon.GetAnimation () ["ads"].speed = -1;
+                    currentWeapon.GetAnimation () ["isAiming"].speed = -1;
                     currentWeapon.GetAnimation () ["adsSniper"].speed = -1;
                 }
 
                 // If the current weapon is a sniper then activate the Scope.
                 if(currentWeapon.GetWeaponType() == Weapon.GunType.Sniper)
                 {
-                    currentWeapon.GetScope().SetActive(ads);	
+                    currentWeapon.GetScope().SetActive(isAiming);	
                     currentWeapon.GetAnimation ().Play ("adsSniper");	
                 }
                 else
                 {
-                    currentWeapon.GetAnimation ().Play ("ads");
+                    currentWeapon.GetAnimation ().Play ("isAiming");
                 }
             }
 
@@ -413,7 +401,7 @@ public class WeaponController : MonoBehaviour
                     currentWeapon.NextFireType();
 
                     // Aiming is interupted so set it to false.
-                    ads = false;
+                    isAiming = false;
                 }
             }
 
@@ -428,7 +416,7 @@ public class WeaponController : MonoBehaviour
                 fireRou = false;
 
                 // Different reload _Animation played depending on if Aim down sight or if current weapon is sniper.
-                if (ads)
+                if (isAiming)
                     currentWeapon.GetAnimation ().Play ("reloadads");
                 else if(currentWeapon.GetWeaponType() != Weapon.GunType.Sniper)
                     currentWeapon.GetAnimation ().Play ("reload");
@@ -473,16 +461,6 @@ public class WeaponController : MonoBehaviour
         {
             currentWeapon.GetMuzzleFlashGO().SetActive (false);
         }
-    }
-
-    public void SetCurrentWeapon (Weapon weapon)
-    {
-        currentWeapon = weapon;
-    }
-
-    public Weapon GetCurrentWeapon()
-    {
-        return currentWeapon;
     }
     */
 }

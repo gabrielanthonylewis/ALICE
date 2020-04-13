@@ -122,7 +122,7 @@ public class PlayerRaycast : MonoBehaviour
 				// If ammo is rewarded, add the ammo to the Inventory and destroy the pick up object.
 				if(hit.transform.gameObject.GetComponent<PickUpBonus>().ammo > 0)
 				{
-					Inventory.instance.ManipulateAmmo(GunType.AssaultRifle, hit.transform.gameObject.GetComponent<PickUpBonus>().ammo);
+					Inventory.instance.ManipulateAmmo(hit.transform.gameObject.GetComponent<PickUpBonus>().ammo);
 					Destroy(hit.transform.gameObject);
 				}
 

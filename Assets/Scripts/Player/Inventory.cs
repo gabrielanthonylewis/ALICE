@@ -166,71 +166,22 @@ public class Inventory
         return null;
     }
 
-    public int GetAmmo(GunType weaponType)
-	{	// Calculates how many full clips there are..
+    public int GetAmmo()
+	{	
+        // Calculates how many full clips there are..
 		if(_ClipsUIText)
             _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
-        switch (weaponType) {
-		case GunType.AssaultRifle:
-			return _AR_ammo;
-			
-		case GunType.Pistol:
-			Debug.Log("Inventory.cs/GetAmmo(): TODO - Pistol Case");
-			break;
-			
-		case GunType.Shotgun:
-			Debug.Log("Inventory.cs/GetAmmo(): TODO - Shotgun Case");
-			break;
-			
-		case GunType.Sniper:
-			Debug.Log("Inventory.cs/SetAmmo(): TODO - Sniper Case");
-			return _AR_ammo;
-			
-			
-		default:
-			Debug.LogError("Inventory.cs/GetAmmo(): Invalid Weapon Type!");
-			return -1;
-		}
 
-		return -1;
+		return _AR_ammo;
 	}
 
-	public void SetAmmo(GunType weaponType, int value)
+	public void SetAmmo(int value)
 	{
-		switch (weaponType) {
-		case GunType.AssaultRifle:
+		_AR_ammo = value;
 
-			_AR_ammo = value;
-
-			// Enforce lower bound limit.
-			if(_AR_ammo < 0)
-				_AR_ammo = 0;
-
-			break;
-			
-		case GunType.Pistol:
-			Debug.Log("Inventory.cs/SetAmmo(): TODO - Pistol Case");
-			break;
-			
-		case GunType.Shotgun:
-			Debug.Log("Inventory.cs/SetAmmo(): TODO - Shotgun Case");
-			break;
-			
-		case GunType.Sniper:
-			Debug.Log("Inventory.cs/SetAmmo(): TODO - Sniper Case");
-
-			_AR_ammo = value;
-
-			// Enforce lower bound limit.
-			if(_AR_ammo < 0)
-				_AR_ammo = 0;
-
-			break;
-			
-		default:
-			Debug.LogError("Inventory.cs/SetAmmo(): Invalid Weapon Type!");
-			break;
-		}
+		// Enforce lower bound limit.
+		if(_AR_ammo < 0)
+			_AR_ammo = 0;
 
 		// Get reference to the Clips UI Text component.
 		if (!_ClipsUIText)
@@ -240,51 +191,18 @@ public class Inventory
         _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
     }
 
-	public void ManipulateAmmo(GunType weaponType, int value)
-	{
+	public void ManipulateAmmo(int value)
+	{		
+	    _AR_ammo += value;
 
-		switch (weaponType) 
-		{
-			case GunType.AssaultRifle:
-		
-				_AR_ammo += value;
+        _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
 
-                _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
-
-                // Enforce lower bound limit.
-                if (_AR_ammo < 0)
-				{
-					_AR_ammo = 0;
-					_ClipsUIText.text = "0"; // Ensure Clips Text displays 0.
-				}
-
-				break;
-				
-			case GunType.Pistol:
-				Debug.Log("Inventory.cs/ManupulateAmmo(): TODO - Pistol Case");
-				break;
-				
-			case GunType.Shotgun:
-				Debug.Log("Inventory.cs/ManupulateAmmo(): TODO - Shotgun Case");
-				break;
-				
-			case GunType.Sniper:
-				//Debug.Log("Inventory.cs/ManupulateAmmo(): TODO - Sniper Case");
-
-				_AR_ammo += value;
-
-				// Enforce lower bound limit.
-				if (_AR_ammo < 0)
-				{
-					_AR_ammo = 0;
-					_ClipsUIText.text = "0"; // Ensure Clips Text displays 0.
-				}
-				break;
-				
-			default:
-				Debug.LogError("Inventory.cs/ManupulateAmmo(): Invalid Weapon Type!");
-				break;
-		}
+        // Enforce lower bound limit.
+        if (_AR_ammo < 0)
+	    {
+		    _AR_ammo = 0;
+		    _ClipsUIText.text = "0"; // Ensure Clips Text displays 0.
+	    }
 
 		// Get reference to the Clips UI Text component.
 		if (!_ClipsUIText) 

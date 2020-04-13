@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace ALICE.Weapon
 {
@@ -11,6 +12,8 @@ namespace ALICE.Weapon
         [SerializeField] protected int damage = 1;
         private Animation _Animation = null; // todo: use Animator
         protected float range = 35.0f;
+
+        [HideInInspector] public UnityEvent onHitEvent = new UnityEvent();
 
         public virtual void OnDropped() { }
         public virtual void OnFireInput() { }
