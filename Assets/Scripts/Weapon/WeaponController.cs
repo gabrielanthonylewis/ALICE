@@ -116,6 +116,9 @@ public class WeaponController : MonoBehaviour
         if(Input.GetKey(KeyCode.Mouse0))
             this.Attack();
 
+        if(Input.GetKeyDown(KeyCode.R))
+            this.Reload();
+
         // Return the hitMarker's size back to it's orginal size. 
         hitMarker.sizeDelta = Vector2.Lerp(hitMarker.sizeDelta, new Vector2(4, 4), Time.deltaTime * 20f);
     }
@@ -126,10 +129,18 @@ public class WeaponController : MonoBehaviour
             return;
 
         // Can we "pull the trigger" or are we currently doing something? 
-        if (currentWeapon.IsBusy())
-            return;
+        //if (currentWeapon.IsBusy())
+         //   return;
 
         currentWeapon.OnFireInput();
+    }
+
+    private void Reload()
+    {
+        if(currentWeapon == null)
+            return;
+
+        currentWeapon.OnReloadInput();
     }
 
     /*
@@ -199,9 +210,6 @@ public class WeaponController : MonoBehaviour
     /*
     // The ParticleSystem to be instantiated upon a bullet hitting an object.
     [SerializeField] private ParticleSystem ObjectHitParticle;
-
-    // Reloading sound clip.
-    [SerializeField] private AudioClip ReloadSound;
 
     // Fire rate changing sound clip. 
     [SerializeField] private AudioClip FireRateSound;
@@ -405,30 +413,6 @@ public class WeaponController : MonoBehaviour
                 }
             }
 
-        }
-
-        // Reload on command or automatically if the clip is empty (and if there is enough ammo).
-        if (currentWeapon != null && (Input.GetKeyDown (KeyCode.R) || (currentWeapon.GetClip() <= 0)) && Inventory.instance.GetAmmo(currentWeapon.GetWeaponType()) > 0 && !currentWeapon.GetAnimation ().isPlaying) 
-        {
-            // If has reloaded then play the _Animation and sound.
-            if (currentWeapon.Reload() && !currentWeapon.GetAnimation().isPlaying) 
-            {
-                fireRou = false;
-
-                // Different reload _Animation played depending on if Aim down sight or if current weapon is sniper.
-                if (isAiming)
-                    currentWeapon.GetAnimation ().Play ("reloadads");
-                else if(currentWeapon.GetWeaponType() != Weapon.GunType.Sniper)
-                    currentWeapon.GetAnimation ().Play ("reload");
-                else if(currentWeapon.GetWeaponType() == Weapon.GunType.Sniper)
-                    currentWeapon.GetAnimation ().Play ("reloadSniper");
-
-                audioSource.clip = ReloadSound;
-                audioSource.Play();
-
-                // Turn off muzzle flash as not firing.
-                currentWeapon.GetMuzzleFlashGO().SetActive (false);
-            }
         }
 
         // If the clip is empty then hide the muzzleFlashPS (as not firing).

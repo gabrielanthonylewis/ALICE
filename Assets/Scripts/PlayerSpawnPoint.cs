@@ -6,6 +6,9 @@ public class PlayerSpawnPoint : MonoBehaviour
 	
     public GameObject SpawnPlayer()
     {
+        
+
+
         return this.SpawnPlayer(this.transform.position, this.transform.rotation);
     }
     
@@ -17,6 +20,9 @@ public class PlayerSpawnPoint : MonoBehaviour
             return null;
         }
 
-        return Instantiate(this.playerPrefab, position, rotation);
+        GameObject player = Instantiate(this.playerPrefab, position, rotation);
+        Inventory.instance.Initialise();
+        
+        return player;
     }
 }

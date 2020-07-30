@@ -16,9 +16,10 @@ namespace ALICE.Weapon.Gun
         [SerializeField] private FireType fireType = FireType.NULL;
         [SerializeField] private bool useProjectiles = true;
         [SerializeField] private AudioClip fireSound = null;
+        [SerializeField] private AudioClip reloadSound = null;
 
         private AudioSource audioSource;
-        private int remainingAmmo = 0;
+        private int remainingMagAmmo = 0;
         protected bool isFiring = false;
         protected bool isAiming = false;
         
@@ -30,45 +31,19 @@ namespace ALICE.Weapon.Gun
             this.SetRemainingAmmo(this.magSize);
         }
 
-        public override void OnFireInput()
-        {
-            base.OnFireInput();
-
-            if (this.isFiring)
-                return;
-
-            if (this.remainingAmmo > 0)
-                this.StartCoroutine(this.Fire());
-        }
-
         protected virtual Vector3 GetFireVector() { return Vector3.zero; }
         protected virtual Vector3 GetFireForwardVector() { return Vector3.zero; }
         protected virtual Vector3 GetFireRayPosition() { return Vector3.zero; }
-        protected virtual float GetFireDelay() { return 0.0f; } // todo: put on Gun.cs?
+        protected virtual float GetFireDelay() { return 0.0f; } // TODO: put on Gun.cs?
 
         private IEnumerator Fire()
         {
             this.isFiring = true;
 
-            // Todo: when animator is in call all the same name and use params to do ads etc. so wont need to differentiate between guns
-            // Different recoil _Animation played depending on if Aiming or not and if the Sniper is being used (more dramatic).
-            /*if (isAiming)
-            {
-                currentWeapon.GetAnimation()["recoilads"].speed = (1f / Time.timeScale);
-                currentWeapon.GetAnimation().Play("recoilads");
-            }
-            else if (currentWeapon.GetWeaponType() != Weapon.GunType.Sniper)
-            {
-                currentWeapon.GetAnimation()["recoil"].speed = (1f / Time.timeScale);
-                currentWeapon.GetAnimation().Play("recoil");
+            //TODO: May need to do this so animator reacts to slomo 
+            //this.animator.speed = (1.0f / Time.deltaTime);
 
-            }
-            else if (currentWeapon.GetWeaponType() == Weapon.GunType.Sniper)
-            {
-                currentWeapon.GetAnimation()["recoilSniper"].speed = (1f / Time.timeScale);
-                currentWeapon.GetAnimation().Play("recoilSniper");
-            }
-            */
+            this.animator.SetTrigger("shotFired");
 
             Vector3 randomVector = this.GetFireVector();
             Vector3 forward = this.GetFireForwardVector();
@@ -79,18 +54,22 @@ namespace ALICE.Weapon.Gun
 
             yield return new WaitForSeconds(waitDelay);
 
+            // Auto reload
+            if(this.remainingMagAmmo <= 0)
+                this.OnReloadInput();
+
             this.isFiring = false;
         }
 
         public void FireBullet(Vector3 randomVector, Vector3 rayPos, Vector3 forward)
         {
             // Activate and Play the Muzzle Flash as the gun is now firing.
-            //this.muzzleFlashPS.main.simulationSpeed = 1f * (1f / Time.timeScale); // todo: use this for slomo im assuming?
+            //this.muzzleFlashPS.main.simulationSpeed = 1f * (1f / Time.timeScale); // TODO: use this for slomo im assuming?
             this.EnableMuzzleFlash(true);
 
             this.audioSource.PlayOneShot(this.fireSound);
 
-            // todo: no point in hasProjectile then?
+            // TODO: no point in hasProjectile then?
             // If the weapon has a projectile to fire then Fire it.
             if (this.transform.GetComponent<FireObject>())
             {
@@ -127,7 +106,7 @@ namespace ALICE.Weapon.Gun
                 if (hit.transform.tag != "Enemy")
                 {
                     if (hit.transform.GetComponent<Rigidbody>())
-                        hit.transform.GetComponent<Rigidbody>().AddForce(this.transform.forward * 10000f * Time.deltaTime);// todo: should i be using time.deltatime here?
+                        hit.transform.GetComponent<Rigidbody>().AddForce(this.transform.forward * 10000f * Time.deltaTime);// TODO: should i be using time.deltatime here?
                 }
 
                 if (hit.transform.GetComponent<Destructable>())
@@ -138,30 +117,68 @@ namespace ALICE.Weapon.Gun
             }
 
             // Reduce the current gun's clip by 1.
-            this.SetRemainingAmmo(this.remainingAmmo - 1);
+            this.SetRemainingAmmo(this.remainingMagAmmo - 1);
+        }
+
+        public override void OnFireInput()
+        {
+            base.OnFireInput();
+
+            bool isReloading = this.animator.GetCurrentAnimatorStateInfo(0).IsName("reload");
+            if (this.isFiring || isReloading)
+                return;
+
+            if (this.remainingMagAmmo > 0)
+                this.StartCoroutine(this.Fire());
+        }
+
+        public override void OnReloadInput()
+        {
+            base.OnReloadInput();
+
+            bool isMagFull = (this.remainingMagAmmo == this.magSize);
+            bool canReload = (!isMagFull && Inventory.instance.GetAmmo() > 0);
+
+            if(!canReload)
+                return;
+
+            // If bullets still in clip, add it back to the Inventory's ammo.
+            if (this.remainingMagAmmo > 0)
+                Inventory.instance.ManipulateAmmo(this.remainingMagAmmo);
+
+            // If there is ammo, add it to the clip (even if can't fill).
+            int newAmmo = Inventory.instance.TryTakeAmmo(this.magSize);
+            if(newAmmo > 0)
+            {
+                this.remainingMagAmmo = newAmmo;
+
+                if (ammoText)
+                    ammoText.text = remainingMagAmmo.ToString();
+
+                this.StopCoroutine(this.Fire());
+
+                this.animator.SetTrigger("reload");
+                this.audioSource.PlayOneShot(this.reloadSound);
+            }
         }
 
         public override void OnDropped()
         {
             base.OnDropped();
-
-            // If the weapon is dropped then firing has stopped so stop & hide the Muzzle Flash.
-            this.EnableMuzzleFlash(false);
         }
 
         private void OnEmptyMag()
         {
-            this.EnableMuzzleFlash(false);
         }
 
         private void SetRemainingAmmo(int ammo)
         {
-            this.remainingAmmo = ammo;
+            this.remainingMagAmmo = ammo;
 
             if (this.ammoText)
-                this.ammoText.text = this.remainingAmmo.ToString();
+                this.ammoText.text = this.remainingMagAmmo.ToString();
 
-            if (this.remainingAmmo <= 0)
+            if (this.remainingMagAmmo <= 0)
                 this.OnEmptyMag();
         }
 

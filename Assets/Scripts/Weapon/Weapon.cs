@@ -10,32 +10,37 @@ namespace ALICE.Weapon
     public class Weapon: MonoBehaviour
     {
         [SerializeField] protected int damage = 1;
-        private Animation _Animation = null; // todo: use Animator
+        protected Animator animator = null;
         protected float range = 35.0f;
 
         [HideInInspector] public UnityEvent onHitEvent = new UnityEvent();
 
         public virtual void OnDropped() { }
         public virtual void OnFireInput() { }
+        public virtual void OnReloadInput() { }
 
-
+        private void Awake()
+        {
+            this.animator = this.GetComponent<Animator>();    
+        }
+        
         public bool IsBusy()
         {
-            // todo: Should have animator on the weapon itself
-            if (this._Animation == null)
-                this._Animation = Camera.main.transform.GetComponent<Animation>();
+            if (this.animator == null)
+                return false;
 
-            return this._Animation.isPlaying;
+            return (this.animator.GetCurrentAnimatorStateInfo(0).normalizedTime <= 1 
+                || this.animator.IsInTransition(0));
         }
 
         /*
-        // todo: put in AIWeaponController?
+        // TODO: put in AIWeaponController?
         // (Optional) AI ammo count (doesn't have a seperate inventory).
         [SerializeField] private int AiAmmo = 300;
         // is AI? (decided automatically).
         private bool isAI = false;
 
-        // todo: controller
+        // TODO: controller
         // Dependent on whether the Reload Coroutine is being run.
         private bool reloadRou = false;
 
@@ -94,54 +99,6 @@ namespace ALICE.Weapon
                     StartCoroutine("ReloadRou");
 
                 return true;
-            }
-
-            // Return if clip is full or not empty.
-            if (!(remainingAmmo < magSize || remainingAmmo <= 0))
-                return false;
-
-            switch (gunType)
-            {
-
-                case GunType.AssaultRifle:
-
-                    // If bullets still in clip, add it back to the ammo.
-                    if (remainingAmmo > 0)
-                        Inventory.instance.ManipulateAmmo(gunType, +remainingAmmo);
-
-                    // If there is ammo, add it to the clip (even if can't fill).
-                    if (Inventory.instance.GetAmmo(gunType) > 0)
-                    {
-                        if (Inventory.instance.GetAmmo(gunType) < magSize)
-                        {
-                            remainingAmmo = Inventory.instance.GetAmmo(gunType);
-                            Inventory.instance.SetAmmo(gunType, 0);
-                        }
-                        else
-                        {
-                            remainingAmmo = magSize;
-                            Inventory.instance.ManipulateAmmo(gunType, -magSize);
-                        }
-
-                        // Update clip UI Text element.
-                        if (ammoText)
-                            ammoText.text = remainingAmmo.ToString();
-
-                    }
-                    break;
-
-                case GunType.Pistol:
-                    Debug.Log("Weapon.cs/Reload(): TODO - Pistol Case");
-                    break;
-
-                case GunType.Shotgun:
-                    Debug.Log("Weapon.cs/Reload(): TODO - Shotgun Case");
-                    break;
-
-                default:
-                    Debug.Log("Weapon.cs/Reload(): TODO - GunType");
-                    break;
-
             }
 
             return true;

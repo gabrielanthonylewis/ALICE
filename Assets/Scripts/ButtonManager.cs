@@ -8,13 +8,6 @@ public class ButtonManager : MonoBehaviour
 {
     public void LoadLevel(int levelNo)
 	{
-		// The Inventory is static throught levels/rooms so only reset when on the main menu.
-		if (levelNo == 0)
-		{
-			// Reset Inventory to inital state.
-			Inventory.instance.Initialise ();
-		}
-
 		Time.timeScale = 1f;
 
         // Load level "levelNo", e.g. level 0 = the Main Menu.
@@ -33,9 +26,6 @@ public class ButtonManager : MonoBehaviour
 
         // Reload the current level.
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        
-        // Reset Inventory to inital state.
-        Inventory.instance.Initialise();
 
         Time.timeScale = 1.0f;
     }
@@ -54,7 +44,6 @@ public class ButtonManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
     }
 	
-
 	public void QuitApplication()
 	{
 		// Exit the game/application.
