@@ -18,6 +18,7 @@ namespace ALICE.Weapon
         public virtual void OnDropped() { }
         public virtual void OnFireInput() { }
         public virtual void OnReloadInput() { }
+        public virtual void OnAimInput() { }
 
         private void Awake()
         {
@@ -130,76 +131,11 @@ namespace ALICE.Weapon
             reloadRou = false;
         }
 
-        // Getter/Setter functions
-         
-        public Animation GetAnimation()
-        {
-            if (_Animation == null)
-                Debug.LogError("Weapon.cs/GetAnimation(): _Animation variable == null");
-
-            return _Animation;
-        }
-
-        public void SetAnimation(Animation anim)
-        {
-            _Animation = anim;
-        }
-
-        public GunType GetWeaponType()
-        {
-            return gunType;
-        }
-
-
-        public int GetClip()
-        {
-            return remainingAmmo;
-        }
-
-        public void ManipulateClip(int value)
-        {
-            remainingAmmo += value;
-
-            // Update clip UI text element.
-            if (ammoText)
-                ammoText.text = remainingAmmo.ToString();
-        }
-
         public void AIManipulateAmmo(int value)
         {
             AiAmmo += value;
             if (AiAmmo < 0)
                 AiAmmo = 0;
-        }
-
-        public int AIGetAmmo()
-        {
-            return AiAmmo;
-        }
-
-        public FireType GetFireType()
-        {
-            return fireType;
-        }
-
-        public int GetDamage()
-        {
-            return damage;
-        }
-
-        public GameObject GetScope()
-        {
-            return scopeGO;
-        }
-
-        public Vector3 GetPickUpPosition()
-        {
-            return PickUpPos;
-        }
-
-        public bool GetUseRayBullet()
-        {
-            return useProjectiles;
         }
 
         public void SwitchPowerUp()
@@ -288,11 +224,6 @@ namespace ALICE.Weapon
             target.GetComponent<MeshRenderer>().material.color = tempCol;
 
             return true;
-        }
-
-        public bool GetPowerUpCapable()
-        {
-            return _PowerUpCapable;
         }
         */
     }

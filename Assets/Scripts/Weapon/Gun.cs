@@ -162,6 +162,19 @@ namespace ALICE.Weapon.Gun
             }
         }
 
+        public override void OnAimInput()
+        {
+            // Start/Stop Aiming Down the Gun's Sight depending on the current state.
+            isAiming = !isAiming;
+
+            // TODO: Move into Sniper class
+            // If the current weapon is a sniper then activate the Scope.
+            //if(this.fireType == FireType.Sniper)
+            //    currentWeapon.GetScope().SetActive(isAiming);	
+
+            this.animator.SetTrigger("ads");
+        }
+
         public override void OnDropped()
         {
             base.OnDropped();

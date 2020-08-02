@@ -6,9 +6,6 @@ public class PlayerSpawnPoint : MonoBehaviour
 	
     public GameObject SpawnPlayer()
     {
-        
-
-
         return this.SpawnPlayer(this.transform.position, this.transform.rotation);
     }
     

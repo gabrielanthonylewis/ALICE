@@ -110,38 +110,24 @@ public class WeaponController : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.X))
-            this.DropWeapon(this.currentWeapon);
+        if(currentWeapon != null)
+        {
+            if (Input.GetKeyDown(KeyCode.X))
+                this.DropWeapon(this.currentWeapon);
 
-        if(Input.GetKey(KeyCode.Mouse0))
-            this.Attack();
+            if(Input.GetKey(KeyCode.Mouse0))
+                currentWeapon.OnFireInput();
 
-        if(Input.GetKeyDown(KeyCode.R))
-            this.Reload();
+            if(Input.GetKeyDown(KeyCode.Mouse1))
+                currentWeapon.OnAimInput();
+
+            if(Input.GetKeyDown(KeyCode.R))
+                currentWeapon.OnReloadInput();
+        }
 
         // Return the hitMarker's size back to it's orginal size. 
         hitMarker.sizeDelta = Vector2.Lerp(hitMarker.sizeDelta, new Vector2(4, 4), Time.deltaTime * 20f);
-    }
-
-    private void Attack()
-    {
-        if (currentWeapon == null)
-            return;
-
-        // Can we "pull the trigger" or are we currently doing something? 
-        //if (currentWeapon.IsBusy())
-         //   return;
-
-        currentWeapon.OnFireInput();
-    }
-
-    private void Reload()
-    {
-        if(currentWeapon == null)
-            return;
-
-        currentWeapon.OnReloadInput();
-    }
+    }  
 
     /*
      * IEnumerator Fire()
@@ -225,11 +211,6 @@ public class WeaponController : MonoBehaviour
 
     // A mutliplier used to increase the distance the grenade is thrown.
     private float _grenadeThrowMulti = 250f;
-
-    void Awake()
-    {
-        Inventory.instance.UpdateUI ();
-    }
 
     void Update ()
     {
@@ -341,35 +322,6 @@ public class WeaponController : MonoBehaviour
             && ((currentWeapon.GetAnimation ().IsPlaying ("recoil") || (currentWeapon.GetAnimation ().IsPlaying ("recoilads"))
                 || !currentWeapon.GetAnimation().isPlaying)))
         {
-            // Start/Stop Aiming Down the Gun's Sight depending on the current state.
-            if (Input.GetKeyDown (KeyCode.Mouse1))
-            {
-                isAiming = !isAiming;
-
-                // Play _Animation forwards/backwards depending on the current state.
-                if (isAiming == true)
-                {
-                    currentWeapon.GetAnimation () ["isAiming"].speed = 1;
-                    currentWeapon.GetAnimation () ["adsSniper"].speed = 1;
-                }
-                else
-                {
-                    currentWeapon.GetAnimation () ["isAiming"].speed = -1;
-                    currentWeapon.GetAnimation () ["adsSniper"].speed = -1;
-                }
-
-                // If the current weapon is a sniper then activate the Scope.
-                if(currentWeapon.GetWeaponType() == Weapon.GunType.Sniper)
-                {
-                    currentWeapon.GetScope().SetActive(isAiming);	
-                    currentWeapon.GetAnimation ().Play ("adsSniper");	
-                }
-                else
-                {
-                    currentWeapon.GetAnimation ().Play ("isAiming");
-                }
-            }
-
             // Tilt Right OR back to the normal state depending on current tilt state.
             if (Input.GetKeyDown (KeyCode.E)) 
             {
@@ -413,37 +365,6 @@ public class WeaponController : MonoBehaviour
                 }
             }
 
-        }
-
-        // If the clip is empty then hide the muzzleFlashPS (as not firing).
-        if (currentWeapon != null && currentWeapon.GetClip() <= 0) 
-        {
-            currentWeapon.GetMuzzleFlashGO().SetActive (false);
-        //	return;
-        }
-
-        // Play Muzzle flash when firing.
-        if (Input.GetKeyDown (KeyCode.Mouse0)) 
-        {
-            if (currentWeapon != null && currentWeapon.GetClip() > 0) 
-            {
-                if(currentWeapon.GetAnimation ().isPlaying == false && !fireRou)
-                {
-                    if (!currentWeapon.GetMuzzleFlashPS ().isPlaying) 
-                    {
-                        currentWeapon.GetMuzzleFlashPS ().Play ();
-                        currentWeapon.GetMuzzleFlashPS().playbackSpeed = 1f *(1f / Time.timeScale); // Counters the Slomo effect.
-                        currentWeapon.GetMuzzleFlashPS ().enableEmission = true;
-                        currentWeapon.GetMuzzleFlashGO ().SetActive (true);
-                    }
-                }
-            }
-        }
-
-        // If not firing then turn off the Muzzle Flash.
-        if (!Input.GetKey (KeyCode.Mouse0) && currentWeapon && !fireRou) 
-        {
-            currentWeapon.GetMuzzleFlashGO().SetActive (false);
         }
     }
     */
