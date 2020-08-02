@@ -9,6 +9,11 @@ public class WeaponController : MonoBehaviour
 {
 	[SerializeField] private Weapon	currentWeapon = null;
     [SerializeField] private RectTransform hitMarker = null;
+    [SerializeField] private GameObject grenadePrefab = null;
+
+    private GameObject tempGrenade = null;
+    private float initialThrowStrength = 250.0f;
+    private float currentThrowStrength;
 
 
     public void PickupWeapon(Weapon weapon)
@@ -125,9 +130,50 @@ public class WeaponController : MonoBehaviour
                 currentWeapon.OnReloadInput();
         }
 
+        if(Input.GetKey(KeyCode.G))
+            this.PrepareGrenade();
+        else if(Input.GetKeyUp(KeyCode.G))
+            this.ThrowGrenade();
+
         // Return the hitMarker's size back to it's orginal size. 
         hitMarker.sizeDelta = Vector2.Lerp(hitMarker.sizeDelta, new Vector2(4, 4), Time.deltaTime * 20f);
     }  
+
+    private void PrepareGrenade()
+    {
+        if(Inventory.instance.GetGrenades() <= 0)
+            return;
+        
+        // Ready the grenade.
+        if (Input.GetKeyDown (KeyCode.G)) 
+        {
+            this.currentThrowStrength = this.initialThrowStrength;
+            this.tempGrenade = Instantiate(this.grenadePrefab, this.transform.position + this.transform.forward, this.grenadePrefab.transform.rotation) as GameObject;
+            this.tempGrenade.GetComponent<Rigidbody>().useGravity = false;
+            this.tempGrenade.transform.GetChild(0).GetComponent<Collider>().enabled = false;
+        }
+
+        this.tempGrenade.transform.position = this.transform.position + this.transform.forward / 1.6f;
+
+        // Increase the distance of the grenade whilst the player is holding it down. 
+        // "* (1f / Time.timeScale)" counters the slomo effect affecting the power of the throw.
+        this.currentThrowStrength = Mathf.Min(this.currentThrowStrength + 50f * Time.deltaTime * (1f / Time.timeScale), 500.0f);
+    }
+
+    private void ThrowGrenade()
+    {
+        if(this.tempGrenade == null)
+            return;
+
+        this.tempGrenade.transform.GetChild(0).GetComponent<Collider>().enabled = true;
+        this.tempGrenade.GetComponent<Rigidbody>().useGravity = true;
+        // Throw the grenade. "* (1f / Time.timeScale)" counters the slomo effect affecting the power of the throw.
+        this.tempGrenade.GetComponent<Rigidbody>().AddForce(this.transform.forward * this.currentThrowStrength * (1f / Time.timeScale) , ForceMode.Force);
+
+        Inventory.instance.ManipulateGrenades(-1);
+        this.tempGrenade = null;
+        this.currentThrowStrength = this.initialThrowStrength;
+    }
 
     /*
      * IEnumerator Fire()
@@ -200,64 +246,14 @@ public class WeaponController : MonoBehaviour
     // Fire rate changing sound clip. 
     [SerializeField] private AudioClip FireRateSound;
 
-    // GameObject to be instantiated upon throwing a grenade.
-    [SerializeField] private GameObject _GrenadePrefab = null;
-
     // Traks whether the player is tiliting left or right.
     private bool tiltRight = false, tiltLeft = false;
-
-    // A reference to a potential grenade to be thrown.
-    private GameObject tempGrenade = null;
-
-    // A mutliplier used to increase the distance the grenade is thrown.
-    private float _grenadeThrowMulti = 250f;
 
     void Update ()
     {
         // If the game is paused then halt all of the behaviour.
         if(Time.timeScale == 0) 
             return;
-
-        // Ready a Grenade if there is one in the Inventory.
-        if(Inventory.instance.GetGrenades() > 0)
-        {
-            if (Input.GetKey (KeyCode.G)) 
-            {
-                // Ready the grenade.
-                if (Input.GetKeyDown (KeyCode.G)) 
-                {
-                    _grenadeThrowMulti = 250f;
-                    tempGrenade = Instantiate(_GrenadePrefab, this.transform.position + this.transform.forward, _GrenadePrefab.transform.rotation) as GameObject;
-                    tempGrenade.GetComponent<Rigidbody>().useGravity = false;
-                    tempGrenade.transform.GetChild(0).GetComponent<Collider>().enabled = false;
-                }
-
-                // Update the grenades position.
-                if(tempGrenade)
-                    tempGrenade.transform.position = this.transform.position + this.transform.forward /1.6f;
-
-                // Increase the distance of the grenade whilst the player is holding it down. "* (1f / Time.timeScale)" counters the slomo effect affecting the power of the throw.
-                _grenadeThrowMulti += 50f * Time.deltaTime * (1f / Time.timeScale);
-
-                // Limit the distance the grenade can be thrown.
-                if(_grenadeThrowMulti > 500f)
-                    _grenadeThrowMulti = 500f;
-            }
-
-            // Throw the grenade.
-            if(Input.GetKeyUp(KeyCode.G))
-            {
-                if(tempGrenade)
-                {
-                    tempGrenade.transform.GetChild(0).GetComponent<Collider>().enabled = true;
-                    tempGrenade.GetComponent<Rigidbody>().useGravity = true;
-                    // Throw the grenade. "* (1f / Time.timeScale)" counters the slomo effect affecting the power of the throw.
-                    tempGrenade.GetComponent<Rigidbody>().AddForce(this.transform.forward * _grenadeThrowMulti * (1f / Time.timeScale) , ForceMode.Force);
-                    // Remove one grenade from the Inventory. 
-                    Inventory.instance.ManipulateGrenades(-1); 
-                }
-            }
-        }
 
         // Attempt to change weapon depending on the key pressed (1, 2 or 3).
         if (currentWeapon && !currentWeapon.GetAnimation ().isPlaying) 
