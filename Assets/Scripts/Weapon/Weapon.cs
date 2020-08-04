@@ -15,10 +15,12 @@ namespace ALICE.Weapon
 
         [HideInInspector] public UnityEvent onHitEvent = new UnityEvent();
 
-        public virtual void OnDropped() { }
-        public virtual void OnFireInput() { }
-        public virtual void OnReloadInput() { }
-        public virtual void OnAimInput() { }
+        public virtual void OnDropped() {}
+        public virtual void OnFireInput(bool isDownOnce) {}
+        public virtual void OnReloadInput() {}
+        public virtual void OnAimInput() {}
+        public virtual void OnChangeFireTypeInput() {}
+        public virtual void OnSwitchPowerupInput() {}
 
         private void Awake()
         {
@@ -61,33 +63,6 @@ namespace ALICE.Weapon
                 AIManipulateAmmo(-magSize);
             else
                 Inventory.instance.ManipulateAmmo(gunType, -magSize);
-        }
-
-        // Change fire type to the next one, reseting after single shot.
-        public void NextFireType()
-        {
-            // Play appropriate _Animation correseponding to the current Fire Type
-            if ((int)fireType == 1)
-            {
-                this.GetAnimation()["FireRateToSingle"].speed = -1;
-                this.GetAnimation().Play("FireRateToSingle");
-                this.GetAnimation()["fireRateToSemi"].speed = -1;
-                this.GetAnimation().Play("fireRateToSemi");
-                fireType = (FireType)((int)fireType + 1);
-            }
-            else if ((int)fireType == 2)
-            {
-                this.GetAnimation()["fireRateToSemi"].speed = 1;
-                this.GetAnimation().Play("fireRateToSemi");
-                fireType = (FireType)((int)fireType + 1);
-            }
-            else if ((int)fireType == 3)
-            {
-                this.GetAnimation()["FireRateToSingle"].speed = 1;
-                this.GetAnimation().Play("FireRateToSingle");
-                fireType = (FireType)((int)fireType - 2);
-            }
-
         }
 
         public bool Reload()
@@ -138,93 +113,7 @@ namespace ALICE.Weapon
                 AiAmmo = 0;
         }
 
-        public void SwitchPowerUp()
-        {
-            if (!_PowerUpCapable)
-                return;
-
-            shrinkPS.gameObject.SetActive(false);
-            transparencyPS.gameObject.SetActive(false);
-
-            if (powerup == PowerUp.NULL)
-            {
-                powerup = PowerUp.Shrink;
-                shrinkPS.gameObject.SetActive(true);
-                return;
-            }
-
-            if (powerup == PowerUp.Shrink)
-            {
-                powerup = PowerUp.Transparency;
-                transparencyPS.gameObject.SetActive(true);
-                return;
-            }
-
-            if (powerup == PowerUp.Transparency)
-            {
-                powerup = PowerUp.NULL;
-                return;
-            }
-
-        }
-              
-        private bool Shrink(Transform target, float val)
-        {
-            if (target.tag != "Resizable")
-                return false;
-
-            if (target.GetComponent<Transform>().localScale.x < 0.2f
-                && target.GetComponent<Transform>().localScale.y < 0.2f
-                && target.GetComponent<Transform>().localScale.z < 0.2f
-               )
-            {
-                // Play power up sound to indicate no more can be done.
-                if (powerupSound)
-                {
-                    if (Camera.main.GetComponent<AudioSource>())
-                    {
-                        Camera.main.GetComponent<AudioSource>().clip = powerupSound;
-                        Camera.main.GetComponent<AudioSource>().Play();
-                    }
-                }
-                return false;
-            }
-
-            // Downscale object.
-            target.GetComponent<Transform>().localScale /= 1.1f;
-
-            return true;
-        }
-
-        private bool ReduceAlpha(Transform target, float val)
-        {
-            if (target.tag != "Transparent")
-                return false;
-
-
-            Color tempCol = target.GetComponent<MeshRenderer>().material.color;
-            tempCol.a -= val;
-
-            // Disable the collider.
-            if (tempCol.a <= 0.4f)
-            {
-                target.GetComponent<Collider>().enabled = false;
-                // Play power up sound to indicate no more can be done.
-                if (powerupSound)
-                {
-                    if (Camera.main.GetComponent<AudioSource>())
-                    {
-                        Camera.main.GetComponent<AudioSource>().clip = powerupSound;
-                        Camera.main.GetComponent<AudioSource>().Play();
-                    }
-                }
-                return false;
-            }
-
-            target.GetComponent<MeshRenderer>().material.color = tempCol;
-
-            return true;
-        }
+       
         */
     }
 }

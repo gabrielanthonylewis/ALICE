@@ -120,14 +120,23 @@ public class WeaponController : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.X))
                 this.DropWeapon(this.currentWeapon);
 
+            bool isFireDownOnce = false;
+            if(Input.GetKeyDown(KeyCode.Mouse0))
+                isFireDownOnce = true;
             if(Input.GetKey(KeyCode.Mouse0))
-                currentWeapon.OnFireInput();
+                currentWeapon.OnFireInput(isFireDownOnce);
 
             if(Input.GetKeyDown(KeyCode.Mouse1))
                 currentWeapon.OnAimInput();
 
             if(Input.GetKeyDown(KeyCode.R))
                 currentWeapon.OnReloadInput();
+
+            if(Input.GetKeyDown(KeyCode.B))
+                currentWeapon.OnChangeFireTypeInput();
+
+            if (Input.GetKeyDown (KeyCode.T))
+                currentWeapon.OnSwitchPowerupInput();
         }
 
         if(Input.GetKey(KeyCode.G))
@@ -137,7 +146,7 @@ public class WeaponController : MonoBehaviour
 
         // Return the hitMarker's size back to it's orginal size. 
         hitMarker.sizeDelta = Vector2.Lerp(hitMarker.sizeDelta, new Vector2(4, 4), Time.deltaTime * 20f);
-    }  
+    }
 
     private void PrepareGrenade()
     {
@@ -176,77 +185,6 @@ public class WeaponController : MonoBehaviour
     }
 
     /*
-     * IEnumerator Fire()
-    {
-        // Offset of the ray creating a Recoil effect.
-        Vector3 randomVector = Vector3.zero;
-
-        if (currentWeapon.GetFireType () == Weapon.FireType.Burst) 
-        {
-            // Shoot a burst of 4 bullets.
-            for (int i = 0; i < 4; i++) 
-            {
-                // If not aiming down the sight add some recoil (less than if fully automatic).
-                if (!isAiming)
-                    randomVector = new Vector3 (Random.Range (-0.03f, 0.03f), Random.Range (-0.03f, 0.03f), Random.Range (-0.03f, 0.0f));
-
-                // Fire a bullet.
-                FireBullet(randomVector);
-
-                // Wait for _Animation to finish before firing again.
-                do
-                {
-                    yield return null;
-                } 
-                while ( currentWeapon.GetAnimation ().isPlaying );
-
-                // Stop emitting the Muzzle Flash (as not firing).
-                currentWeapon.GetMuzzleFlashPS ().enableEmission = false;
-                currentWeapon.GetMuzzleFlashPS().playbackSpeed = 1f *(1f / Time.timeScale);
-            }
-
-            // Turn off the Muzzle Flash as completely done with it.
-            currentWeapon.GetMuzzleFlashGO ().SetActive (false);
-        } 
-        else 
-        {
-          
-            if (currentWeapon && currentWeapon.GetFireType () == Weapon.FireType.Auto) 
-            {
-                // Wait for _Animation to finish before firing again.
-                do
-                {
-                    yield return null;
-                }
-                while (currentWeapon && currentWeapon.GetAnimation ().isPlaying );
-            }
-            else if(currentWeapon.GetFireType() == Weapon.FireType.Sniper)
-            { 
-                // Wait an extended period of time (game balance reasons).
-                yield return new WaitForSeconds (1.5f *(1f / Time.timeScale));
-            }
-            // No delay for Assault rifle but delay for a single shot pistol for example.
-            else if (currentWeapon.GetWeaponType() != Weapon.GunType.AssaultRifle 
-                        && currentWeapon.GetFireType () == Weapon.FireType.Single)
-            {
-                yield return new WaitForSeconds (0.1f *(1f / Time.timeScale));
-            }
-
-            // Turn off the Muzzle Flash as completely done with it.
-            if(currentWeapon)
-                currentWeapon.GetMuzzleFlashGO ().SetActive (false);
-        }
-    }
-     */
-
-    /*
-    // The ParticleSystem to be instantiated upon a bullet hitting an object.
-    [SerializeField] private ParticleSystem ObjectHitParticle;
-
-    // Fire rate changing sound clip. 
-    [SerializeField] private AudioClip FireRateSound;
-
-    // Traks whether the player is tiliting left or right.
     private bool tiltRight = false, tiltLeft = false;
 
     void Update ()
@@ -268,10 +206,6 @@ public class WeaponController : MonoBehaviour
             if (Input.GetKeyDown (KeyCode.Alpha3))
                 Inventory.instance.EquipWeapon (2);
         }
-
-        // Switch Power Up
-        if (Input.GetKeyDown (KeyCode.T))
-            currentWeapon.SwitchPowerUp();
 
         // If there is no Current weapon then weapon behaviour is not possible so return.
         if(currentWeapon == null) return;
@@ -344,21 +278,6 @@ public class WeaponController : MonoBehaviour
                     currentWeapon.GetAnimation () ["tiltLeft"].speed = -1;
 
                 currentWeapon.GetAnimation ().Play ("tiltLeft");
-            }
-
-            // Change the Fire Type (Fully Automatic, Burst and Single shot).
-            if(Input.GetKeyDown(KeyCode.B) && !fireRou) // if not firing
-            {
-                // Functionallity only availiable for the Assault Rifle.
-                if(currentWeapon.GetWeaponType() == Weapon.GunType.AssaultRifle)
-                {
-                    audioSource.clip = FireRateSound;
-                    audioSource.Play();
-                    currentWeapon.NextFireType();
-
-                    // Aiming is interupted so set it to false.
-                    isAiming = false;
-                }
             }
 
         }
