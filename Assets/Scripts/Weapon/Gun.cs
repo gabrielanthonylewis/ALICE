@@ -1,6 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public enum PowerUp
+{
+    NULL = 0,
+    Shrink = 1,
+    Transparency = 2
+};
+
 namespace ALICE.Weapon.Gun
 {      
     public class Gun : Weapon
@@ -10,13 +17,6 @@ namespace ALICE.Weapon.Gun
             Auto = 0,
             Semi = 1,
             Single = 2
-        };
-
-        public enum PowerUp
-        {
-            NULL = 0,
-            Shrink = 1,
-            Transparency = 2
         };
 
         [SerializeField] private int magSize = 30;
@@ -256,6 +256,27 @@ namespace ALICE.Weapon.Gun
                 this.muzzleFlashPS.Stop();
 
             this.muzzleFlashPS.gameObject.SetActive(enable);
+        }
+
+        public override void OnMeleeInput()
+        {
+            this.animator.SetTrigger("melee");
+
+            // If an object is hit then apply force and reduce it's health.
+            RaycastHit hit;
+            if (Physics.Raycast (this.transform.position, this.transform.forward, out hit, 2f))
+            {				
+                // Apply force to hit object. "* (1f / Time.timeScale)" counters the slomo effect affecting the power of the throw.
+                if (hit.transform.GetComponent<Rigidbody> ())
+                    hit.transform.GetComponent<Rigidbody> ().AddForce (this.transform.forward * 20000f * Time.deltaTime *  (1f / Time.timeScale));
+
+                if (hit.transform.GetComponent<Destructable> ())
+                {
+                    // Increase the size of the hitMarker to show that an object with health has been hit.
+                    //hitMarker.sizeDelta = new Vector2(10,10);
+                    hit.transform.GetComponent<Destructable> ().ManipulateHealth (5f);
+                }
+            }
         }
 
         public override void OnSwitchPowerupInput()

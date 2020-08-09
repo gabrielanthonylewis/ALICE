@@ -75,7 +75,42 @@ public class CameraMovement : MonoBehaviour
 			}*/
 
 		}
-    }   
+    }
+
+	 /*
+    private bool tiltRight = false, tiltLeft = false;
+
+    void Update ()
+    {
+		// Tilt Right OR back to the normal state depending on current tilt state.
+		if (Input.GetKeyDown (KeyCode.E)) 
+		{
+			tiltRight = !tiltRight;
+
+			// Play backwards/forwards depending on the current tilt state.
+			if (tiltRight == true)
+				this.GetAnimation () ["tiltRight"].speed = 1;
+			else
+				this.GetAnimation () ["tiltRight"].speed = -1;
+
+			this.GetAnimation ().Play ("tiltRight");
+		}
+
+		// Tilt Left OR back to the normal state depending on current tilt state.
+		if (Input.GetKeyDown (KeyCode.Q)) 
+		{
+			tiltLeft = !tiltLeft;
+
+			// Play backwards/forwards depending on the current tilt state.
+			if (tiltLeft == true)
+				this.GetAnimation () ["tiltLeft"].speed = 1;
+			else
+				this.GetAnimation () ["tiltLeft"].speed = -1;
+
+			this.GetAnimation ().Play ("tiltLeft");
+		}
+    }
+    */
 
     private void UpdateHorizontalRot()
     {

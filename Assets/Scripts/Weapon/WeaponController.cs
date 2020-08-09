@@ -115,6 +115,10 @@ public class WeaponController : MonoBehaviour
 
     private void Update()
     {
+        // If the game is paused then halt all of the behaviour.
+        if(Time.timeScale == 0) 
+           return;
+
         if(currentWeapon != null)
         {
             if (Input.GetKeyDown(KeyCode.X))
@@ -137,7 +141,17 @@ public class WeaponController : MonoBehaviour
 
             if (Input.GetKeyDown (KeyCode.T))
                 currentWeapon.OnSwitchPowerupInput();
+
+            if (Input.GetKeyDown (KeyCode.V)) 
+                currentWeapon.OnMeleeInput();
         }
+
+        if (Input.GetKeyDown (KeyCode.Alpha1))
+            this.SwitchWeapon(0);
+        if (Input.GetKeyDown (KeyCode.Alpha2))
+            this.SwitchWeapon(1);
+        if (Input.GetKeyDown (KeyCode.Alpha3))
+            this.SwitchWeapon(2);
 
         if(Input.GetKey(KeyCode.G))
             this.PrepareGrenade();
@@ -146,6 +160,17 @@ public class WeaponController : MonoBehaviour
 
         // Return the hitMarker's size back to it's orginal size. 
         hitMarker.sizeDelta = Vector2.Lerp(hitMarker.sizeDelta, new Vector2(4, 4), Time.deltaTime * 20f);
+    }
+
+
+    private void SwitchWeapon(int index)
+    {
+        /* TODO: Cancel whatever weapon is doing and then switch.
+         * pherhaps do Any state to switch and have an event in switch which does the switch.
+         * therefore it will finish whatever it is doing. However I will need to stop the 
+         * burst loop through code otherwise it will fire whilst I am switching. */
+
+        Inventory.instance.EquipWeapon (index);
     }
 
     private void PrepareGrenade()
@@ -183,104 +208,82 @@ public class WeaponController : MonoBehaviour
         this.tempGrenade = null;
         this.currentThrowStrength = this.initialThrowStrength;
     }
-
-    /*
-    private bool tiltRight = false, tiltLeft = false;
-
-    void Update ()
-    {
-        // If the game is paused then halt all of the behaviour.
-        if(Time.timeScale == 0) 
-            return;
-
-        // Attempt to change weapon depending on the key pressed (1, 2 or 3).
-        if (currentWeapon && !currentWeapon.GetAnimation ().isPlaying) 
-        {
-            if (Input.GetKeyDown (KeyCode.Alpha1) || Input.GetKeyDown (KeyCode.Alpha2) || Input.GetKeyDown (KeyCode.Alpha3))
-                fireRou = false;
-
-            if (Input.GetKeyDown (KeyCode.Alpha1))
-                Inventory.instance.EquipWeapon (0);
-            if (Input.GetKeyDown (KeyCode.Alpha2))
-                Inventory.instance.EquipWeapon (1);
-            if (Input.GetKeyDown (KeyCode.Alpha3))
-                Inventory.instance.EquipWeapon (2);
-        }
-
-        // If there is no Current weapon then weapon behaviour is not possible so return.
-        if(currentWeapon == null) return;
-               
-        // Melee
-        if (Input.GetKeyDown (KeyCode.V)) 
-        {
-            // If idle then can melee.
-            if(currentWeapon.GetAnimation ().isPlaying == false)
-            {
-                fireRou = false;
-
-                // Play a different Melee _Animation depending on whether or not the current weapon is a Sniper.
-                if(currentWeapon.GetWeaponType() == Weapon.GunType.Sniper)
-                    currentWeapon.GetAnimation ().Play ("meleeSniper");
-                else
-                    currentWeapon.GetAnimation ().Play ("melee");
-
-                // If an object is hit then apply force and reduce it's health.
-                RaycastHit hit;
-                if (Physics.Raycast (this.transform.position, this.transform.forward, out hit, 2f))
-                {				
-                    // Apply force to hit object. "* (1f / Time.timeScale)" counters the slomo effect affecting the power of the throw.
-                    if (hit.transform.GetComponent<Rigidbody> ())
-                        hit.transform.GetComponent<Rigidbody> ().AddForce (this.transform.forward * 20000f * Time.deltaTime *  (1f / Time.timeScale));
-
-                    if (hit.transform.GetComponent<Destructable> ())
-                    {
-                        // Increase the size of the hitMarker to show that an object with health has been hit.
-                        hitMarker.sizeDelta = new Vector2(10,10);
-                        hit.transform.GetComponent<Destructable> ().ManipulateHealth (5f);
-                    }
-
-                }
-
-                // Aiming is interupted so set it to false.
-                isAiming = false;
-            }
-        }
-
-        // If weapon exists and NOT reloading...
-        if (currentWeapon != null && !currentWeapon.GetAnimation ().IsPlaying ("reloadads") 
-            // (Allows the player the aim down sight whilst shooting the gun but not when doing anything else like changing fire mode)
-            && ((currentWeapon.GetAnimation ().IsPlaying ("recoil") || (currentWeapon.GetAnimation ().IsPlaying ("recoilads"))
-                || !currentWeapon.GetAnimation().isPlaying)))
-        {
-            // Tilt Right OR back to the normal state depending on current tilt state.
-            if (Input.GetKeyDown (KeyCode.E)) 
-            {
-                tiltRight = !tiltRight;
-
-                // Play backwards/forwards depending on the current tilt state.
-                if (tiltRight == true)
-                    currentWeapon.GetAnimation () ["tiltRight"].speed = 1;
-                else
-                    currentWeapon.GetAnimation () ["tiltRight"].speed = -1;
-
-                currentWeapon.GetAnimation ().Play ("tiltRight");
-            }
-
-            // Tilt Left OR back to the normal state depending on current tilt state.
-            if (Input.GetKeyDown (KeyCode.Q)) 
-            {
-                tiltLeft = !tiltLeft;
-
-                // Play backwards/forwards depending on the current tilt state.
-                if (tiltLeft == true)
-                    currentWeapon.GetAnimation () ["tiltLeft"].speed = 1;
-                else
-                    currentWeapon.GetAnimation () ["tiltLeft"].speed = -1;
-
-                currentWeapon.GetAnimation ().Play ("tiltLeft");
-            }
-
-        }
-    }
-    */
 }
+
+ /*
+        // TODO: put in AIWeaponController?
+        // (Optional) AI ammo count (doesn't have a seperate inventory).
+        [SerializeField] private int AiAmmo = 300;
+        // is AI? (decided automatically).
+        private bool isAI = false;
+
+        // TODO: controller
+        // Dependent on whether the Reload Coroutine is being run.
+        private bool reloadRou = false;
+
+        void Start()
+        {
+
+            // Automatically decide if weapon is owned by an AI.
+            if (this.transform.parent == null)
+                isAI = false;
+            else if (this.transform.parent.GetComponent<AIWeaponController>())
+                isAI = true;
+            else
+                isAI = false;
+               
+            // Manipulate ammo (because we initially load the clip).
+            if (isAI)
+                AIManipulateAmmo(-magSize);
+            else
+                Inventory.instance.ManipulateAmmo(gunType, -magSize);
+        }
+
+        public bool Reload()
+        {
+            // Play Reload animtion.
+            if (isAI)
+            {
+
+                if (!reloadRou)
+                    StartCoroutine("ReloadRou");
+
+                return true;
+            }
+
+            return true;
+        }
+
+        IEnumerator ReloadRou()
+        {
+            reloadRou = true;
+
+            // Deactivate muzzle flash.
+            muzzleFlashGO.SetActive(false);
+
+            // Play Reload _Animation and wait for it to be complete.
+            _Animation.Play("reload");
+            yield return new WaitForSeconds(_Animation["reload"].length);
+
+            // Update clip and AI Ammo (taking into account the case where AI ammo cannot fill the clip).
+            if (AiAmmo < magSize)
+            {
+                remainingAmmo = AiAmmo;
+                AiAmmo = 0;
+            }
+            else
+            {
+                remainingAmmo = magSize;
+                AiAmmo -= magSize;
+            }
+
+            reloadRou = false;
+        }
+
+        public void AIManipulateAmmo(int value)
+        {
+            AiAmmo += value;
+            if (AiAmmo < 0)
+                AiAmmo = 0;
+        }
+        */
