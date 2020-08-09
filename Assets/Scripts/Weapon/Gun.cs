@@ -1,13 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public enum PowerUp
-{
-    NULL = 0,
-    Shrink = 1,
-    Transparency = 2
-};
-
 namespace ALICE.Weapon.Gun
 {      
     public class Gun : Weapon
@@ -27,11 +20,9 @@ namespace ALICE.Weapon.Gun
         [SerializeField] private AudioClip fireSound = null;
         [SerializeField] private AudioClip reloadSound = null;
         [SerializeField] private AudioClip fireTypeSound;
-        [SerializeField] private ParticleSystem shrinkPS = null;
-        [SerializeField] private ParticleSystem transparencyPS = null;
-        [SerializeField] private AudioClip powerupSound = null;
-        private PowerUp powerup = PowerUp.NULL;
 
+        private Powerup[] powerups = {};
+        private int currentPowerupIndex = -1;
         private AudioSource audioSource;
         private int remainingMagAmmo = 0;
         protected bool isFiring = false;
@@ -46,6 +37,7 @@ namespace ALICE.Weapon.Gun
         private void Start()
         {
             this.audioSource = this.GetComponent<AudioSource>();
+            this.powerups = this.GetComponents<Powerup>();
 
             // Current Clip fully loaded.
             this.SetRemainingAmmo(this.magSize);
@@ -99,66 +91,47 @@ namespace ALICE.Weapon.Gun
 
         public void FireBullet(Vector3 randomVector, Vector3 rayPos, Vector3 forward)
         {
-            //TODO: May need to do this so animator reacts to slomo 
-            //this.animator.speed = (1.0f / Time.deltaTime);
             this.animator.SetTrigger("shotFired");
 
-            // Activate and Play the Muzzle Flash as the gun is now firing.
-            //this.muzzleFlashPS.main.simulationSpeed = 1f * (1f / Time.timeScale); // TODO: use this for slomo im assuming?
+            // TODO: use this for slomo im assuming?
+            //this.muzzleFlashPS.main.simulationSpeed = 1f * (1f / Time.timeScale); 
             this.EnableMuzzleFlash(true);
 
             this.audioSource.PlayOneShot(this.fireSound);
 
-            // TODO: no point in hasProjectile then?
             // If the weapon has a projectile to fire then Fire it.
             if (this.transform.GetComponent<FireObject>())
-            {
                 this.transform.GetComponent<FireObject>().Fire(rayPos);
-                return;
-            }
-
-            // If the gun fires a ray bullet...
-            RaycastHit hit;
-            // If the bullet hits an object add a force and deal damage.
-            if (Physics.Raycast(rayPos, forward + randomVector, out hit, range))
+            else
             {
-                if (this.onHitEvent != null)
-                    this.onHitEvent.Invoke();
-
-                // Spawn a hit particle (if one exists) where the bullet hit (on the surface).
-                //if (ReduceAlpha)
-                //	Instantiate (ObjectHitParticle, hit.point - transform.forward * 0.02f, Quaternion.Euler (hit.normal));
-
-                if (powerup == PowerUp.Shrink)
+                // Shoot a bullet via raycasting.
+                RaycastHit hit;
+                if (Physics.Raycast(rayPos, forward + randomVector, out hit, range))
                 {
-                    this.Shrink(hit.transform, 1f);
-                    // if (Shrink(hit.transform, 1f))
-                    //    hitMarker.sizeDelta = new Vector2(10, 10);
-                    return;
-                }
-                if (powerup == PowerUp.Transparency)
-                {
-                    this.ReduceAlpha(hit.transform, 0.05f);
-                    //if (ReduceAlpha(hit.transform, 0.05f))
-                    //    hitMarker.sizeDelta = new Vector2(10, 10);
-                    return;
-                }
+                    this.onHitEvent?.Invoke();
 
-                // Add a forwards force (from the players perspective) to the hit object.
-                if (hit.transform.tag != "Enemy")
-                {
-                    if (hit.transform.GetComponent<Rigidbody>())
-                        hit.transform.GetComponent<Rigidbody>().AddForce(this.transform.forward * 10000f * Time.deltaTime);// TODO: should i be using time.deltatime here?
-                }
+                    // Spawn a hit particle (if one exists) where the bullet hit (on the surface).
+                    //  Instantiate (ObjectHitParticle, hit.point - transform.forward * 0.02f, Quaternion.Euler (hit.normal));
 
-                if (hit.transform.GetComponent<Destructable>())
-                {
-                    // Deal damage to the hit object (depends on the damage of the weapon).
-                    hit.transform.GetComponent<Destructable>().ManipulateHealth(this.damage);
+                    if(this.currentPowerupIndex >= 0)
+                    {
+                        this.powerups[this.currentPowerupIndex].AffectObject(hit.transform);
+                        // if (Shrink(hit.transform, 1f))
+                        //    hitMarker.sizeDelta = new Vector2(10, 10);
+                    }
+
+                    // Add a forwards force (from the players perspective) to the hit object.
+                    if (hit.transform.tag != "Enemy")
+                    {
+                        if (hit.transform.GetComponent<Rigidbody>())
+                            hit.transform.GetComponent<Rigidbody>().AddForce(this.transform.forward * 10000f * Time.deltaTime);// TODO: should i be using time.deltatime here?
+                    }
+
+                    if (hit.transform.GetComponent<Destructable>())
+                        hit.transform.GetComponent<Destructable>().ManipulateHealth(this.damage);
                 }
             }
 
-            // Reduce the current gun's clip by 1.
             this.SetRemainingAmmo(this.remainingMagAmmo - 1);
         }
 
@@ -217,7 +190,6 @@ namespace ALICE.Weapon.Gun
 
         public override void OnAimInput()
         {
-            // Start/Stop Aiming Down the Gun's Sight depending on the current state.
             isAiming = !isAiming;
 
             // TODO: Move into Sniper class
@@ -228,34 +200,12 @@ namespace ALICE.Weapon.Gun
             this.animator.SetTrigger("ads");
         }
 
-        public override void OnDropped()
-        {
-            base.OnDropped();
-        }
-
-        private void OnEmptyMag()
-        {
-        }
-
         private void SetRemainingAmmo(int ammo)
         {
             this.remainingMagAmmo = ammo;
 
             if (this.ammoText)
                 this.ammoText.text = this.remainingMagAmmo.ToString();
-
-            if (this.remainingMagAmmo <= 0)
-                this.OnEmptyMag();
-        }
-
-        private void EnableMuzzleFlash(bool enable)
-        {
-            if (enable)
-                this.muzzleFlashPS.Play();
-            else
-                this.muzzleFlashPS.Stop();
-
-            this.muzzleFlashPS.gameObject.SetActive(enable);
         }
 
         public override void OnMeleeInput()
@@ -281,73 +231,25 @@ namespace ALICE.Weapon.Gun
 
         public override void OnSwitchPowerupInput()
         {
-            this.SwitchPowerUp();
-        }
+            if(this.currentPowerupIndex >= 0)
+                this.powerups[this.currentPowerupIndex].SetParticleActive(false);
 
-        public void SwitchPowerUp()
+            this.currentPowerupIndex++;
+            if(this.currentPowerupIndex >= this.powerups.Length)
+                this.currentPowerupIndex = -1;
+            else
+                this.powerups[this.currentPowerupIndex].SetParticleActive(true);
+        }
+    
+        private void EnableMuzzleFlash(bool enable)
         {
-            this.powerup = (PowerUp)Mathf.Repeat((int)this.powerup + 1,
-                System.Enum.GetValues(typeof(PowerUp)).Length);
+            if (enable)
+                this.muzzleFlashPS.Play();
+            else
+                this.muzzleFlashPS.Stop();
 
-            shrinkPS.gameObject.SetActive(powerup == PowerUp.Shrink);
-            transparencyPS.gameObject.SetActive(powerup == PowerUp.Transparency);
-        }
-              
-        private bool Shrink(Transform target, float val)
-        {
-            if (target.tag != "Resizable")
-                return false;
-
-            if (target.GetComponent<Transform>().localScale.x < 0.2f
-                && target.GetComponent<Transform>().localScale.y < 0.2f
-                && target.GetComponent<Transform>().localScale.z < 0.2f
-               )
-            {
-                // Play power up sound to indicate no more can be done.
-                if (powerupSound)
-                {
-                    if (Camera.main.GetComponent<AudioSource>())
-                    {
-                        Camera.main.GetComponent<AudioSource>().clip = powerupSound;
-                        Camera.main.GetComponent<AudioSource>().Play();
-                    }
-                }
-                return false;
-            }
-
-            // Downscale object.
-            target.GetComponent<Transform>().localScale /= 1.1f;
-
-            return true;
+            this.muzzleFlashPS.gameObject.SetActive(enable);
         }
 
-        private bool ReduceAlpha(Transform target, float val)
-        {
-            if (target.tag != "Transparent")
-                return false;
-
-            Color tempCol = target.GetComponent<MeshRenderer>().material.color;
-            tempCol.a -= val;
-
-            // Disable the collider.
-            if (tempCol.a <= 0.4f)
-            {
-                target.GetComponent<Collider>().enabled = false;
-                // Play power up sound to indicate no more can be done.
-                if (powerupSound)
-                {
-                    if (Camera.main.GetComponent<AudioSource>())
-                    {
-                        Camera.main.GetComponent<AudioSource>().clip = powerupSound;
-                        Camera.main.GetComponent<AudioSource>().Play();
-                    }
-                }
-                return false;
-            }
-
-            target.GetComponent<MeshRenderer>().material.color = tempCol;
-
-            return true;
-        }
     }
 }
