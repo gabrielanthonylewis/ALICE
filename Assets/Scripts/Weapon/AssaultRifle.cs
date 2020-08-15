@@ -4,14 +4,22 @@ namespace ALICE.Weapon.Gun
 {
     public class AssaultRifle : Gun
     {
+        // Change the Fire Type (Fully Automatic, Burst and Single shot).
+        public override void OnChangeFireTypeInput()
+        {
+            base.OnChangeFireTypeInput();
+
+            if(this.isFiring)
+                return;
+            
+            this.audioSource.PlayOneShot(this.fireTypeSound);
+            this.NextFireType();
+        }
+
         protected override Vector3 GetFireVector()
         {
-            Vector3 randomVector = Vector3.zero;
-
-            if (!this.isAiming)
-                randomVector = new Vector3(Random.Range(-0.05f, 0.05f), Random.Range(-0.05f, 0.05f), Random.Range(-0.05f, 0.05f));
-
-            return randomVector;
+            return (this.isAiming) ? Vector3.zero :
+                this.GetRandomFireVector(this.hipFireOffsetRange, this.hipFireOffsetMultiplier);
         }
 
         protected override Vector3 GetFireForwardVector()
@@ -22,11 +30,6 @@ namespace ALICE.Weapon.Gun
         protected override Vector3 GetFireRayPosition()
         {
             return Camera.main.transform.position;
-        }
-
-        protected override float GetFireDelay()
-        {
-            return 0.1f;
         }
     }
 }

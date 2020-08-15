@@ -1,10 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections;
 using ALICE.Weapon;
-using System;
 
 // The WeaponController script provides/give access to (through input and references) all of the functionallity to operate the current weapon.
-// This includes reloading, changing the firing mode, aiming, tilting, throwing grenades, switching weapons etc.
+// This includes reloading, changing the firing mode, aiming, throwing grenades, switching weapons etc.
 public class WeaponController : MonoBehaviour
 {
 	[SerializeField] private Weapon	currentWeapon = null;
@@ -14,6 +12,8 @@ public class WeaponController : MonoBehaviour
     private GameObject tempGrenade = null;
     private float initialThrowStrength = 250.0f;
     private float currentThrowStrength;
+    private float dropWeaponStrength = 10.0f;
+    private int pickupLayer = 8;
 
 
     public void PickupWeapon(Weapon weapon)
@@ -78,21 +78,17 @@ public class WeaponController : MonoBehaviour
         if (!Inventory.instance.HasWeapon(weapon))
             return false;
 
-        Transform mainCameraTransform = Camera.main.transform;
-
         // Unparent the weapon and re-enable the colliders and physics.
         weapon.transform.SetParent(null);
-
         if (weapon.transform.GetComponent<BoxCollider>())
             weapon.transform.GetComponent<BoxCollider>().enabled = true;
-
-        if (weapon.transform.GetComponent<Rigidbody>())
+        
+        // Throw weapon forwards.
+        Rigidbody weaponRigidbody = weapon.transform.GetComponent<Rigidbody>();
+        if (weaponRigidbody != null)
         {
-            weapon.transform.GetComponent<Rigidbody>().isKinematic = false;
-            // "Throw" weapon forwards.
-            // todo: add current movement velocity (convert to force?) to this so always pushed forward at same distance
-            // m,aybe use velocity here and not force
-            weapon.transform.GetComponent<Rigidbody>().AddForce(mainCameraTransform.forward * 10000.0f * Time.deltaTime);
+            weaponRigidbody.isKinematic = false;
+            weaponRigidbody.AddForce(Camera.main.transform.forward * this.dropWeaponStrength);
         }
 
         // Set the weapon's children's layers to 0 (default) so that the player cannot see the weapon through objects.
@@ -100,11 +96,8 @@ public class WeaponController : MonoBehaviour
         for (int j = 0; j < children.Length; j++)
             children[j].gameObject.layer = 0;
 
-        // Sets the weapon's layer to "PickUp" so that the player can pick it back up.
-        weapon.gameObject.layer = 8;
-
+        weapon.gameObject.layer = this.pickupLayer;
         weapon.onHitEvent.RemoveListener(this.OnHit);
-
         weapon.OnDropped();
 
         // If another gun is in the Inventory then equip it, otherwise will be null.
@@ -162,13 +155,10 @@ public class WeaponController : MonoBehaviour
         hitMarker.sizeDelta = Vector2.Lerp(hitMarker.sizeDelta, new Vector2(4, 4), Time.deltaTime * 20f);
     }
 
-
     private void SwitchWeapon(int index)
     {
-        /* TODO: Cancel whatever weapon is doing and then switch.
-         * pherhaps do Any state to switch and have an event in switch which does the switch.
-         * therefore it will finish whatever it is doing. However I will need to stop the 
-         * burst loop through code otherwise it will fire whilst I am switching. */
+        if(this.currentWeapon != null)
+            this.currentWeapon.StopAllActivity();
 
         Inventory.instance.EquipWeapon (index);
     }
@@ -202,7 +192,7 @@ public class WeaponController : MonoBehaviour
         this.tempGrenade.transform.GetChild(0).GetComponent<Collider>().enabled = true;
         this.tempGrenade.GetComponent<Rigidbody>().useGravity = true;
         // Throw the grenade. "* (1f / Time.timeScale)" counters the slomo effect affecting the power of the throw.
-        this.tempGrenade.GetComponent<Rigidbody>().AddForce(this.transform.forward * this.currentThrowStrength * (1f / Time.timeScale) , ForceMode.Force);
+        this.tempGrenade.GetComponent<Rigidbody>().AddForce(this.transform.forward * this.currentThrowStrength, ForceMode.Force);
 
         Inventory.instance.ManipulateGrenades(-1);
         this.tempGrenade = null;

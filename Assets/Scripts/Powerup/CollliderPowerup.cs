@@ -5,29 +5,36 @@ public class CollliderPowerup : Powerup
     [SerializeField] private float minAlpha = 0.4f;
     [SerializeField] private float reduceAlphaAmount = 0.05f;
 
-    public override void AffectObject(Transform target)
+    public override bool AffectObject(Transform target)
     {
         if (target == null || target.tag != this.affectedObjectTag)
-            return;
+            return false;
 
         MeshRenderer targetMeshRenderer = target.GetComponent<MeshRenderer>();
-        this.ReduceAlpha(targetMeshRenderer, this.reduceAlphaAmount);
-
-        if(targetMeshRenderer.material.color.a <= this.minAlpha)
+        if(this.ReduceAlpha(targetMeshRenderer, this.reduceAlphaAmount))
         {
-            this.DisableCollider(target.GetComponent<Collider>());
-            this.PlayCompleteSound();
+            if(targetMeshRenderer.material.color.a <= this.minAlpha)
+            {
+                this.DisableCollider(target.GetComponent<Collider>());               
+                this.PlayCompleteSound(); 
+            }
+
+            return true;
         }
+
+        return false;
     }
 
-    private void ReduceAlpha(MeshRenderer meshRenderer, float amount)
+    private bool ReduceAlpha(MeshRenderer meshRenderer, float amount)
     {
         if(meshRenderer == null)
-            return;
+            return false;
 
         Color newColour = meshRenderer.material.color;
         newColour.a = Mathf.Max(newColour.a - amount, this.minAlpha);
         meshRenderer.material.color = newColour;
+    
+        return true;
     }
 
     private void DisableCollider(Collider collider)

@@ -11,21 +11,20 @@ namespace ALICE.Weapon.Gun
         {
             base.OnDropped();
 
-            // Stop looking down the scope.
             this.scopeGO.SetActive(false);
+        }
+
+        public override void OnAimInput()
+        {
+            base.OnAimInput();
+
+            this.scopeGO.SetActive(this.isAiming);
         }
 
         protected override Vector3 GetFireVector()
         {
-            Vector3 randomVector = Vector3.zero;
-
-            if (this.isAiming)
-            {
-                randomVector = new Vector3(Random.Range(-0.05f, 0.05f),
-                    Random.Range(-0.05f, 0.05f), Random.Range(-0.05f, 0.05f)) * 10.0f;
-            }
-            
-            return randomVector; 
+            return (this.isAiming) ? Vector3.zero :
+                this.GetRandomFireVector(this.hipFireOffsetRange, this.hipFireOffsetMultiplier); 
         }
 
         protected override Vector3 GetFireForwardVector()
@@ -36,11 +35,6 @@ namespace ALICE.Weapon.Gun
         protected override Vector3 GetFireRayPosition()
         {
             return (this.isAiming) ? this.scopeGO.transform.position : Camera.main.transform.position;
-        }
-
-        protected override float GetFireDelay()
-        {
-            return 1.0f;
-        }      
+        } 
     }
 }

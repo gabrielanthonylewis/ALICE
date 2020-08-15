@@ -19,26 +19,24 @@ namespace ALICE.Weapon.Gun
         [SerializeField] private bool useProjectiles = true;
         [SerializeField] private AudioClip fireSound = null;
         [SerializeField] private AudioClip reloadSound = null;
-        [SerializeField] private AudioClip fireTypeSound;
+        [SerializeField] protected AudioClip fireTypeSound;
+        [SerializeField] private int semiFireBulletCount = 4;
+        [SerializeField] private float bulletForce = 1.0f;
+        [SerializeField] private GameObject bulletHolePrefab = null;
+        [SerializeField] private float fireDelay = 0.1f;
+        [SerializeField] protected Vector2 hipFireOffsetRange = new Vector2(-0.05f, 0.05f);
+        [SerializeField] protected float hipFireOffsetMultiplier = 1.0f;
 
-        private Powerup[] powerups = {};
-        private int currentPowerupIndex = -1;
-        private AudioSource audioSource;
         private int remainingMagAmmo = 0;
         protected bool isFiring = false;
-        protected bool isAiming = false;
 
         protected virtual Vector3 GetFireVector() { return Vector3.zero; }
         protected virtual Vector3 GetFireForwardVector() { return Vector3.zero; }
         protected virtual Vector3 GetFireRayPosition() { return Vector3.zero; }
-        protected virtual float GetFireDelay() { return 0.0f; } // TODO: put on Gun.cs?
-        
+      
 
         private void Start()
         {
-            this.audioSource = this.GetComponent<AudioSource>();
-            this.powerups = this.GetComponents<Powerup>();
-
             // Current Clip fully loaded.
             this.SetRemainingAmmo(this.magSize);
         }
@@ -46,19 +44,9 @@ namespace ALICE.Weapon.Gun
 
         public override void OnFireInput(bool isDownOnce)
         {
-            // Have to press down to fire a single bullet or burst.
-            if(!isDownOnce && this.fireType == FireType.Semi ||
-                !isDownOnce && this.fireType == FireType.Single)
-            {
-                    return;
-            }
+            base.OnFireInput(isDownOnce);
 
-            bool isReloading = (this.animator.GetCurrentAnimatorStateInfo(0).IsName("reload") ||
-                                this.animator.GetCurrentAnimatorStateInfo(0).IsName("reloadads"));
-            if (this.isFiring || isReloading)     
-                return;
-
-            if (this.remainingMagAmmo > 0)
+            if(this.CanFire(isDownOnce))
                 this.StartCoroutine(this.Fire());
         }
 
@@ -66,20 +54,16 @@ namespace ALICE.Weapon.Gun
         {
             this.isFiring = true;
 
-            int bulletsToShoot = (this.fireType == FireType.Semi) ? 4 : 1;
+            int bulletsToShoot = (this.fireType == FireType.Semi) ? this.semiFireBulletCount : 1;
             for(int i = 0; i < bulletsToShoot; i++)
             {
                 if(this.remainingMagAmmo <= 0)
                     break;
 
-                Vector3 randomVector = this.GetFireVector();
-                Vector3 forward = this.GetFireForwardVector();
-                Vector3 pos = this.GetFireRayPosition();
-                float waitDelay = this.GetFireDelay();
+                this.FireBullet(this.GetFireVector(),
+                    this.GetFireRayPosition(), this.GetFireForwardVector());
 
-                this.FireBullet(randomVector, pos, forward);
-
-                yield return new WaitForSeconds(waitDelay);
+                yield return new WaitForSeconds(this.fireDelay);
             }
 
             // Auto reload
@@ -92,62 +76,54 @@ namespace ALICE.Weapon.Gun
         public void FireBullet(Vector3 randomVector, Vector3 rayPos, Vector3 forward)
         {
             this.animator.SetTrigger("shotFired");
-
-            // TODO: use this for slomo im assuming?
-            //this.muzzleFlashPS.main.simulationSpeed = 1f * (1f / Time.timeScale); 
             this.EnableMuzzleFlash(true);
-
             this.audioSource.PlayOneShot(this.fireSound);
 
-            // If the weapon has a projectile to fire then Fire it.
+            // If the weapon has a projectile then fire it.
             if (this.transform.GetComponent<FireObject>())
                 this.transform.GetComponent<FireObject>().Fire(rayPos);
             else
             {
                 // Shoot a bullet via raycasting.
                 RaycastHit hit;
-                if (Physics.Raycast(rayPos, forward + randomVector, out hit, range))
+                if (Physics.Raycast(rayPos, forward + randomVector, out hit, this.range))
                 {
-                    this.onHitEvent?.Invoke();
+                    bool hasHitObject = false;
 
-                    // Spawn a hit particle (if one exists) where the bullet hit (on the surface).
-                    //  Instantiate (ObjectHitParticle, hit.point - transform.forward * 0.02f, Quaternion.Euler (hit.normal));
+                    // Spawn a bullet hole where the bullet hit.
+                    if(this.bulletHolePrefab != null)
+                        GameObject.Instantiate(this.bulletHolePrefab, hit.point - (transform.forward * 0.02f), Quaternion.Euler(hit.normal));
 
-                    if(this.currentPowerupIndex >= 0)
+                    if(this.IsPowerupActive())
                     {
-                        this.powerups[this.currentPowerupIndex].AffectObject(hit.transform);
-                        // if (Shrink(hit.transform, 1f))
-                        //    hitMarker.sizeDelta = new Vector2(10, 10);
+                        if(this.GetActivePowerup().AffectObject(hit.transform))
+                            hasHitObject = true;
                     }
 
-                    // Add a forwards force (from the players perspective) to the hit object.
-                    if (hit.transform.tag != "Enemy")
+                    // Add a forward force to a hit object that isn't a character.
+                    if (hit.transform.tag != "Enemy" && hit.transform.tag != "Player")
                     {
-                        if (hit.transform.GetComponent<Rigidbody>())
-                            hit.transform.GetComponent<Rigidbody>().AddForce(this.transform.forward * 10000f * Time.deltaTime);// TODO: should i be using time.deltatime here?
+                        Rigidbody hitRigidbody = hit.transform.GetComponent<Rigidbody>();
+                        if(hitRigidbody != null)
+                        {
+                            hitRigidbody.AddForce(this.transform.forward * this.bulletForce);
+                            hasHitObject = true;
+                        }
                     }
 
-                    if (hit.transform.GetComponent<Destructable>())
-                        hit.transform.GetComponent<Destructable>().ManipulateHealth(this.damage);
+                    Destructable hitDestructable = hit.transform.GetComponent<Destructable>();
+                    if(hitDestructable != null)
+                    {
+                        hit.transform.GetComponent<Destructable>()?.ManipulateHealth(this.damage);
+                        hasHitObject = true;
+                    }
+
+                    if(hasHitObject)
+                        this.onHitEvent?.Invoke();
                 }
             }
 
             this.SetRemainingAmmo(this.remainingMagAmmo - 1);
-        }
-
-        public override void OnChangeFireTypeInput()
-        {
-            // Change the Fire Type (Fully Automatic, Burst and Single shot).
-            if(this.isFiring)
-                return;
-            
-            // Functionallity only availiable for the Assault Rifle.
-            // TODO: if(currentWeapon.GetWeaponType() == Weapon.GunType.AssaultRifle)
-            {
-                audioSource.clip = fireTypeSound;
-                audioSource.Play();
-                this.NextFireType();
-            }
         }
 
         public void NextFireType()
@@ -164,7 +140,6 @@ namespace ALICE.Weapon.Gun
 
             bool isMagFull = (this.remainingMagAmmo == this.magSize);
             bool canReload = (!isMagFull && Inventory.instance.GetAmmo() > 0);
-
             if(!canReload)
                 return;
 
@@ -176,28 +151,13 @@ namespace ALICE.Weapon.Gun
             int newAmmo = Inventory.instance.TryTakeAmmo(this.magSize);
             if(newAmmo > 0)
             {
-                this.remainingMagAmmo = newAmmo;
-
-                if (ammoText)
-                    ammoText.text = remainingMagAmmo.ToString();
-
                 this.StopCoroutine(this.Fire());
 
                 this.animator.SetTrigger("reload");
                 this.audioSource.PlayOneShot(this.reloadSound);
+
+                this.SetRemainingAmmo(newAmmo);
             }
-        }
-
-        public override void OnAimInput()
-        {
-            isAiming = !isAiming;
-
-            // TODO: Move into Sniper class
-            // If the current weapon is a sniper then activate the Scope.
-            //if(this.fireType == FireType.Sniper)
-            //    currentWeapon.GetScope().SetActive(isAiming);	
-
-            this.animator.SetTrigger("ads");
         }
 
         private void SetRemainingAmmo(int ammo)
@@ -207,42 +167,12 @@ namespace ALICE.Weapon.Gun
             if (this.ammoText)
                 this.ammoText.text = this.remainingMagAmmo.ToString();
         }
-
-        public override void OnMeleeInput()
-        {
-            this.animator.SetTrigger("melee");
-
-            // If an object is hit then apply force and reduce it's health.
-            RaycastHit hit;
-            if (Physics.Raycast (this.transform.position, this.transform.forward, out hit, 2f))
-            {				
-                // Apply force to hit object. "* (1f / Time.timeScale)" counters the slomo effect affecting the power of the throw.
-                if (hit.transform.GetComponent<Rigidbody> ())
-                    hit.transform.GetComponent<Rigidbody> ().AddForce (this.transform.forward * 20000f * Time.deltaTime *  (1f / Time.timeScale));
-
-                if (hit.transform.GetComponent<Destructable> ())
-                {
-                    // Increase the size of the hitMarker to show that an object with health has been hit.
-                    //hitMarker.sizeDelta = new Vector2(10,10);
-                    hit.transform.GetComponent<Destructable> ().ManipulateHealth (5f);
-                }
-            }
-        }
-
-        public override void OnSwitchPowerupInput()
-        {
-            if(this.currentPowerupIndex >= 0)
-                this.powerups[this.currentPowerupIndex].SetParticleActive(false);
-
-            this.currentPowerupIndex++;
-            if(this.currentPowerupIndex >= this.powerups.Length)
-                this.currentPowerupIndex = -1;
-            else
-                this.powerups[this.currentPowerupIndex].SetParticleActive(true);
-        }
     
         private void EnableMuzzleFlash(bool enable)
         {
+            if(this.muzzleFlashPS == null)
+                return;
+                
             if (enable)
                 this.muzzleFlashPS.Play();
             else
@@ -251,5 +181,40 @@ namespace ALICE.Weapon.Gun
             this.muzzleFlashPS.gameObject.SetActive(enable);
         }
 
+        public override void StopAllActivity()
+        {
+            base.StopAllActivity();
+
+            this.StopAllCoroutines();
+            this.EnableMuzzleFlash(false);
+            this.isFiring = false;
+        }
+
+        private bool CanFire(bool isDownOnce)
+        {
+            // If not a single press then return during Semi/Single fire.
+            if(!isDownOnce && this.fireType == FireType.Semi ||
+                !isDownOnce && this.fireType == FireType.Single)
+            {
+                return false;
+            }
+
+            if (this.isFiring || this.IsReloading())     
+                return false;
+
+            return (this.remainingMagAmmo > 0);
+        }
+
+        private bool IsReloading()
+        {
+            return (this.animator.GetCurrentAnimatorStateInfo(0).IsName("reload") ||
+                        this.animator.GetCurrentAnimatorStateInfo(0).IsName("reloadads"));
+        }
+
+        protected Vector3 GetRandomFireVector(Vector2 range, float multiplier)
+        {
+            return new Vector3(Random.Range(range.x, range.y), Random.Range(range.x, range.y),
+                Random.Range(range.x, range.y)) * multiplier;
+        }
     }
 }

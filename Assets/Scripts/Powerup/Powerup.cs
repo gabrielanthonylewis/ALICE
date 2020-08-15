@@ -7,7 +7,7 @@ public class Powerup : MonoBehaviour
     [SerializeField] protected string affectedObjectTag;
     private AudioSource audioSource = null;
 
-    public virtual void AffectObject(Transform target) { }
+    public virtual bool AffectObject(Transform target) { return false; }
 
     private void Start()
     {

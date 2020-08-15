@@ -5,23 +5,30 @@ public class ShrinkPowerup : Powerup
     [SerializeField] private Vector3 minSize = new Vector3(0.2f, 0.2f, 0.2f);
     [SerializeField] private float shrinkMultiplier = 0.9f; 
 
-    public override void AffectObject(Transform target)
+    public override bool AffectObject(Transform target)
     {
         if (target == null || target.tag != this.affectedObjectTag)
-            return;
+            return false;
 
-        this.Shrink(target);
+        if(this.Shrink(target))
+        {
+            if(target.localScale.magnitude <= this.minSize.magnitude)
+                this.PlayCompleteSound();
 
-        if(target.localScale.magnitude <= this.minSize.magnitude)
-            this.PlayCompleteSound();
+            return true;
+        }
+
+        return false;
     }
               
-    private void Shrink(Transform target)
+    private bool Shrink(Transform target)
     {
         if(target == null)
-            return;
+            return false;
 
         target.localScale = Vector3.Max(target.localScale * this.shrinkMultiplier, this.minSize);
+
+        return true;
     }
 
 }
