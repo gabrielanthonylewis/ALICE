@@ -5,6 +5,7 @@ namespace ALICE.Weapon.Gun
     public class Sniper : Gun
     {
         [SerializeField] private GameObject scopeGO = null;
+        [SerializeField] private GameObject bodyGO = null;
 
 
         public override void OnDropped()
@@ -12,6 +13,7 @@ namespace ALICE.Weapon.Gun
             base.OnDropped();
 
             this.scopeGO.SetActive(false);
+            this.bodyGO.SetActive(true);
         }
 
         public override void OnAimInput()
@@ -19,6 +21,7 @@ namespace ALICE.Weapon.Gun
             base.OnAimInput();
 
             this.scopeGO.SetActive(this.isAiming);
+            this.bodyGO.SetActive(!this.isAiming);
         }
 
         protected override Vector3 GetFireVector()
@@ -29,12 +32,12 @@ namespace ALICE.Weapon.Gun
 
         protected override Vector3 GetFireForwardVector()
         {
-            return (this.isAiming) ? this.scopeGO.transform.forward : Camera.main.transform.forward;
+            return Camera.main.transform.forward;
         }
 
         protected override Vector3 GetFireRayPosition()
         {
-            return (this.isAiming) ? this.scopeGO.transform.position : Camera.main.transform.position;
+            return Camera.main.transform.position;
         } 
     }
 }

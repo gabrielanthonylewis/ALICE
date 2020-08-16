@@ -14,6 +14,9 @@ namespace ALICE.Weapon
         [SerializeField] private int meleeDamage = 5;
         [SerializeField] private float meleeForce = 2.0f;
         [SerializeField] private float meleeRange = 2.0f;
+        [SerializeField] private float normalFOV = 75.0f;
+        [SerializeField] private float zoomFOV = 50.0f;
+        [SerializeField] protected float range = 35.0f;
         
         [HideInInspector] public UnityEvent onHitEvent = new UnityEvent();
         
@@ -21,10 +24,9 @@ namespace ALICE.Weapon
         private int currentPowerupIndex = -1;
         protected Animator animator = null;
         protected AudioSource audioSource;
-        protected float range = 35.0f;        
+          
         protected bool isAiming = false;
 
-        public virtual void OnDropped() {}
         public virtual void OnFireInput(bool isDownOnce) {}
         public virtual void OnReloadInput() {}
         public virtual void OnChangeFireTypeInput() {}
@@ -47,9 +49,16 @@ namespace ALICE.Weapon
 
         public virtual void OnAimInput()
         {
-            isAiming = !isAiming;
+            this.isAiming = !this.isAiming;
+
+            Camera.main.fieldOfView = (this.isAiming) ? this.zoomFOV : this.normalFOV;
 
             this.animator.SetTrigger("ads");
+        }
+
+        public virtual void OnDropped()
+        {
+            Camera.main.fieldOfView = this.normalFOV;
         }
 
         public void OnMeleeInput()
