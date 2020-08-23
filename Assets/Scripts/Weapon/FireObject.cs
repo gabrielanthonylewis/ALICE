@@ -6,15 +6,16 @@ public class FireObject : MonoBehaviour
 {
 	// Projectile to fire.
 	[SerializeField] private GameObject Projectile = null;
+	[SerializeField] private Transform spawnPosition = null;
+	[SerializeField] private float force = 400.0f;
 
-	public void Fire(Vector3 spawnPos)
+	public void Fire()
 	{
 		// Fire the projectile at the position "spawnPos".
-		GameObject projectile = Instantiate(Projectile, spawnPos + this.transform.forward, Camera.main.transform.rotation) as GameObject;
+		GameObject projectile = Instantiate(Projectile, spawnPosition.position + this.transform.forward, this.transform.rotation) as GameObject;
 
 		// Add force to the object using Unity's Physics engine to simulate Projectile Motion.
-		// "* (1f / Time.timeScale)" counters the slomo effect affecting the power of the launch.
-		projectile.GetComponent<Rigidbody>().AddForce(this.transform.forward * 400000f * Time.deltaTime *(1f / Time.timeScale));
+		projectile.GetComponent<Rigidbody>().AddForce(this.transform.forward * this.force);
 
 	}
 

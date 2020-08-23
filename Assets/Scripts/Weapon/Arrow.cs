@@ -8,6 +8,8 @@ public class Arrow : MonoBehaviour {
 	// Reference to Rigidbody component (optimisation)
 	private Rigidbody _Rigidbody = null;
 
+	private bool hasCollided = false;
+
 	void Start()
 	{
 		// Assign reference to Rigidbody component.
@@ -16,24 +18,21 @@ public class Arrow : MonoBehaviour {
 
 	void OnTriggerEnter(Collider other)
 	{
+		if(this.hasCollided)
+			return;
+
+		if(other.tag == "IgnoreCollision")
+			return;
+
+		this.hasCollided = true;
+	
+		this.GetComponent<Collider> ().enabled = false;
+
 		// Stick the arrow in the hit object.
 		_Rigidbody.isKinematic = true;
 		_Rigidbody.useGravity = false;
 			
-		// Deal 5 damage to the object if it's destructable.
-		if (other.GetComponent<Destructable> ()) 
-		{
-			other.GetComponent<Destructable> ().ManipulateHealth (5f);
-			
-			Vector3 pos = this.transform.position;
-		//	this.transform.SetParent (other.transform);
-			this.transform.position = pos;
-		}
-
-		if (other.transform.localScale == Vector3.one)
-			this.transform.SetParent (other.transform);
-
-		// Turn off the collider.
-		this.GetComponent<Collider> ().enabled = false;
+		if (other.GetComponent<Destructable>()) 
+			other.GetComponent<Destructable>().ManipulateHealth(5f);
 	}
 }

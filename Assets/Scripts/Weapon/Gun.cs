@@ -29,11 +29,7 @@ namespace ALICE.Weapon.Gun
 
         private int remainingMagAmmo = 0;
         protected bool isFiring = false;
-
-        protected virtual Vector3 GetFireVector() { return Vector3.zero; }
-        protected virtual Vector3 GetFireForwardVector() { return Vector3.zero; }
-        protected virtual Vector3 GetFireRayPosition() { return Vector3.zero; }
-      
+     
 
         private void Start()
         {
@@ -73,7 +69,7 @@ namespace ALICE.Weapon.Gun
             this.isFiring = false;
         }
 
-        public void FireBullet(Vector3 randomVector, Vector3 rayPos, Vector3 forward)
+        public virtual void FireBullet(Vector3 randomVector, Vector3 rayPos, Vector3 forward)
         {
             this.animator.SetTrigger("shotFired");
             this.EnableMuzzleFlash(true);
@@ -81,7 +77,7 @@ namespace ALICE.Weapon.Gun
 
             // If the weapon has a projectile then fire it.
             if (this.transform.GetComponent<FireObject>())
-                this.transform.GetComponent<FireObject>().Fire(rayPos);
+                this.transform.GetComponent<FireObject>().Fire();
             else
             {
                 // Shoot a bullet via raycasting.
@@ -209,6 +205,22 @@ namespace ALICE.Weapon.Gun
         {
             return (this.animator.GetCurrentAnimatorStateInfo(0).IsName("reload") ||
                         this.animator.GetCurrentAnimatorStateInfo(0).IsName("reloadads"));
+        }
+
+        protected virtual Vector3 GetFireForwardVector()
+        { 
+            return Camera.main.transform.forward;
+        }
+
+        protected virtual Vector3 GetFireRayPosition() 
+        {
+            return Camera.main.transform.position;
+        }
+
+        protected virtual Vector3 GetFireVector()
+        { 
+            return (this.isAiming) ? Vector3.zero :
+                this.GetRandomFireVector(this.hipFireOffsetRange, this.hipFireOffsetMultiplier); 
         }
 
         protected Vector3 GetRandomFireVector(Vector2 range, float multiplier)

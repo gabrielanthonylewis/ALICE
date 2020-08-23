@@ -23,21 +23,5 @@ namespace ALICE.Weapon.Gun
             this.scopeGO.SetActive(this.isAiming);
             this.bodyGO.SetActive(!this.isAiming);
         }
-
-        protected override Vector3 GetFireVector()
-        {
-            return (this.isAiming) ? Vector3.zero :
-                this.GetRandomFireVector(this.hipFireOffsetRange, this.hipFireOffsetMultiplier); 
-        }
-
-        protected override Vector3 GetFireForwardVector()
-        {
-            return Camera.main.transform.forward;
-        }
-
-        protected override Vector3 GetFireRayPosition()
-        {
-            return Camera.main.transform.position;
-        } 
     }
 }

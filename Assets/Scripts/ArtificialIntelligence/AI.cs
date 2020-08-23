@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using ALICE.Weapon;
 
 // The AI script provides all of the non-weapon behaviours such as looking at the target,
 // following a Roam Path or even charging towards the player depending on what is required.
@@ -31,6 +32,8 @@ public class AI : MonoBehaviour
 	
 	// If true the AI object will face the player.
 	[SerializeField] bool LookAtTarget = true;
+
+	[SerializeField] private Weapon	currentWeapon = null;
 
 	// Reference to AIWeaponController component.
 	private AIWeaponController _AIWeaponController = null;
