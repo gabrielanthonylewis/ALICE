@@ -14,6 +14,7 @@ public class WeaponController : MonoBehaviour
     private float currentThrowStrength;
     private float dropWeaponStrength = 10.0f;
     private int pickupLayer = 8;
+    private int ignoreLayer = 2;
 
 
     public void PickupWeapon(Weapon weapon)
@@ -67,6 +68,7 @@ public class WeaponController : MonoBehaviour
         this.currentWeapon.transform.localRotation = Quaternion.identity;
         this.currentWeapon.transform.localPosition = Vector3.zero;
         this.currentWeapon.transform.gameObject.SetActive(true);
+        this.currentWeapon.gameObject.layer = this.ignoreLayer;
 
         this.currentWeapon.onHitEvent.AddListener(this.OnHit);
 

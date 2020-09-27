@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 namespace ALICE.Weapon.Gun
 {      
@@ -14,7 +15,7 @@ namespace ALICE.Weapon.Gun
 
         [SerializeField] private int magSize = 30;
         [SerializeField] private ParticleSystem muzzleFlashPS = null;
-        [SerializeField] private TextMesh ammoText = null;
+        [SerializeField] private Text ammoText = null;
         [SerializeField] private FireType fireType = FireType.Auto;
         [SerializeField] private bool useProjectiles = true;
         [SerializeField] private AudioClip fireSound = null;
