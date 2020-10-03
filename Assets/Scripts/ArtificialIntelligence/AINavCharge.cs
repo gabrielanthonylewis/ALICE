@@ -1,17 +1,15 @@
 ﻿using UnityEngine;
-using UnityEngine.AI;
 
-[RequireComponent(typeof(NavMeshAgent))]
-public class AINavCharge : MonoBehaviour
+public class AINavCharge : AIMovementBase
 {
-    [SerializeField] private string targetTag = "Player";
-    [SerializeField] private float range = 100.0f;
+    [SerializeField] private float speedMultiplier = 1.0f;
 
-    private NavMeshAgent navMeshAgent;
-
-    private void Start()
+    private void Update() 
     {
-        this.navMeshAgent = this.GetComponent<NavMeshAgent>();
+        if(this.target != null)
+        {
+            this.transform.position = Vector3.MoveTowards(transform.position,
+                target.transform.position, this.speedMultiplier * Time.deltaTime);
+        }
     }
-
 }

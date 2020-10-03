@@ -1,90 +1,67 @@
 ﻿using UnityEngine;
 using System.Collections;
-using ALICE.Weapon;
 
-// The AI script provides all of the non-weapon behaviours such as looking at the target,
-// following a Roam Path or even charging towards the player depending on what is required.
 public class AI : MonoBehaviour 
 {
-	[SerializeField] private string targetTag = "Player";
-
-	// (Optional) If true signifies that the AI will proceed towards the player once spotted.
-	[SerializeField] private bool shouldAdvance = false;
-	
-	// If true the AI object will face the player.
-	[SerializeField] bool LookAtTarget = true;
-
-	[SerializeField] private Weapon	currentWeapon = null;
-
+	[SerializeField] private LayerMask targetLayerMask;
+	[SerializeField] bool shouldLookAtTarget = true;
 	[SerializeField] private float detectionFOV = 60.0f;
 	[SerializeField] private float detectionDiameter = 12.5f;
+
 	private SphereCollider detectionCollider = null;
-
-	private AIWeaponController _AIWeaponController = null;
-
 	private Transform target = null;
-	
-	void Start()
+	private AIMovementBase movementBase = null;
+
+
+	private void Start()
 	{
-		_AIWeaponController = this.GetComponentInChildren<AIWeaponController> ();
+		this.movementBase = this.GetComponent<AIMovementBase>();
 		this.detectionCollider = this.GetComponent<SphereCollider>();
 		this.detectionCollider.radius = this.detectionDiameter / 2.0f; // radius is half the diameter of a circle
 	}
 
-	void Update () 
+	private void Update () 
 	{
-		// TODO: All AI have the same logic for shooting and looking at the player.
+		// TODO: Shooting
+		bool isTargetSeen = (this.target != null && this.IsTargetSeen(this.target.position));
 
-		if(this.HasDetectedPlayer())
+		if (isTargetSeen && this.shouldLookAtTarget)
 		{
-			if (LookAtTarget)
-			{
-				// Look towards the target (but preventing the body rotating upwards and downwards) 
-				Vector3 targetPos = target.transform.position;
-				targetPos.y = this.transform.position.y;
-				this.transform.LookAt (targetPos, transform.up);
-			}
-
-			// TODO: Movement is unique so should be a seperate component added on.
-			// Move towards player if spotted and should advance.
-			if (this.shouldAdvance) 
-				this.transform.position = Vector3.MoveTowards (transform.position, target.transform.position, Time.deltaTime);
+			// Look towards the target (but preventing the body rotating upwards and downwards) 
+			Vector3 targetPos = target.transform.position;
+			targetPos.y = this.transform.position.y;
+			this.transform.LookAt (targetPos, transform.up);
 		}
+
+		if(this.movementBase != null)
+			this.movementBase.SetTarget((isTargetSeen) ? this.target : null);
 	}
 
 	private void OnTriggerEnter(Collider other)
 	{
-		if(other.tag == this.targetTag)
+		if((1<<other.gameObject.layer) == this.targetLayerMask.value)
 			this.target = other.transform;
 	}
 
 	private void OnTriggerExit(Collider other)
 	{
-		if(other.tag == this.targetTag)
+		if((1<<other.gameObject.layer) == this.targetLayerMask.value)
 			this.target = null;
 	}
 
-	public bool HasDetectedPlayer()
+	private bool IsTargetSeen(Vector3 targetPosition)
     {
-		if(this.target == null)
-			return false;
+		bool isTargetWithinFOV = this.IsWithinFOV(targetPosition);
+		bool isTargetObstruced = !Physics.Linecast(this.transform.position, targetPosition, this.targetLayerMask);
 
-		// FOV
-		Vector3 targetDirection = this.target.position - this.transform.position;
-		float angle = Vector3.Angle(targetDirection, this.transform.forward);
-		
-		if(angle > this.detectionFOV)
-			return false;
-
-		// TODO: Use layermask and then dont have to do check can just return the physics line and thats it as it will do true/false
-		// Check for obstruction.
-		RaycastHit hit;
-		if(Physics.Linecast(this.transform.position, this.target.position, out hit))
-		{
-			if(hit.transform == this.target)
-				return true;
-		}
-
-        return false;
+		return (isTargetWithinFOV && !isTargetObstruced);
     }
+
+	private bool IsWithinFOV(Vector3 position)
+	{
+		Vector3 targetDirection = position - this.transform.position;
+		float angle = Vector3.Angle(targetDirection, this.transform.forward);
+
+		return (angle <= this.detectionFOV);
+	}
 }
