@@ -22,15 +22,15 @@ public class SlowmoController : MonoBehaviour
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
-            this.SetSlomo(true);
+            this.SetSlomoState(true);
         else if (Input.GetKeyUp(KeyCode.Space))
-            this.SetSlomo(false);
+            this.SetSlomoState(false);
 
         if(this.isSlomoActive)
             this.ReduceRemainingTime();
     }
 
-    private void SetSlomo(bool shouldSlow)
+    private void SetSlomoState(bool shouldSlow)
     {
         this.isSlomoActive = (shouldSlow && this.remainingTime > 0.0f);
         Time.timeScale = (shouldSlow) ? this.slowmoTimescale : 1.0f;
@@ -51,7 +51,7 @@ public class SlowmoController : MonoBehaviour
         if (this.remainingTime <= 0.0f)
         {
             this.remainingTime = 0.0f;
-            this.SetSlomo(false);
+            this.SetSlomoState(false);
         }
 
         this.remainingTimeBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left,
