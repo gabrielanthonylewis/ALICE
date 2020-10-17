@@ -131,7 +131,13 @@ public class Destructable : MonoBehaviour
 		for (int i = 0; i < DropList.Count; i++) 
 		{
 			DropList[i].transform.SetParent(null);
-			DropList[i].AddComponent<Rigidbody>();
+
+			Rigidbody droppedRigidbody = DropList[i].GetComponent<Rigidbody>();
+			if(!droppedRigidbody)
+				droppedRigidbody = DropList[i].AddComponent<Rigidbody>();
+			droppedRigidbody.useGravity = true;
+			droppedRigidbody.isKinematic = false;
+			
 			// Assign Pick up layer (8) to the object.
 			DropList[i].layer = 8;
 		}

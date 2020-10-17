@@ -102,7 +102,7 @@ namespace ALICE.Checkpoint
                 ammo = Inventory.instance.GetAmmo(),
                 grenades = Inventory.instance.GetGrenades(),
                 health = this.player.GetComponent<Destructable>().GetHealth(),
-                slowmo = this.player.GetComponent<SlowmoController>().GetRemainingTime()
+                slowmo = this.player.GetComponent<SlowmoController>().remainingTime
             };
         }
 

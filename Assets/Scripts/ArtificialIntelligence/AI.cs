@@ -4,9 +4,9 @@ using System.Collections;
 public class AI : MonoBehaviour 
 {
 	[SerializeField] private LayerMask targetLayerMask;
-	[SerializeField] bool shouldLookAtTarget = true;
 	[SerializeField] private float detectionFOV = 60.0f;
 	[SerializeField] private float detectionDiameter = 12.5f;
+	[SerializeField] private AIWeaponController weaponController = null;
 
 	private SphereCollider detectionCollider = null;
 	private Transform target = null;
@@ -22,19 +22,21 @@ public class AI : MonoBehaviour
 
 	private void Update () 
 	{
-		// TODO: Shooting
-		bool isTargetSeen = (this.target != null && this.IsTargetSeen(this.target.position));
+		bool isTargetSpotted = (this.target != null && this.IsTargetSeen(this.target.position));
 
-		if (isTargetSeen && this.shouldLookAtTarget)
+		if(this.movementBase != null)
+			this.movementBase.SetTarget((isTargetSpotted) ? this.target : null);
+
+		if(this.weaponController != null)
+			this.weaponController.SetTarget((isTargetSpotted) ? this.target : null);
+
+		if (isTargetSpotted)
 		{
 			// Look towards the target (but preventing the body rotating upwards and downwards) 
 			Vector3 targetPos = target.transform.position;
 			targetPos.y = this.transform.position.y;
 			this.transform.LookAt (targetPos, transform.up);
 		}
-
-		if(this.movementBase != null)
-			this.movementBase.SetTarget((isTargetSeen) ? this.target : null);
 	}
 
 	private void OnTriggerEnter(Collider other)

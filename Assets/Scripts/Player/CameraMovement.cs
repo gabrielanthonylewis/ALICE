@@ -5,32 +5,16 @@ using System.Collections;
 // to rotate depending on the mouse input. The X and Y axis can be independtly locked.
 public class CameraMovement : MonoBehaviour
 {
-	// If true X axis rotation is locked/prevented.
 	[SerializeField] private bool LockX = false;
-    
-	// If true Y axis rotation is locked/prevented.
 	[SerializeField] private bool LockY = false;
-    
-	// Speed of vertical rotation.
 	[SerializeField] private float _VerticalSpeed = 2.5f;
-    
-	// Speed of horizontal rotation.
 	[SerializeField] private float _HorizontalSpeed = 2.5f;
 
-	// Lower bound vertical limit. 
     private float _VertLimitLow = 0.5f;
-    
-	// Higher bound vertical limit.
 	private float _VertLimitHigh = -0.4f;
 
-	// Reference to Transform component (optimisation purposes).
     private Transform _Transform = null;
-
-	public Camera ThirdPersonCamera = null;
-
 	public Camera LayerCamera = null;
-
-//	private bool isThirdPerson = false;
 
     void Awake()
     {
@@ -48,33 +32,8 @@ public class CameraMovement : MonoBehaviour
             UpdateHorizontalRot();
 
 		// If Y axis isn't locked then update the Vertical Rotation accordingly.
-        if (!LockY) {
+        if (!LockY)
 			UpdateVerticalRot ();
-
-			/* Third person.
-			if(Input.GetKeyDown(KeyCode.I))
-			{
-				if(ThirdPersonCamera)
-				{
-				
-					isThirdPerson = !isThirdPerson;
-					ThirdPersonCamera.gameObject.SetActive(isThirdPerson);
-					ThirdPersonCamera.transform.gameObject.SetActive(isThirdPerson);
-					this.camera.enabled = !isThirdPerson;
-					LayerCamera.enabled = !isThirdPerson;
-					this.GetComponent<WeaponController>().enabled = !isThirdPerson;
-
-				}
-				else
-				{
-					if(this.GetComponent<WeaponController>())
-					{
-						this.GetComponent<WeaponController>().GetCurrentWeapon().gameObject.SetActive(true);
-					}
-				}
-			}*/
-
-		}
     }
 
 	 /*
@@ -118,10 +77,6 @@ public class CameraMovement : MonoBehaviour
 
 		Screen.lockCursor = (mouseX != 0);
 
-		// Prevent the "Slomo effect" from slowing down horizontal rotation. "* (1f / Time.timeScale)" counters the slomo effect.
-		if (Time.timeScale != 1)
-			mouseX *= Time.deltaTime * (1f / Time.timeScale) * 200f ;
-
 		// Get horizontal rotation freezing x and z axis.
         Quaternion horizontalRot = _Transform.rotation * Quaternion.Euler(new Vector3(0f, mouseX, 0f)) ;
         horizontalRot.x = 0f;
@@ -135,10 +90,6 @@ public class CameraMovement : MonoBehaviour
         float mouseY = Input.GetAxis("Mouse Y") * _VerticalSpeed;
 
 		Screen.lockCursor = (mouseY != 0);
-
-		// Prevent the "Slomo effect" from slowing down vertical rotation. "* (1f / Time.timeScale)" counters the slomo effect.
-		if (Time.timeScale != 1)
-			mouseY *= Time.deltaTime * (1f / Time.timeScale)  * 200f;
 
 		// Get horizontal rotation freezing y and z axis.
         Quaternion verticalRot = Quaternion.Euler(new Vector3(-mouseY, 0f, 0f));
