@@ -2,28 +2,34 @@
 
 public class Powerup : MonoBehaviour
 {
-    [SerializeField] protected AudioClip actionSound = null;
+    [SerializeField] private AudioClip actionCompleteSound = null;
     [SerializeField] private GameObject particles = null;
-    [SerializeField] protected string affectedObjectTag;
+    [SerializeField] private string affectedObjectTag;
     private AudioSource audioSource = null;
 
-    public virtual bool AffectObject(Transform target) { return false; }
+    protected virtual bool AffectObject(Transform target) { return false; }
 
     private void Start()
     {
         this.audioSource = Camera.main.GetComponent<AudioSource>();
     }
 
-    public void SetParticleActive(bool active)
+    public bool TryAffectObject(Transform target)
+    { 
+        if (target == null || target.tag != this.affectedObjectTag)
+            return false;
+
+        return AffectObject(target);
+    }
+
+    public void SetActive(bool active)
     {
         this.particles.SetActive(active);
     }
 
-    protected void PlayCompleteSound()
+    protected virtual void OnActionComplete(Transform target = null)
     {
-        if (this.actionSound == null || this.audioSource == null)
-            return;
-
-        this.audioSource.PlayOneShot(this.actionSound);
+        if (this.actionCompleteSound != null && this.audioSource != null)
+            this.audioSource.PlayOneShot(this.actionCompleteSound);
     }
 }

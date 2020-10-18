@@ -1,23 +1,26 @@
 ﻿using UnityEngine;
 
+/**
+ * Will reduce the alpha of an object to a point.
+ * This will then disable the collider of the object.
+ */
 public class CollliderPowerup : Powerup
 {
     [SerializeField] private float minAlpha = 0.4f;
     [SerializeField] private float reduceAlphaAmount = 0.05f;
 
-    public override bool AffectObject(Transform target)
+    protected override bool AffectObject(Transform target)
     {
-        if (target == null || target.tag != this.affectedObjectTag)
-            return false;
-
+        // Reduce target material's alpha. 
         MeshRenderer targetMeshRenderer = target.GetComponent<MeshRenderer>();
-        if(this.ReduceAlpha(targetMeshRenderer, this.reduceAlphaAmount))
+        if(targetMeshRenderer != null)
         {
+            Color newColour = targetMeshRenderer.material.color;
+            newColour.a = Mathf.Max(newColour.a - this.reduceAlphaAmount, this.minAlpha);
+            targetMeshRenderer.material.color = newColour;
+
             if(targetMeshRenderer.material.color.a <= this.minAlpha)
-            {
-                this.DisableCollider(target.GetComponent<Collider>());               
-                this.PlayCompleteSound(); 
-            }
+                this.OnActionComplete(target);       
 
             return true;
         }
@@ -25,24 +28,14 @@ public class CollliderPowerup : Powerup
         return false;
     }
 
-    private bool ReduceAlpha(MeshRenderer meshRenderer, float amount)
+    protected override void OnActionComplete(Transform target)
     {
-        if(meshRenderer == null)
-            return false;
+        base.OnActionComplete();
 
-        Color newColour = meshRenderer.material.color;
-        newColour.a = Mathf.Max(newColour.a - amount, this.minAlpha);
-        meshRenderer.material.color = newColour;
-    
-        return true;
-    }
-
-    private void DisableCollider(Collider collider)
-    {
-        if(collider == null)
-            return;
-
-        collider.enabled = false;
+        // Disable target's collider.
+        Collider targetCollider = target.GetComponent<Collider>();
+        if(targetCollider != null)
+            targetCollider.enabled = false;
     }
 
 }

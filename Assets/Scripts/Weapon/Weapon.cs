@@ -83,13 +83,13 @@ namespace ALICE.Weapon
         public void OnSwitchPowerupInput()
         {
             if(this.currentPowerupIndex >= 0)
-                this.powerups[this.currentPowerupIndex].SetParticleActive(false);
+                this.powerups[this.currentPowerupIndex].SetActive(false);
 
             this.currentPowerupIndex++;
             if(this.currentPowerupIndex >= this.powerups.Length)
                 this.currentPowerupIndex = -1;
             else
-                this.powerups[this.currentPowerupIndex].SetParticleActive(true);
+                this.powerups[this.currentPowerupIndex].SetActive(true);
         }
 
         public virtual void StopAllActivity()
@@ -99,7 +99,7 @@ namespace ALICE.Weapon
             this.isAiming = false;
         
             foreach(Powerup powerup in this.powerups)
-                powerup.SetParticleActive(false);
+                powerup.SetActive(false);
             this.currentPowerupIndex = -1;
         }
 

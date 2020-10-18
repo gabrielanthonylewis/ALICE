@@ -93,7 +93,7 @@ namespace ALICE.Weapon.Gun
 
                     if(this.IsPowerupActive())
                     {
-                        if(this.GetActivePowerup().AffectObject(hit.transform))
+                        if(this.GetActivePowerup().TryAffectObject(hit.transform))
                             hasHitObject = true;
                     }
 
