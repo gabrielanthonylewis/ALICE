@@ -165,7 +165,8 @@ public class Inventory
     public int GetAmmo()
 	{	
         // Calculates how many full clips there are..
-        _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+		if(_ClipsUIText != null)
+        	_ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
 
 		return _AR_ammo;
 	}
@@ -179,7 +180,8 @@ public class Inventory
 			_AR_ammo = 0;
 
         // Calculates how many full clips there are..
-        _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+		if(_ClipsUIText != null)
+        	_ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
     }
 
 	public void ManipulateAmmo(int value)
@@ -194,7 +196,8 @@ public class Inventory
 	    }
 
 		// Calculates how many full clips there are..
-        _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+		if(_ClipsUIText != null)
+        	_ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
     }
 
 	/**
