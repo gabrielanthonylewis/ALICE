@@ -156,6 +156,7 @@ public class Destructable : MonoBehaviour
 
 			// Show crusor so that the player can use the UI Buttons.
 			Cursor.visible = true;
+			Cursor.lockState = CursorLockMode.Confined;
 
 			Cam.SetActive (true);
 		}

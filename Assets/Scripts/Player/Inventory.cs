@@ -1,109 +1,79 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using ALICE.Weapon;
-using ALICE.Weapon.Gun;
 
-// The Inventory script is a Singleton implementation that holds the ammo count, an array of guns, grenade count etc.
-// Also providing Accessors to these values and functionality to drop, add or equipt a weapon.
+/* The Inventory script is a Singleton implementation that holds the ammo count, an array of guns, grenade count etc.
+ * Also providing Accessors to these values and functionality to drop, add or equipt a weapon. */
 public class Inventory 
 {
 	// Singleton pattern implementation so that there can only be ONE inventory used throughout the game.
-	#region Singleton Pattern implementation
-	protected Inventory() { }
-	
-	private static Inventory _instance = null;
-	
+	private static Inventory _instance = null;	
 	public static Inventory instance
 	{
 		get
 		{
 			if (Inventory._instance == null)
-			{
 				Inventory._instance = new Inventory();
-			}
+
 			return Inventory._instance;
 		}
 	}
-	#endregion
 	
-	// List of guns (maximum of 3)
-	private Weapon[] Guns = new Weapon[3];
-
-	// Total ammount of Assault Rifle ammo (NOTE that this represents all ammo at this point).
-	private int _AR_ammo = 300;
-
-	// Reference to the Player's WeaponController component.
-	private WeaponController _WeaponController = null;
-
-	// Ammount of grenades (default at 3)
-	private int _Grenades = 3;
-
-	// Reference to the Main Camera's Transform component (optimisation purposes).
-	private Transform _MainCamera = null;
-
-	// Reference to the Grendades UI text component (to show the player how many grenades they have).
-	private Text _GrenadesUIText = null;
-
-	// Reference to the Clips UI text component (to show the player how many clips/mags they have).
-	private Text _ClipsUIText = null;
+	private Weapon[] weapons = new Weapon[3];
+	private int ammoCount = 300;
+	private int grenadeCount = 3;
+	private int magSize = 30;
+	private Text grenadeCountText = null;
+	private Text clipCountText = null;
+	private WeaponController weaponController = null;
+	private Transform mainCameraTransform = null;
 
 	// Initalisation function (cannot use Start() or Awake() as not inherited from MonoBehaviour)  
 	public void Initialise()
 	{
 		// Default Values.
-		_AR_ammo = 300;
-		_Grenades = 3;
+		this.ammoCount = 300;
+		this.grenadeCount = 3;
 
-		// Get reference to the Grenades UI Text component.
-		if (!_GrenadesUIText)
-			_GrenadesUIText = GameObject.FindGameObjectWithTag ("GrenadesText").GetComponent<Text>();
+		this.grenadeCountText = GameObject.FindGameObjectWithTag ("GrenadesText").GetComponent<Text>();
+		this.clipCountText = GameObject.FindGameObjectWithTag ("ClipsText").GetComponent<Text>();
+		this.weaponController = GameObject.FindObjectOfType<WeaponController>();
 
-		// Get reference to the Clips UI Text component.
-		if (!_ClipsUIText)
-			_ClipsUIText = GameObject.FindGameObjectWithTag ("ClipsText").GetComponent<Text>();
-
-		UpdateUI ();
+		this.UpdateUI ();
 	}
 
 	public void UpdateUI()
 	{
-		// Get reference to the Grenades UI Text component.
-		if (!_GrenadesUIText)
-			_GrenadesUIText = GameObject.FindGameObjectWithTag ("GrenadesText").GetComponent<Text>();
-
-		// Display how many grenades the player has.
-		_GrenadesUIText.text = _Grenades.ToString();
-
-        // Calculates how many full clips there are..
-        _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+		this.grenadeCountText.text = this.grenadeCount.ToString();
+        this.clipCountText.text = this.GetClipCount().ToString();
     }
+
+	private int GetClipCount()
+	{
+		return Mathf.Max(Mathf.CeilToInt(this.ammoCount / this.magSize), 0);
+	}
 
 	public Weapon EquipWeapon(int slotIndex)
 	{
-        WeaponController weaponController = GameObject.FindObjectOfType<WeaponController>();
-        return weaponController.EquipWeapon(Guns[slotIndex]);
+        return weaponController.EquipWeapon(this.weapons[slotIndex]);
     }
 
     public bool AddWeapon(Weapon weapon)
     {
-        // If the weapon is already in the Inventory then don't add it!
-        if (this.HasWeapon(weapon))
+        if(this.HasWeapon(weapon))
             return false;
 
         // Check through all of the Guns until an empty spot is found.
-        for (int i = 0; i < Guns.Length; i++)
+        for (int i = 0; i < this.weapons.Length; i++)
         {
-            // If spot in Inventory is empty.
-            if (Guns[i] == null)
-            {
-                // Add weapon to spot, parent it and position it correctly.
-                Guns[i] = weapon;
+            if (this.weapons[i] != null)
+				continue;
 
-                WeaponController weaponController = GameObject.FindObjectOfType<WeaponController>();
-                weaponController.PickupWeapon(Guns[i]);
+			// Add weapon to spot.
+			this.weapons[i] = weapon;
+			this.weaponController.PickupWeapon(weapons[i]);
 
-                return true;
-            }
+			return true;
         }
 
         // An empty spot hasn't been found so return false (weapon not added).
@@ -112,14 +82,14 @@ public class Inventory
 
     public bool HasWeapon(Weapon weapon)
     {
-        if (weapon == null)
-            return false;
+		if(weapon == null)
+			return false;
 
-        for (int i = 0; i < Guns.Length; i++)
-        {
-            if (Guns[i] == weapon)
-                return true;
-        }
+		foreach(Weapon inventoryWeapon in this.weapons)
+		{
+			if(inventoryWeapon == weapon)
+				return true;
+		}
 
         return false;
     }	
@@ -129,15 +99,15 @@ public class Inventory
 		if(weapon == null)
             return null;
 
-        for (int i = 0; i < Guns.Length; i++)
+        for (int i = 0; i < this.weapons.Length; i++)
         {
-            if (Guns[i] == weapon)
-            {
-                Guns[i] = null;
+            if(this.weapons[i] != weapon)
+				continue;
 
-                // If another gun is in the Inventory then equip it.
-                return this.EquipNextHeldGun(i);
-            }
+			this.weapons[i] = null;
+
+			// If another gun is in the Inventory then equip it.
+			return this.EquipNextHeldGun(i);
         }
 
         return null;
@@ -145,18 +115,18 @@ public class Inventory
 
     private Weapon EquipNextHeldGun(int slotIndex)
     {
-        // Check after
-        for (int i = slotIndex + 1; i < Guns.Length; i++)
+        // Check index after.
+        for(int i = slotIndex + 1; i < this.weapons.Length; i++)
         {
-            if (Guns[i] != null)
-                return this.EquipWeapon(i);
+            if(this.weapons[i] != null)
+				return this.EquipWeapon(i);
         }
 
-        // If not found loop around and check from start
-        for (int i = 0; i < slotIndex; i++)
+        // If not found loop around and check from start.
+        for(int i = 0; i < slotIndex; i++)
         {
-            if (Guns[i] != null)
-                return this.EquipWeapon(i);
+            if (this.weapons[i] != null)
+            	return this.EquipWeapon(i);
         }
 
         return null;
@@ -164,40 +134,18 @@ public class Inventory
 
     public int GetAmmo()
 	{	
-        // Calculates how many full clips there are..
-		if(_ClipsUIText != null)
-        	_ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
-
-		return _AR_ammo;
+		return this.ammoCount;
 	}
 
 	public void SetAmmo(int value)
 	{
-		_AR_ammo = value;
-
-		// Enforce lower bound limit.
-		if(_AR_ammo < 0)
-			_AR_ammo = 0;
-
-        // Calculates how many full clips there are..
-		if(_ClipsUIText != null)
-        	_ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+		this.ammoCount = Mathf.Max(value, 0);
+		this.UpdateUI();
     }
 
 	public void ManipulateAmmo(int value)
-	{		
-	    _AR_ammo += value;
-
-        // Enforce lower bound limit.
-        if (_AR_ammo < 0)
-	    {
-		    _AR_ammo = 0;
-		    _ClipsUIText.text = "0"; // Ensure Clips Text displays 0.
-	    }
-
-		// Calculates how many full clips there are..
-		if(_ClipsUIText != null)
-        	_ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+	{
+		this.SetAmmo(this.ammoCount + value);
     }
 
 	/**
@@ -206,7 +154,7 @@ public class Inventory
 	 */
 	public int TryTakeAmmo(int ammo)
 	{
-		int diff = Mathf.Abs(this._AR_ammo - ammo);
+		int diff = Mathf.Abs(this.ammoCount - ammo);
 		int ammoToTake = Mathf.Min(diff, ammo);
 
 		this.ManipulateAmmo(-ammoToTake);
@@ -216,35 +164,18 @@ public class Inventory
 	
 	public int GetGrenades()
 	{
-		return _Grenades;
+		return this.grenadeCount;
 	}
 	
 	public void SetGrenades(int value)
 	{
-		_Grenades = value;
-
-		// Get reference to the Grenades UI Text component.
-		if (!_GrenadesUIText)
-			_GrenadesUIText = GameObject.FindGameObjectWithTag ("GrenadesText").GetComponent<Text>();
-		
-		// Display how many grenades the player has.
-		_GrenadesUIText.text = _Grenades.ToString();
+		this.grenadeCount = Mathf.Max(value, 0);
+		this.UpdateUI();	
 	}
 	
 	public void ManipulateGrenades(int value)
 	{
-		_Grenades += value;
-
-		// Enforce lower bound limit.
-		if(_Grenades < 0)
-			_Grenades = 0;
-
-		// Get reference to the Grenades UI Text component.
-		if (!_GrenadesUIText)
-			_GrenadesUIText = GameObject.FindGameObjectWithTag ("GrenadesText").GetComponent<Text>();
-		
-		// Display how many grenades the player has.
-		_GrenadesUIText.text = _Grenades.ToString();
+		this.SetGrenades(this.grenadeCount + value);
 	}
 	
 }
