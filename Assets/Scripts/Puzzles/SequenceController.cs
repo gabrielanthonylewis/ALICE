@@ -3,7 +3,7 @@ using UnityEngine.Events;
 using System.Collections;
 
 // The SequenceController script is the manager script of the sequence puzzle.
-public class SequenceController : MonoBehaviour 
+public class SequenceController : MonoBehaviour, IInteractable 
 {
 	// Event to be Invoked upon completion of the puzzle.
 	public UnityEvent OnFinish;
@@ -66,7 +66,12 @@ public class SequenceController : MonoBehaviour
 			sequence[i] = Random.Range(0,2);
 	}
 
-	public void PlaySequence()
+	public void OnInteract(GameObject interactor)
+	{
+		this.PlaySequence();
+	}
+
+	private void PlaySequence()
 	{
 		if (busy || finished)
 			return;

@@ -2,7 +2,7 @@
 using System.Collections;
 
 // The Rotatable script provides rotation in any axis.
-public class Rotatable : MonoBehaviour 
+public class Rotatable : MonoBehaviour, IInteractable
 {
 	// The axis to rotate around.
 	[SerializeField] private Vector3 axis = Vector3.up;
@@ -37,6 +37,11 @@ public class Rotatable : MonoBehaviour
 
 		// Disable rotation.
 		_Rotate = false;
+	}
+
+	public void OnInteract(GameObject interactor)
+	{
+		this.Rotate();
 	}
 
 	public void Rotate()

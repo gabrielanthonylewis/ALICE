@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine.Events;
 
 // The PiecePuzzleController script is the manager script of the piece/picture puzzle.
-public class PiecePuzzleController : MonoBehaviour 
+public class PiecePuzzleController : MonoBehaviour, IInteractable
 {
 	struct Position
 	{
@@ -141,6 +141,13 @@ public class PiecePuzzleController : MonoBehaviour
 		}
 
 		return true;
+	}
+
+	public void OnInteract(GameObject interactor)
+	{
+		// "play" the puzzle and remove self from the game temporarily.
+		if(this.Play(interactor.transform.parent))
+			interactor.transform.parent.gameObject.SetActive(false);
 	}
 
 	// Hide the player (for safety) and play the puzzle game by enabling the camera and such.

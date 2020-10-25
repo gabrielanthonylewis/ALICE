@@ -81,9 +81,10 @@ namespace ALICE.Weapon.Gun
                 this.transform.GetComponent<FireObject>().Fire();
             else
             {
-                // Shoot a bullet via raycasting.
+                /* Shoot a bullet via raycasting.
+                 * ~0 means every layer and triggers are ignored.*/
                 RaycastHit hit;
-                if (Physics.Raycast(rayPos, forward + randomVector, out hit, this.range))
+                if (Physics.Raycast(rayPos, forward + randomVector, out hit, this.range, ~0, QueryTriggerInteraction.Ignore))
                 {
                     bool hasHitObject = false;
 
@@ -111,7 +112,7 @@ namespace ALICE.Weapon.Gun
                     Destructable hitDestructable = hit.transform.GetComponent<Destructable>();
                     if(hitDestructable != null)
                     {
-                        hit.transform.GetComponent<Destructable>()?.ManipulateHealth(this.damage);
+                        hit.transform.GetComponent<Destructable>().ManipulateHealth(this.damage);
                         hasHitObject = true;
                     }
 

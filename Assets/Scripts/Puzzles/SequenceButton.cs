@@ -2,7 +2,7 @@
 using System.Collections;
 
 // The SequenceButton scripts deals the button puzzle piece behaviour.
-public class SequenceButton : MonoBehaviour 
+public class SequenceButton : MonoBehaviour, IInteractable 
 {
 	// Material to breifly flash.
 	[SerializeField] private Material FlashMat;
@@ -23,6 +23,13 @@ public class SequenceButton : MonoBehaviour
 	void Awake()
 	{
 		_OriginalMat = this.GetComponent<MeshRenderer> ().material;
+	}
+
+
+	public void OnInteract(GameObject interactor)
+	{
+		if(!this.GetBusy())
+			this.UserPush();
 	}
 
 	public void UserPush()

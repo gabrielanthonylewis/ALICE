@@ -8,7 +8,7 @@ using UnityEngine.Events;
  */
 namespace ALICE.Weapon
 {
-    public class Weapon: MonoBehaviour
+    public class Weapon: Pickup
     {
         [SerializeField] protected int damage = 1;
         [SerializeField] private int meleeDamage = 5;
@@ -61,13 +61,19 @@ namespace ALICE.Weapon
             Camera.main.fieldOfView = this.normalFOV;
         }
 
+        public override void OnPickup(GameObject interactor)
+        {
+            Inventory.instance.AddWeapon(this);
+        }
+
         public void OnMeleeInput()
         {
             this.animator.SetTrigger("melee");
 
-            // If an object is hit then apply force and reduce it's health.
+            /* If an object is hit then apply force and reduce it's health.
+             * ~0 means every layer and triggers are ignored.*/
             RaycastHit hit;
-            if (Physics.Raycast (this.transform.position, this.transform.forward, out hit, this.meleeRange))
+            if (Physics.Raycast (this.transform.position, this.transform.forward, out hit, this.meleeRange, ~0, QueryTriggerInteraction.Ignore))
             {
                 hit.transform.GetComponent<Rigidbody>()?.AddForce(this.transform.forward * this.meleeForce);
 
