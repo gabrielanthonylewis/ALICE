@@ -20,6 +20,7 @@ namespace ALICE.Checkpoint
         private readonly string checkpointReachedAnimationParam = "ShowCheckpoint";
 
         private Transform player = null;
+        private Inventory playerInventory = null;
         private int currentSceneIndex = -1;
         private bool skipNextCheckpoint = false;
 
@@ -61,6 +62,7 @@ namespace ALICE.Checkpoint
                 this.ClearLastCheckpoint();
 
                 this.player = GameObject.FindObjectOfType<PlayerSpawnPoint>().SpawnPlayer().transform;
+                this.playerInventory = this.player.GetComponentInChildren<Inventory>();
             }                
         }
 
@@ -99,8 +101,8 @@ namespace ALICE.Checkpoint
                 enemyPositions = this.GetEnemyPositions(),
                 playerPosition = this.player.position,
                 playerRotation = this.player.rotation,
-                ammo = Inventory.instance.GetAmmo(),
-                grenades = Inventory.instance.GetGrenades(),
+                ammo = this.playerInventory.GetAmmo(),
+                grenades = this.playerInventory.GetGrenades(),
                 health = this.player.GetComponent<Destructable>().GetHealth(),
                 slowmo = this.player.GetComponent<SlowmoController>().remainingTime
             };
@@ -126,6 +128,7 @@ namespace ALICE.Checkpoint
             this.player = GameObject.FindObjectOfType<PlayerSpawnPoint>().SpawnPlayer(
                 this.lastCheckPoint.playerPosition, this.lastCheckPoint.playerRotation).transform;
 
+            this.playerInventory = this.player.GetComponentInChildren<Inventory>();
             this.player.GetComponent<Destructable>().SetHealth(this.lastCheckPoint.health);
             this.player.GetComponent<SlowmoController>().SetRemainingTime(this.lastCheckPoint.slowmo);
 
@@ -134,8 +137,8 @@ namespace ALICE.Checkpoint
 
         private void LoadInventory()
         {
-            Inventory.instance.SetAmmo(this.lastCheckPoint.ammo);
-            Inventory.instance.SetGrenades(this.lastCheckPoint.grenades);
+            this.playerInventory.SetAmmo(this.lastCheckPoint.ammo);
+            this.playerInventory.SetGrenades(this.lastCheckPoint.grenades);
         }
 
         private void LoadEnemies()

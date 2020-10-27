@@ -8,6 +8,8 @@ public class WeaponController : MonoBehaviour
 	[SerializeField] private Weapon	currentWeapon = null;
     [SerializeField] private RectTransform hitMarker = null;
     [SerializeField] private GameObject grenadePrefab = null;
+    
+    public Inventory inventory { get; private set; }
 
     private GameObject tempGrenade = null;
     private float initialThrowStrength = 250.0f;
@@ -16,9 +18,15 @@ public class WeaponController : MonoBehaviour
     private int pickupLayer = 8;
     private int ignoreLayer = 2;
 
+    private void Start()
+    {
+        this.inventory = this.GetComponent<Inventory>();
+    }
 
     public void PickupWeapon(Weapon weapon)
     {
+        weapon.weaponController = this;
+
         Transform mainCameraTransform = Camera.main.transform;
 
         // Hide weapon (not equiped on default).
@@ -77,8 +85,10 @@ public class WeaponController : MonoBehaviour
 
     private bool DropWeapon(Weapon weapon)
     {
-        if (!Inventory.instance.HasWeapon(weapon))
+        if (!this.inventory.HasWeapon(weapon))
             return false;
+
+        weapon.weaponController = null;
 
         // Unparent the weapon and re-enable the colliders and physics.
         weapon.transform.SetParent(null);
@@ -103,7 +113,7 @@ public class WeaponController : MonoBehaviour
         weapon.OnDropped();
 
         // If another gun is in the Inventory then equip it, otherwise will be null.
-        this.currentWeapon = Inventory.instance.DropWeapon(weapon);
+        this.currentWeapon = this.inventory.DropWeapon(weapon);
         
         return true;
     }
@@ -162,12 +172,12 @@ public class WeaponController : MonoBehaviour
         if(this.currentWeapon != null)
             this.currentWeapon.StopAllActivity();
 
-        Inventory.instance.EquipWeapon (index);
+        this.inventory.EquipWeapon (index);
     }
 
     private void PrepareGrenade()
     {
-        if(Inventory.instance.GetGrenades() <= 0)
+        if(this.inventory.GetGrenades() <= 0)
             return;
         
         // Ready the grenade.
@@ -196,7 +206,7 @@ public class WeaponController : MonoBehaviour
         // Throw the grenade. "* (1f / Time.timeScale)" counters the slomo effect affecting the power of the throw.
         this.tempGrenade.GetComponent<Rigidbody>().AddForce(this.transform.forward * this.currentThrowStrength, ForceMode.Force);
 
-        Inventory.instance.ManipulateGrenades(-1);
+        this.inventory.ManipulateGrenades(-1);
         this.tempGrenade = null;
         this.currentThrowStrength = this.initialThrowStrength;
     }

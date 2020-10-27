@@ -4,7 +4,9 @@ public class PickupAmmo: PickupBonus<int>
 {
     public override void OnPickup(GameObject interactor)
     {
-		Inventory.instance.ManipulateAmmo(this.amount);
+        if(interactor.GetComponent<Inventory>() != null)
+            interactor.GetComponent<Inventory>().ManipulateAmmo(this.amount);
+            
         base.OnPickup(interactor);
     }
 }

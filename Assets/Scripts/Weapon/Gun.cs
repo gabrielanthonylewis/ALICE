@@ -137,16 +137,16 @@ namespace ALICE.Weapon.Gun
             base.OnReloadInput();
 
             bool isMagFull = (this.remainingMagAmmo == this.magSize);
-            bool canReload = (!isMagFull && Inventory.instance.GetAmmo() > 0);
+            bool canReload = (!isMagFull && this.weaponController.inventory.GetAmmo() > 0);
             if(!canReload)
                 return;
 
             // If bullets still in clip, add it back to the Inventory's ammo.
             if (this.remainingMagAmmo > 0)
-                Inventory.instance.ManipulateAmmo(this.remainingMagAmmo);
+                this.weaponController.inventory.ManipulateAmmo(this.remainingMagAmmo);
 
             // If there is ammo, add it to the clip (even if can't fill).
-            int newAmmo = Inventory.instance.TryTakeAmmo(this.magSize);
+            int newAmmo = this.weaponController.inventory.TryTakeAmmo(this.magSize);
             if(newAmmo > 0)
             {
                 this.StopCoroutine(this.Fire());

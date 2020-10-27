@@ -19,6 +19,8 @@ namespace ALICE.Weapon
         [SerializeField] protected float range = 35.0f;
         
         [HideInInspector] public UnityEvent onHitEvent = new UnityEvent();
+
+        public WeaponController weaponController { protected get; set; }
         
         private Powerup[] powerups = {};
         private int currentPowerupIndex = -1;
@@ -63,7 +65,8 @@ namespace ALICE.Weapon
 
         public override void OnPickup(GameObject interactor)
         {
-            Inventory.instance.AddWeapon(this);
+            if(interactor.GetComponent<Inventory>() != null)
+                interactor.GetComponent<Inventory>().AddWeapon(this);
         }
 
         public void OnMeleeInput()

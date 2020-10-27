@@ -2,23 +2,8 @@
 using UnityEngine.UI;
 using ALICE.Weapon;
 
-/* The Inventory script is a Singleton implementation that holds the ammo count, an array of guns, grenade count etc.
- * Also providing Accessors to these values and functionality to drop, add or equipt a weapon. */
-public class Inventory 
-{
-	// Singleton pattern implementation so that there can only be ONE inventory used throughout the game.
-	private static Inventory _instance = null;	
-	public static Inventory instance
-	{
-		get
-		{
-			if (Inventory._instance == null)
-				Inventory._instance = new Inventory();
-
-			return Inventory._instance;
-		}
-	}
-	
+public class Inventory: MonoBehaviour 
+{	
 	private Weapon[] weapons = new Weapon[3];
 	private int ammoCount = 300;
 	private int grenadeCount = 3;
@@ -28,8 +13,7 @@ public class Inventory
 	private WeaponController weaponController = null;
 	private Transform mainCameraTransform = null;
 
-	// Initalisation function (cannot use Start() or Awake() as not inherited from MonoBehaviour)  
-	public void Initialise()
+	private void Awake()
 	{
 		// Default Values.
 		this.ammoCount = 300;
