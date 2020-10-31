@@ -2,7 +2,6 @@
 using ALICE.Weapon;
 
 // The WeaponController script provides/give access to (through input and references) all of the functionallity to operate the current weapon.
-// This includes reloading, changing the firing mode, aiming, throwing grenades, switching weapons etc.
 public class WeaponController : MonoBehaviour
 {
 	[SerializeField] private Weapon	currentWeapon = null;
@@ -14,165 +13,84 @@ public class WeaponController : MonoBehaviour
     private GameObject tempGrenade = null;
     private float initialThrowStrength = 250.0f;
     private float currentThrowStrength;
-    private float dropWeaponStrength = 10.0f;
-    private int pickupLayer = 8;
-    private int ignoreLayer = 2;
 
     private void Start()
     {
         this.inventory = this.GetComponent<Inventory>();
     }
 
-    public void PickupWeapon(Weapon weapon)
-    {
-        weapon.weaponController = this;
-
-        Transform mainCameraTransform = Camera.main.transform;
-
-        // Hide weapon (not equiped on default).
-        weapon.gameObject.SetActive(false);
-
-        // Turn off colliders and physics.
-        if (weapon.transform.GetComponent<BoxCollider>())
-            weapon.transform.GetComponent<BoxCollider>().enabled = false;
-        if (weapon.transform.GetComponent<Rigidbody>())
-            weapon.transform.GetComponent<Rigidbody>().isKinematic = true;
-
-        weapon.name = "Gun";
-        weapon.transform.SetParent(mainCameraTransform);
-        weapon.transform.localRotation = Quaternion.identity;
-        weapon.transform.localPosition = Vector3.zero;
-
-        // Set the weapon's children's layers to "GunLayer" so that the gun will not clip through objects (from the player's perspective).
-        Transform[] children = weapon.GetComponentsInChildren<Transform>();
-        for (int j = 0; j < children.Length; j++)
-            children[j].gameObject.layer = 10;
-
-        // Automatically equip weapon if the Player hasn't already got a weapon equipted.
-        if (this.currentWeapon == null)
-            EquipWeapon(weapon);
-    }
-
-    private void OnHit()
-    {
-        hitMarker.sizeDelta = new Vector2(10, 10);
-    }
-
-    public Weapon EquipWeapon(Weapon weapon)
-    {
-        // If the gun is already active then return.
-        if (this.currentWeapon == weapon)
-            return this.currentWeapon;
-
-        if (this.currentWeapon != null)
-        {
-            this.currentWeapon.gameObject.SetActive(false);
-            this.currentWeapon.onHitEvent.RemoveListener(this.OnHit);
-        }
-
-        // Activate/show new gun, parenting and positioning the gun in the correct position.
-        this.currentWeapon = weapon;
-        this.currentWeapon.transform.SetParent(Camera.main.transform);
-        this.currentWeapon.transform.localRotation = Quaternion.identity;
-        this.currentWeapon.transform.localPosition = Vector3.zero;
-        this.currentWeapon.transform.gameObject.SetActive(true);
-        this.currentWeapon.gameObject.layer = this.ignoreLayer;
-
-        this.currentWeapon.onHitEvent.AddListener(this.OnHit);
-
-        return this.currentWeapon;
-    }
-
-    private bool DropWeapon(Weapon weapon)
-    {
-        if (!this.inventory.HasWeapon(weapon))
-            return false;
-
-        weapon.weaponController = null;
-
-        // Unparent the weapon and re-enable the colliders and physics.
-        weapon.transform.SetParent(null);
-        if (weapon.transform.GetComponent<BoxCollider>())
-            weapon.transform.GetComponent<BoxCollider>().enabled = true;
-        
-        // Throw weapon forwards.
-        Rigidbody weaponRigidbody = weapon.transform.GetComponent<Rigidbody>();
-        if (weaponRigidbody != null)
-        {
-            weaponRigidbody.isKinematic = false;
-            weaponRigidbody.AddForce(Camera.main.transform.forward * this.dropWeaponStrength);
-        }
-
-        // Set the weapon's children's layers to 0 (default) so that the player cannot see the weapon through objects.
-        Transform[] children = weapon.GetComponentsInChildren<Transform>();
-        for (int j = 0; j < children.Length; j++)
-            children[j].gameObject.layer = 0;
-
-        weapon.gameObject.layer = this.pickupLayer;
-        weapon.onHitEvent.RemoveListener(this.OnHit);
-        weapon.OnDropped();
-
-        // If another gun is in the Inventory then equip it, otherwise will be null.
-        this.currentWeapon = this.inventory.DropWeapon(weapon);
-        
-        return true;
-    }
-
     private void Update()
     {
+        // Return the hitMarker's size back to it's orginal size. 
+        this.hitMarker.sizeDelta = Vector2.Lerp(this.hitMarker.sizeDelta, new Vector2(4, 4), Time.deltaTime * 20f);
+
         // If the game is paused then halt all of the behaviour.
         if(Time.timeScale == 0) 
            return;
-
-        if(currentWeapon != null)
-        {
-            if (Input.GetKeyDown(KeyCode.X))
-                this.DropWeapon(this.currentWeapon);
-
-            bool isFireDownOnce = false;
-            if(Input.GetKeyDown(KeyCode.Mouse0))
-                isFireDownOnce = true;
-            if(Input.GetKey(KeyCode.Mouse0))
-                currentWeapon.OnFireInput(isFireDownOnce);
-
-            if(Input.GetKeyDown(KeyCode.Mouse1))
-                currentWeapon.OnAimInput();
-
-            if(Input.GetKeyDown(KeyCode.R))
-                currentWeapon.OnReloadInput();
-
-            if(Input.GetKeyDown(KeyCode.B))
-                currentWeapon.OnChangeFireTypeInput();
-
-            if (Input.GetKeyDown (KeyCode.T))
-                currentWeapon.OnSwitchPowerupInput();
-
-            if (Input.GetKeyDown (KeyCode.V)) 
-                currentWeapon.OnMeleeInput();
-        }
-
-        if (Input.GetKeyDown (KeyCode.Alpha1))
-            this.SwitchWeapon(0);
-        if (Input.GetKeyDown (KeyCode.Alpha2))
-            this.SwitchWeapon(1);
-        if (Input.GetKeyDown (KeyCode.Alpha3))
-            this.SwitchWeapon(2);
 
         if(Input.GetKey(KeyCode.G))
             this.PrepareGrenade();
         else if(Input.GetKeyUp(KeyCode.G))
             this.ThrowGrenade();
 
-        // Return the hitMarker's size back to it's orginal size. 
-        hitMarker.sizeDelta = Vector2.Lerp(hitMarker.sizeDelta, new Vector2(4, 4), Time.deltaTime * 20f);
+        if(this.currentWeapon != null)
+        {
+            bool isFireDownOnce = false;
+            if(Input.GetKeyDown(KeyCode.Mouse0))
+                isFireDownOnce = true;
+            if(Input.GetKey(KeyCode.Mouse0))
+                this.currentWeapon.OnFireInput(isFireDownOnce);
+
+            if(Input.GetKeyDown(KeyCode.Mouse1))
+                this.currentWeapon.OnAimInput();
+
+            if(Input.GetKeyDown(KeyCode.R))
+                this.currentWeapon.OnReloadInput();
+
+            if(Input.GetKeyDown(KeyCode.B))
+                this.currentWeapon.OnChangeFireTypeInput();
+
+            if(Input.GetKeyDown (KeyCode.T))
+                this.currentWeapon.OnSwitchPowerupInput();
+
+            if(Input.GetKeyDown (KeyCode.V)) 
+                this.currentWeapon.OnMeleeInput();
+        }
     }
 
-    private void SwitchWeapon(int index)
+    public Weapon GetCurrentWeapon()
     {
-        if(this.currentWeapon != null)
-            this.currentWeapon.StopAllActivity();
+        return this.currentWeapon;
+    }
 
-        this.inventory.EquipWeapon (index);
+    private void OnHit()
+    {
+        this.hitMarker.sizeDelta = new Vector2(10, 10);
+    }
+
+    public void EquipWeapon(Weapon weapon)
+    {    
+        if (this.currentWeapon == weapon)
+            return;
+
+        // If already using a weapon turn it off.
+        if (this.currentWeapon != null)
+        {
+            this.currentWeapon.StopAllActivity();
+            this.currentWeapon.gameObject.SetActive(false);
+        }
+
+        // Show weapon.
+        this.currentWeapon = weapon;
+        this.currentWeapon.weaponController = this;
+        this.currentWeapon.onHitEvent.AddListener(this.OnHit);
+        this.currentWeapon.onDroppedEvent.AddListener(this.OnWeaponDropped);
+        this.currentWeapon.gameObject.SetActive(true);
+    }
+
+    private void OnWeaponDropped()
+    {
+        this.currentWeapon = null;
     }
 
     private void PrepareGrenade()

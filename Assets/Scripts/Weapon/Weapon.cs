@@ -19,9 +19,13 @@ namespace ALICE.Weapon
         [SerializeField] protected float range = 35.0f;
         
         [HideInInspector] public UnityEvent onHitEvent = new UnityEvent();
+        [HideInInspector] public UnityEvent onDroppedEvent = new UnityEvent();
 
         public WeaponController weaponController { protected get; set; }
-        
+
+        private int pickupLayer = 8;
+        private int ignoreLayer = 2;
+
         private Powerup[] powerups = {};
         private int currentPowerupIndex = -1;
         protected Animator animator = null;
@@ -60,13 +64,56 @@ namespace ALICE.Weapon
 
         public virtual void OnDropped()
         {
+            // Unparent the weapon and re-enable the colliders and physics.
+            this.transform.SetParent(null);
+            if(this.transform.GetComponent<BoxCollider>())
+                this.transform.GetComponent<BoxCollider>().enabled = true;
+            if(this.transform.GetComponent<Rigidbody>())
+                this.transform.GetComponent<Rigidbody>().isKinematic = false;
+
+            // Set the weapon's children's layers to 0 (default) so that the player cannot see the weapon through objects.
+            Transform[] children = this.transform.GetComponentsInChildren<Transform>();
+            for (int j = 0; j < children.Length; j++)
+                children[j].gameObject.layer = 0;
+
             Camera.main.fieldOfView = this.normalFOV;
+
+            this.gameObject.layer = this.pickupLayer;
+
+            this.onHitEvent.RemoveAllListeners();
+            this.onDroppedEvent?.Invoke();
+            this.onDroppedEvent.RemoveAllListeners();
+            this.weaponController = null;
         }
 
         public override void OnPickup(GameObject interactor)
         {
             if(interactor.GetComponent<Inventory>() != null)
-                interactor.GetComponent<Inventory>().AddWeapon(this);
+                interactor.GetComponent<Inventory>().TryAddWeapon(this);
+        }
+
+        public void OnPickedUp()
+        {
+            // Hide weapon (not equiped on default).
+			this.gameObject.SetActive(false);
+
+			// Turn off colliders and physics.
+			if (this.transform.GetComponent<BoxCollider>())
+				this.transform.GetComponent<BoxCollider>().enabled = false;
+			if (this.transform.GetComponent<Rigidbody>())
+				this.transform.GetComponent<Rigidbody>().isKinematic = true;
+
+			this.name = "Gun";
+			this.transform.SetParent(Camera.main.transform);
+			this.transform.localRotation = Quaternion.identity;
+			this.transform.localPosition = Vector3.zero;
+            this.gameObject.layer = this.ignoreLayer;
+
+
+			// Set the weapon's children's layers to "GunLayer" so that the gun will not clip through objects (from the player's perspective).
+			Transform[] children = this.GetComponentsInChildren<Transform>();
+			for (int j = 0; j < children.Length; j++)
+				children[j].gameObject.layer = 10;
         }
 
         public void OnMeleeInput()
