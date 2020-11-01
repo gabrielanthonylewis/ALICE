@@ -1,11 +1,12 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 using ALICE.Weapon;
+using ALICE.Checkpoint;
 
+[RequireComponent(typeof(WeaponController))]
 public class Inventory: MonoBehaviour 
 {	
-	private Weapon[] weapons = new Weapon[3];
-
 	[SerializeField] private int ammoCount = 300;
 	[SerializeField] private int grenadeCount = 3;
 	[SerializeField] private int magSize = 30;
@@ -13,28 +14,76 @@ public class Inventory: MonoBehaviour
 	[SerializeField] private Text clipCountText = null;
     [SerializeField] private float dropWeaponStrength = 10.0f;
 
-
 	private WeaponController weaponController = null;
+	private Weapon[] weapons = new Weapon[3];
 
 	private void Awake()
 	{
-		this.weaponController = GameObject.FindObjectOfType<WeaponController>();
-
-		this.UpdateUI();
+		this.weaponController = this.GetComponent<WeaponController>();
+		this.RefreshUI();
 	}
 
 	private void Update()
 	{
-		if (Input.GetKeyDown (KeyCode.Alpha1))
+		if(Input.GetKeyDown(KeyCode.Alpha1))
             this.EquipWeapon(0);
-        if (Input.GetKeyDown (KeyCode.Alpha2))
+        else if(Input.GetKeyDown(KeyCode.Alpha2))
             this.EquipWeapon(1);
-        if (Input.GetKeyDown (KeyCode.Alpha3))
+        else if(Input.GetKeyDown(KeyCode.Alpha3))
             this.EquipWeapon(2);
 
-		if (Input.GetKeyDown(KeyCode.X))
+		if(Input.GetKeyDown(KeyCode.X))
 			this.DropWeapon(this.weaponController.GetCurrentWeapon(), true);
 	}
+
+	private void RefreshUI()
+	{
+		this.grenadeCountText.text = this.grenadeCount.ToString();
+        this.clipCountText.text = this.GetClipCount().ToString();
+    }
+
+	private int GetClipCount()
+	{
+		return Mathf.Max(Mathf.CeilToInt(this.ammoCount / this.magSize), 0);
+	}
+
+    public bool TryAddWeapon(Weapon weapon)
+    {
+        if(weapon == null || this.HasWeapon(weapon))
+            return false;
+
+		int availableIndex = Array.IndexOf<Weapon>(this.weapons, null);
+		bool hasAvailableIndex = (availableIndex > -1);
+
+		if(hasAvailableIndex)
+			this.AddWeapon(weapon, availableIndex);
+
+        return hasAvailableIndex;
+    }
+
+	private bool HasWeapon(Weapon weapon)
+    {
+		return (weapon == null) ? false :
+			Array.Exists<Weapon>(this.weapons, element => element == weapon);
+    }	
+
+	private void AddWeapon(Weapon weapon, int slotIndex)
+	{
+		if(slotIndex < 0 || slotIndex >= this.weapons.Length)
+			return;
+
+		this.weapons[slotIndex] = weapon;
+		this.weapons[slotIndex].OnPickedUp();
+
+		// Equip weapon if the Player isn't holding a weapon.
+		if (this.weaponController.GetCurrentWeapon() == null)
+			this.EquipWeapon(slotIndex);
+	}
+
+	private void EquipWeapon(int slotIndex)
+	{
+        this.weaponController.EquipWeapon(this.weapons[slotIndex]);
+    }
 
 	private void DropWeapon(Weapon weapon, bool shouldEquipNextWeapon = false)
 	{
@@ -62,67 +111,7 @@ public class Inventory: MonoBehaviour
 		}
 	}
 
-	private void UpdateUI()
-	{
-		this.grenadeCountText.text = this.grenadeCount.ToString();
-        this.clipCountText.text = this.GetClipCount().ToString();
-    }
-
-	private int GetClipCount()
-	{
-		return Mathf.Max(Mathf.CeilToInt(this.ammoCount / this.magSize), 0);
-	}
-
-	private void EquipWeapon(int slotIndex)
-	{
-        this.weaponController.EquipWeapon(this.weapons[slotIndex]);
-    }
-
-    public bool TryAddWeapon(Weapon weapon)
-    {
-        if(this.HasWeapon(weapon))
-            return false;
-
-        // Check through all of the Guns until an empty spot is found.
-        for (int i = 0; i < this.weapons.Length; i++)
-        {
-            if (this.weapons[i] != null)
-				continue;
-
-			this.AddWeapon(weapon, i);
-
-			return true;
-        }
-
-        // An empty spot hasn't been found so return false (weapon not added).
-        return false;
-    }
-
-	private void AddWeapon(Weapon weapon, int slotIndex)
-	{
-		this.weapons[slotIndex] = weapon;
-		this.weapons[slotIndex].OnPickedUp();
-
-		// Equip weapon if the Player isn't holding a weapon.
-		if (this.weaponController.GetCurrentWeapon() == null)
-			this.EquipWeapon(slotIndex);
-	}
-
-    public bool HasWeapon(Weapon weapon)
-    {
-		if(weapon == null)
-			return false;
-
-		foreach(Weapon inventoryWeapon in this.weapons)
-		{
-			if(inventoryWeapon == weapon)
-				return true;
-		}
-
-        return false;
-    }	
-
-    private void EquipNextHeldGun(int slotIndex)
+	private void EquipNextHeldGun(int slotIndex)
     {
         // Check index after.
         for(int i = slotIndex + 1; i < this.weapons.Length; i++)
@@ -139,15 +128,46 @@ public class Inventory: MonoBehaviour
         }
     }
 
+	public InventoryData GetInventoryData()
+	{
+		string[] weaponNames = new string[this.weapons.Length];
+		for(int i = 0; i < this.weapons.Length; i++)
+		{
+			weaponNames[i] = (this.weapons[i] == null) ? "" :
+				this.weapons[i].GetResourceName();
+		}
+
+		return new InventoryData(this.ammoCount, this.grenadeCount, weaponNames);
+	}
+
+	public void LoadInventory(InventoryData data)
+	{
+		// Create and add weapons.
+		for(int i = 0; i < data.weaponNames.Length; i++)
+		{
+			if(data.weaponNames[i] == "")
+				continue;
+
+			GameObject newWeapon = GameObject.Instantiate<GameObject>(
+				Resources.Load<GameObject>("Weapons/" + data.weaponNames[i]));
+			if(!this.TryAddWeapon(newWeapon.GetComponent<Weapon>()))
+				GameObject.Destroy(newWeapon);
+		}
+
+		this.ammoCount = data.ammo;
+		this.grenadeCount = data.grenades;
+		this.RefreshUI();
+	}
+
     public int GetAmmo()
 	{	
 		return this.ammoCount;
 	}
 
-	public void SetAmmo(int value)
+	private void SetAmmo(int value)
 	{
 		this.ammoCount = Mathf.Max(value, 0);
-		this.UpdateUI();
+		this.RefreshUI();
     }
 
 	public void ManipulateAmmo(int value)
@@ -172,12 +192,12 @@ public class Inventory: MonoBehaviour
 	public int GetGrenades()
 	{
 		return this.grenadeCount;
-	}
+	}	
 	
-	public void SetGrenades(int value)
+	private void SetGrenades(int value)
 	{
 		this.grenadeCount = Mathf.Max(value, 0);
-		this.UpdateUI();	
+		this.RefreshUI();	
 	}
 	
 	public void ManipulateGrenades(int value)

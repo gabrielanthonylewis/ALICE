@@ -1,9 +1,4 @@
-﻿using UnityEngine;
-
-namespace ALICE.Weapon.Gun
+﻿namespace ALICE.Weapon.Gun
 {
-    public class Crossbow : Gun
-    {
-
-    }
+    public class Crossbow : Gun {}
 }

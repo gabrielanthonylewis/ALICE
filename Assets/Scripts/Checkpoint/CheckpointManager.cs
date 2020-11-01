@@ -101,10 +101,9 @@ namespace ALICE.Checkpoint
                 enemyPositions = this.GetEnemyPositions(),
                 playerPosition = this.player.position,
                 playerRotation = this.player.rotation,
-                ammo = this.playerInventory.GetAmmo(),
-                grenades = this.playerInventory.GetGrenades(),
                 health = this.player.GetComponent<Destructable>().GetHealth(),
-                slowmo = this.player.GetComponent<SlowmoController>().remainingTime
+                slowmo = this.player.GetComponent<SlowmoController>().remainingTime,
+                inventory = this.playerInventory.GetInventoryData()
             };
         }
 
@@ -137,8 +136,7 @@ namespace ALICE.Checkpoint
 
         private void LoadInventory()
         {
-            this.playerInventory.SetAmmo(this.lastCheckPoint.ammo);
-            this.playerInventory.SetGrenades(this.lastCheckPoint.grenades);
+            this.playerInventory.LoadInventory(this.lastCheckPoint.inventory);
         }
 
         private void LoadEnemies()

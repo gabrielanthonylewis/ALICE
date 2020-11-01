@@ -10,6 +10,7 @@ namespace ALICE.Weapon
 {
     public class Weapon: Pickup
     {
+        [SerializeField] private string resourceName = "";
         [SerializeField] protected int damage = 1;
         [SerializeField] private int meleeDamage = 5;
         [SerializeField] private float meleeForce = 2.0f;
@@ -51,6 +52,11 @@ namespace ALICE.Weapon
 
             return (this.animator.GetCurrentAnimatorStateInfo(0).normalizedTime <= 1 ||
                 this.animator.IsInTransition(0));
+        }
+
+        public string GetResourceName()
+        {
+            return this.resourceName;
         }
 
         public virtual void OnAimInput()
@@ -103,7 +109,6 @@ namespace ALICE.Weapon
 			if (this.transform.GetComponent<Rigidbody>())
 				this.transform.GetComponent<Rigidbody>().isKinematic = true;
 
-			this.name = "Gun";
 			this.transform.SetParent(Camera.main.transform);
 			this.transform.localRotation = Quaternion.identity;
 			this.transform.localPosition = Vector3.zero;

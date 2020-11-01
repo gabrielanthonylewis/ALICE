@@ -3,7 +3,8 @@ using System.Collections;
 
 // The Arrow script deal with the projectile behaviour of an arrow,
 // stopping when it hits an object and dealing damage.
-public class Arrow : MonoBehaviour {
+public class Arrow : MonoBehaviour
+{
 	
 	// Reference to Rigidbody component (optimisation)
 	private Rigidbody _Rigidbody = null;
