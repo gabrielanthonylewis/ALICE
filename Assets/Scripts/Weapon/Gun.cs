@@ -112,7 +112,7 @@ namespace ALICE.Weapon.Gun
                     Destructable hitDestructable = hit.transform.GetComponent<Destructable>();
                     if(hitDestructable != null)
                     {
-                        hit.transform.GetComponent<Destructable>().ManipulateHealth(this.damage);
+                        hit.transform.GetComponent<Destructable>().ManipulateHealth(-this.damage);
                         hasHitObject = true;
                     }
 

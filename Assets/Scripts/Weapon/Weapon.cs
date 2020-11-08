@@ -135,7 +135,7 @@ namespace ALICE.Weapon
                 Destructable hitDestructable = hit.transform.GetComponent<Destructable>();
                 if (hitDestructable != null)
                 {
-                    hitDestructable.ManipulateHealth (this.meleeDamage);
+                    hitDestructable.ManipulateHealth(-this.meleeDamage);
                     this.onHitEvent?.Invoke();
                 }
             }

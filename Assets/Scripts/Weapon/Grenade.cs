@@ -27,7 +27,7 @@ public class Grenade : MonoBehaviour
 
 		// Damage the object within the trigger by 10.
 		if(other.GetComponent<Destructable>())
-			other.GetComponent<Destructable>().ManipulateHealth(10f);
+			other.GetComponent<Destructable>().ManipulateHealth(-10);
 	}
 
 	// Wait "seconds" seconds and the explode the grenade.

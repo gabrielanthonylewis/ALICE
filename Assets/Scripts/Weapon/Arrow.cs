@@ -34,6 +34,6 @@ public class Arrow : MonoBehaviour
 		_Rigidbody.useGravity = false;
 			
 		if (other.GetComponent<Destructable>()) 
-			other.GetComponent<Destructable>().ManipulateHealth(5f);
+			other.GetComponent<Destructable>().ManipulateHealth(-5);
 	}
 }

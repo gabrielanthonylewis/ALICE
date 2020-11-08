@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using System.Collections;
 
+// TODO: Was invoke in Destructable.ts but should probably have a generic event on Destructle which I can listen to and then invoke.
 public class OnDeathBossEvent : MonoBehaviour 
 {
 	// (optional) Animation to be played upon death.

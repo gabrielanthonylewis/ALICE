@@ -19,6 +19,6 @@ public class DestroyOnTouch : MonoBehaviour
         if (this.GetComponent<Animation>() && !this.GetComponent<Animation>().isPlaying)
 			return;
 
-		other.gameObject.GetComponent<Destructable> ().ManipulateHealth (_killSpeedMultiplier * Time.deltaTime);
+		other.gameObject.GetComponent<Destructable> ().ManipulateHealth (-(_killSpeedMultiplier * Time.deltaTime));
 	}
 }
