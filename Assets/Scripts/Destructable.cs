@@ -24,7 +24,7 @@ public class Destructable : MonoBehaviour
 
     public void SetHealth(float health)
     {
-        this.currentHealth = Mathf.Clamp(health, 0, this.maxHealth);
+        this.currentHealth = Mathf.Clamp(health, 0.0f, this.maxHealth);
 
 		if (this.currentHealth <= 0.0f)
 			this.StartCoroutine(this.OnDeathRoutine());

@@ -1,14 +1,17 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class LightControl : MonoBehaviour {
+[RequireComponent(typeof(Light))]
+public class LightControl : MonoBehaviour
+{
+	private new Light light = null;
 
-    float nRand = 0;
-	
-	void Update ()
+    private void Start()
     {
-        nRand = Random.RandomRange(4f, 5f);
-        this.transform.GetComponent<Light>().intensity = nRand;
+        this.light = this.GetComponent<Light>();
+    }
+
+	private void Update()
+    {
+        this.light.intensity = Random.Range(4.0f, 5.0f);
 	}
 }

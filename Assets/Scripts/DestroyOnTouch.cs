@@ -10,6 +10,9 @@ public class DestroyOnTouch : MonoBehaviour
 
 	void OnTriggerStay(Collider other)
 	{
+        if(other.isTrigger)
+            return;
+
         // Only affect objects that have health...
         if (!other.GetComponent<Destructable>())
             return;

@@ -11,8 +11,8 @@ namespace ALICE.Checkpoint
                 
         private CheckpointData lastCheckPoint = new CheckpointData();
 
-        [SerializeField]
-        private Animator checkpointReachedAnimator = null;
+        [SerializeField] private Animator checkpointReachedAnimator = null;
+        [SerializeField] private bool shouldSpawnPlayerOnNewLevel = false;
 
         private readonly string enemyTag = "Enemy";
         private readonly string playerTag = "Player";
@@ -60,9 +60,15 @@ namespace ALICE.Checkpoint
                 this.currentSceneIndex = scene.buildIndex;
                 this.ClearLastCheckpoint();
 
-                this.player = GameObject.FindObjectOfType<PlayerSpawnPoint>().SpawnPlayer().transform;
-                this.playerInventory = this.player.GetComponentInChildren<Inventory>();
+                if(this.shouldSpawnPlayerOnNewLevel)
+                    this.SpawnPlayer();
             }                
+        }
+
+        public void SpawnPlayer()
+        {
+            this.player = GameObject.FindObjectOfType<PlayerSpawnPoint>().SpawnPlayer().transform;
+            this.playerInventory = this.player.GetComponentInChildren<Inventory>();
         }
 
         public void OnRestartLevel()
