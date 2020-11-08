@@ -47,7 +47,7 @@ public class Destructable : MonoBehaviour
 
 		this.SetHealth(this.currentHealth + val);
 
-		this.PlayAnimation(this.hitAnimation);
+		AnimationUtils.PlayAnimationClip(this.animation, this.hitAnimation);
 
 		return true;
 	}
@@ -58,20 +58,13 @@ public class Destructable : MonoBehaviour
 			this.worldHealth.text = (this.currentHealth + "/" + this.maxHealth);
 	}
 
-	private void PlayAnimation(AnimationClip clip)
-	{
-		if(this.animation == null || clip == null)
-			return;
-
-		this.animation.clip = clip;
-		this.animation.Play();
-	}
 
 	private IEnumerator OnDeathRoutine()
 	{
 		if(this.animation != null && this.deathAnimation != null)
 		{
-			this.PlayAnimation(this.deathAnimation);
+			AnimationUtils.PlayAnimationClip(this.animation, this.deathAnimation);
+			
 			yield return new WaitForSeconds(this.deathAnimation.length);
 		}
 

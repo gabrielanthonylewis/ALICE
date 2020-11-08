@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class AI : MonoBehaviour 
 {
@@ -12,7 +11,6 @@ public class AI : MonoBehaviour
 	private Transform target = null;
 	private AIMovementBase movementBase = null;
 
-
 	private void Start()
 	{
 		this.movementBase = this.GetComponent<AIMovementBase>();
@@ -24,15 +22,17 @@ public class AI : MonoBehaviour
 	{
 		bool isTargetSpotted = (this.target != null && this.IsTargetSeen(this.target.position));
 
+		// TODO: if not spotted then need to rotate slowly back and forth in an 180 degree arc
+
 		if(this.movementBase != null)
 			this.movementBase.SetTarget((isTargetSpotted) ? this.target : null);
 
 		if(this.weaponController != null)
 			this.weaponController.SetTarget((isTargetSpotted) ? this.target : null);
 
-		if (isTargetSpotted)
+		if(isTargetSpotted)
 		{
-			// Look towards the target (but preventing the body rotating upwards and downwards) 
+			// Look towards the target (whilst preventing the body rotating upwards and downwards) 
 			Vector3 targetPos = target.transform.position;
 			targetPos.y = this.transform.position.y;
 			this.transform.LookAt (targetPos, transform.up);

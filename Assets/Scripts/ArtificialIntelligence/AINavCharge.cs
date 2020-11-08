@@ -9,7 +9,7 @@ public class AINavCharge : AIMovementBase
         if(this.target != null)
         {
             this.transform.position = Vector3.MoveTowards(transform.position,
-                target.transform.position, this.speedMultiplier * Time.deltaTime);
+                this.target.transform.position, this.speedMultiplier * Time.deltaTime);
         }
     }
 }

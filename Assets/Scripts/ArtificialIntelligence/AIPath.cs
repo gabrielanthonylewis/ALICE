@@ -5,7 +5,6 @@ public class AIPath : AIMovementBase
 	[SerializeField] private Transform pointA = null;
 	[SerializeField] private Transform pointB = null;
 
-
     private void Start()
     {
         this.navMeshAgent.destination = this.pointA.position;
@@ -21,10 +20,9 @@ public class AIPath : AIMovementBase
             this.GoToNextPoint();
     }
 
-
     private void GoToNextPoint()
     {
-        this.navMeshAgent.destination = (this.navMeshAgent.destination == this.pointA.position) ? 
-            this.pointB.position : this.pointA.position; 
+        this.navMeshAgent.destination = (this.navMeshAgent.destination == this.pointA.position)
+            ? this.pointB.position : this.pointA.position; 
     }
 }

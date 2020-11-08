@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using ALICE.Utils.Animation;
 
 namespace ALICE.Checkpoint
 {
