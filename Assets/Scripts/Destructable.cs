@@ -3,8 +3,7 @@ using System.Collections;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
-// The Destructable script provides health and destruction functionally upon 0 health (unless specified not to).
-// Destruction is achieved by instantiating a prefab of smaller objects.
+// The Destructable script provides health and destruction functionally.
 public class Destructable : MonoBehaviour 
 {
 	// Fragments to instantiate when object is destroyed.
