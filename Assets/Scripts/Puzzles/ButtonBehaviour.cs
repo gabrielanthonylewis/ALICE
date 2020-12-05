@@ -1,17 +1,21 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class ButtonBehaviour : MonoBehaviour, IInteractable 
 {
-	// (optional) Reference to a Platform component to be activated upon button push.
 	[SerializeField] private Platform platform = null;
 
+	private new Animation animation = null;
+
+	private void Start()
+	{
+		this.animation = this.GetComponent<Animation>();
+	}
+	
 	public void OnInteract(GameObject interactor)
 	{
-		if (this.GetComponent<Animation> ()) 
-			this.GetComponent<Animation>().Play();
+		this.animation?.Play(); 
 
-		if (platform) 
-			platform.Activate();
+		if(this.platform) 
+			this.platform.Activate();
 	}
 }

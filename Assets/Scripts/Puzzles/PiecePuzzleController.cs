@@ -1,285 +1,211 @@
 ﻿using UnityEngine;
-using System.Collections;
-using UnityEngine.Events;
 
-// The PiecePuzzleController script is the manager script of the piece/picture puzzle.
-public class PiecePuzzleController : MonoBehaviour, IInteractable
+public class PiecePuzzleController : PuzzleBase, IInteractable
 {
-	struct Position
+	enum Direction { Up, Left, Down, Right, Null };
+
+	[SerializeField] private GameObject piecePrefab = null;
+	[SerializeField] private GameObject firstPiece = null;
+	[SerializeField] private Texture[] textures = null;
+	[SerializeField] private Material emptyMat = null;
+	[SerializeField] private Camera puzzleCamera = null;
+	[SerializeField] private LayerMask pieceLayermask;
+	[SerializeField] private float pieceSpacing = 0.08f;
+	[SerializeField] private int rows = 3;
+	[SerializeField] private int columns = 3;
+
+	private Piece[,] pieces = new Piece[0, 0];
+	private bool isPlaying = false;
+	private GameObject player = null;
+
+	private void Awake()
 	{
-		public int x;
-		public int y;
-	}
-	
-	struct PuzzlePiece
-	{
-		public Position position;
-		public PieceController controller;
-	}
-
-	// Event to be invoked upon completion of the puzzle.
-	[SerializeField] private UnityEvent OnWinEvent;
-
-	// If true the puzzle is active (the user is playing it).
-	[SerializeField] private bool isActive = true;
-
-	// A reference to the Camera that will be active during the duration of the puzzle.
-	[SerializeField] private Camera PuzzleCamera = null;
-
-	// Ordered reference to each piece's PieceController.
-	[SerializeField] private PieceController[] _goPieces;
-
-	// The current index of the piece/PieceController clicked.
-	[SerializeField] private int currIndex = -1;
-
-	// The number of rows the puzzle has.
-	[SerializeField] private const int rows = 3;
-
-	// The number of columns the puzzle has.
-	[SerializeField] private const int columns = 3;
-
-	// The space between each piece.
-	[SerializeField] private const float offset = 0.08f;
-
-	// Ordered reference of each puzzle piece containing more useful data from the "PuzzlePiece" structure.
-	private PuzzlePiece[] _BoardPieces;
-
-	// Keeps a reference to the player for purposes of player safety (hide player).
-	private Transform _tempPlayer;
-
-	void Awake()
-	{
-		// If not supposed to active then turn off the camera.
-		if (!isActive)
-			PuzzleCamera.gameObject.SetActive (false);
-
-		// Inialise _BoardPieces.
-		_BoardPieces = new PuzzlePiece[rows * columns ];
-
-		// Populate _BoardPieces[]. 
-		int tRow = 0;
-		int tCol = 0;
-		for (int rowI = 0; rowI < 8; rowI++) 
-		{
-			// Logic to move along to theoretically move to the next line.
-			if(rowI % rows == 0)
-			{
-				tRow++;
-				tCol = 0;
-			}
-			tCol++;
+		// Setup pieces by instantiating and then assigning postion and textures.
+		Collider firstPieceCollider = this.firstPiece.GetComponent<Collider>();
+		float xOffset = firstPieceCollider.bounds.size.x + this.pieceSpacing;
+		float zOffset = firstPieceCollider.bounds.size.z + this.pieceSpacing;
 		
-			// Inialise the controller and position information of each piece.
-			_BoardPieces[rowI].controller = _goPieces[rowI];
-			_BoardPieces[rowI].position.x = tCol - 1;
-			_BoardPieces[rowI].position.y = tRow - 1;
+		this.pieces = new Piece[this.rows, this.columns];
+		int textureIndex = 0;
+		for(int row = 0; row < this.pieces.GetLength(0); row++)
+		{
+			for(int col = 0; col < this.pieces.GetLength(1); col++, textureIndex++)
+			{
+				GameObject newPiece = GameObject.Instantiate<GameObject>(this.piecePrefab,
+					this.firstPiece.transform.position, this.firstPiece.transform.rotation);
+
+				newPiece.transform.SetParent(this.transform);
+
+				newPiece.transform.position += new Vector3(col * xOffset, 0.0f, -row * zOffset);
+				
+				this.pieces[row, col] = newPiece.GetComponent<Piece>();
+				this.pieces[row, col].SetGridIndex(new GridIndex(row, col));
+				this.pieces[row, col].SetInitialTexture(this.textures[textureIndex]);
+			}
 		}
 
-		RandomizeBoard ();
+		this.pieces[this.rows - 1, this.columns - 1].SetEmpty(emptyMat);
 	}
 
-	void Update () 
+	private void Start()
 	{
-		// If the game is not being played then return.
-		if (!isActive)
+		this.RandomizeBoard();
+	}
+
+	private void Update() 
+	{
+		if(!this.isPlaying)
 			return;
 
-		// Exit from the game when Escape is pressed.
-		if (Input.GetKeyDown (KeyCode.Escape))
-			Stop();
-
-		// [Selecting a piece]
-		if (PuzzleCamera) 
-		{	
-			if(Input.GetKeyDown(KeyCode.Mouse0))
+		// Interact with a piece.
+		if(Input.GetKeyDown(KeyCode.Mouse0))
+		{
+			RaycastHit hit;
+			Ray ray = puzzleCamera.ScreenPointToRay(Input.mousePosition);
+			if(Physics.Raycast (ray, out hit, 10f, this.pieceLayermask))
 			{
-				RaycastHit hit;
-				Ray ray = PuzzleCamera.ScreenPointToRay (Input.mousePosition);
-				if(Physics.Raycast(ray, out hit, 10f))
-				{
-					// If the hit object is a piece...
-					if(hit.transform.gameObject.GetComponent<PieceController>())
-					{
-						PieceController tempPieceController = hit.transform.gameObject.GetComponent<PieceController>();
+				this.MoveToFreeSpace(hit.transform.GetComponent<Piece>());
 
-						// Find the piece selected.
-						for(int i = 0; i < _BoardPieces.Length; i++)
-						{
-							if(tempPieceController == _BoardPieces[i].controller)
-							{
-								currIndex= i;
-								_BoardPieces[currIndex] = _BoardPieces[i];					
-								break;
-							}
-						}
-
-						// Attempt to move the piece into the free space.
-						MoveToFreeSpace();
-
-						// Deselect piece.
-						currIndex = -1;
-
-						// If the puzzle has been complete then stop the game and invoke the win event.
-						if(Complete())
-						{
-							Stop();
-							OnWinEvent.Invoke();
-						}
-					}
-				}
+				if(this.IsComplete())
+					this.OnComplete();
 			}
 		}
+
+		if(Input.GetKeyDown(KeyCode.Escape))
+			this.ChangePlayState(false, this.player);
 	}
 
-	// Check to see if the puzzle has been complete through comparison.
-	private bool Complete()
-	{
-		for(int i = 0; i < _BoardPieces.Length - 1; i++)
-		{
-			if(_BoardPieces[i].controller != _goPieces[i])
-				return false;
-		}
+    protected override void OnComplete()
+    {
+        base.OnComplete();
 
-		return true;
-	}
-
-	public void OnInteract(GameObject interactor)
-	{
-		// "play" the puzzle and remove self from the game temporarily.
-		if(this.Play(interactor.transform.parent))
-			interactor.transform.parent.gameObject.SetActive(false);
-	}
-
-	// Hide the player (for safety) and play the puzzle game by enabling the camera and such.
-	public bool Play (Transform tempPlayer)
-	{
-		_tempPlayer = tempPlayer;
-		isActive = true;
-		PuzzleCamera.gameObject.SetActive (true);
-		Cursor.visible = true;
-		this.GetComponent<BoxCollider> ().enabled = false;
-		return true;
-	}
-
-	// Show the player again and then disable all of the puzzle related game things such as the camera.
-	public void Stop()
-	{
-		isActive = false;
-		PuzzleCamera.gameObject.SetActive (false);
-		Cursor.visible = false;
-		this.GetComponent<BoxCollider> ().enabled = true;
-		_tempPlayer.transform.gameObject.SetActive (true);
-		_tempPlayer = null;
-	}
-
-	private void MoveToFreeSpace()
-	{
-		int newIdx = 0;
-
-		// Check in each direction for the free spot and once found, move there (updating the _BoardPiece in the process).
-		if (CheckFreeLeft ()) 
-		{
-			newIdx = (currIndex - 1);
-			_BoardPieces [currIndex].controller.Move (PieceController.Direction.Left, offset);
-			_BoardPieces [currIndex].position.x -= 1;
-		} 
-		else if (CheckFreeAbove ()) 
-		{
-			newIdx = (_BoardPieces [currIndex].position.y - 1) * (rows) + (_BoardPieces [currIndex].position.x); 
-			_BoardPieces [currIndex].controller.Move (PieceController.Direction.Up, offset);
-			_BoardPieces [currIndex].position.y -= 1;
-		} 
-		else if (CheckFreeRight ()) 
-		{
-			newIdx = (currIndex + 1); 
-			_BoardPieces [currIndex].controller.Move (PieceController.Direction.Right, offset);
-			_BoardPieces [currIndex].position.x += 1;
-		} 
-		else if (CheckFreeBelow ())
-		{
-			newIdx = (_BoardPieces [currIndex].position.y + 1) * (rows) + (_BoardPieces [currIndex].position.x); 
-			_BoardPieces [currIndex].controller.Move (PieceController.Direction.Down, offset);
-			_BoardPieces [currIndex].position.y += 1;
-		} 
-		else
-			return; 
-
-		// Update _BoardPieces with the new positions.
-		PuzzlePiece temp = _BoardPieces[currIndex];
-		_BoardPieces[currIndex] = _BoardPieces[newIdx];
-		_BoardPieces[newIdx] = temp;
-		
-		currIndex = newIdx;
-	}
+		this.ChangePlayState(false, this.player);
+    }
 
 	private void RandomizeBoard()
 	{
 		// Attempt to move a random piece 200 times (creates a randomized puzzle).
 		for (int i = 0; i < 200; i++)
 		{
-			int rand = Random.Range (0, (rows * columns));
-			currIndex = rand;
+			int randRow = Random.Range(0, this.rows);
+			int randCol = Random.Range(0, this.columns);
+			this.MoveToFreeSpace(this.pieces[randRow, randCol]);
+		}
+	}
 
-			if (_BoardPieces [currIndex].controller) 
+	public void OnInteract(GameObject interactor)
+	{
+		if(this.isComplete)
+			return;
+
+		// "play" the puzzle and remove self from the game temporarily.
+		this.ChangePlayState(true, interactor.transform.parent.gameObject);
+	}
+
+	// Hide the player and play the puzzle game by enabling the camera.
+	public void ChangePlayState(bool isPlaying, GameObject player)
+	{
+		this.player = player;
+		this.isPlaying = isPlaying;
+
+		this.player.gameObject.SetActive(!this.isPlaying);
+		this.puzzleCamera.gameObject.SetActive(this.isPlaying);
+		this.GetComponent<BoxCollider>().enabled = !this.isPlaying;
+	}
+
+	private void MoveToFreeSpace(Piece piece)
+	{
+		this.MovePiece(piece, this.GetFirstFreeDirection(piece));
+	}
+
+	private void MovePiece(Piece piece, Direction direction)
+	{
+		Piece newPiece = null;
+
+		switch(direction) 
+		{
+			case Direction.Up:
+				newPiece = this.pieces[piece.index.row - 1, piece.index.col];
+				break;
+
+			case Direction.Left:
+				newPiece = this.pieces[piece.index.row, piece.index.col - 1];
+				break;
+
+			case Direction.Down:
+				newPiece = this.pieces[piece.index.row + 1, piece.index.col];
+				break;
+
+			case Direction.Right:
+				newPiece = this.pieces[piece.index.row, piece.index.col + 1];
+				break;
+		}
+
+		if(newPiece != null)
+		{
+			newPiece.SetTexture(piece.material.mainTexture);
+			piece.SetEmpty(this.emptyMat);
+		}
+	}
+
+	private Direction GetFirstFreeDirection(Piece piece)
+	{
+		if(this.IsFreeRightOf(piece))
+			return Direction.Right;
+		if(this.IsFreeLeftOf(piece))
+			return Direction.Left;
+		if(this.IsFreeAbove(piece))
+			return Direction.Up;
+		if(this.IsFreeBelow(piece))
+			return Direction.Down;
+
+		return Direction.Null;
+	}
+
+	private bool IsFreeRightOf(Piece piece)
+	{
+		if(piece.index.col + 1 >= this.pieces.GetLength(1))
+			return false;
+
+		return (this.pieces[piece.index.row, piece.index.col + 1].isEmpty);
+	}
+
+	private bool IsFreeLeftOf(Piece piece)
+	{
+		if(piece.index.col - 1 < 0)
+			return false;
+
+		return (this.pieces[piece.index.row, piece.index.col - 1].isEmpty);
+	}
+
+	private bool IsFreeAbove(Piece piece)
+	{
+		if(piece.index.row - 1 < 0)
+			return false;
+
+		return (this.pieces[piece.index.row - 1, piece.index.col].isEmpty);
+	}
+
+	private bool IsFreeBelow(Piece piece)
+	{
+		if(piece.index.row + 1 >= this.pieces.GetLength(0))
+			return false;
+
+		return (this.pieces[piece.index.row + 1, piece.index.col].isEmpty);
+	}
+
+	private bool IsComplete()
+	{
+		int textureIndex = 0;
+		for(int row = 0; row < this.pieces.GetLength(0); row++)
+		{
+			for(int col = 0; col < this.pieces.GetLength(1); col++, textureIndex++)
 			{
-				// Locate the free space and move there if there is one.
-				MoveToFreeSpace();
+				if(this.pieces[row, col].material.mainTexture != this.textures[textureIndex])
+					return false;
 			}
 		}
 
-		currIndex = -1;
-	}
-
-	private bool CheckFreeLeft()
-	{
-		// Check if the piece is at the far left.
-		if(_BoardPieces[currIndex].position.x  == 0)
-			return false;
-		// Check if there is a piece on the left. 
-		else if(_BoardPieces[currIndex - 1].controller)
-			return false;
-
-		// If neither then the space is free.
 		return true;
 	}
-
-	private bool CheckFreeAbove()
-	{
-		// Check if the piece is at top.
-		if(_BoardPieces[currIndex].position.y  == 0)
-			return false;
-		// Check if there is a piece above. 
-		else if(_BoardPieces[(_BoardPieces[currIndex].position.y - 1) * (rows) + ( _BoardPieces[currIndex].position.x)].controller)
-			return false;
-
-		// If neither then the space is free.
-		return true;
-	}
-
-	private bool CheckFreeRight()
-	{
-		// Check if the piece is at the far right.
-		if(_BoardPieces[currIndex].position.x  == columns - 1)
-			return false;
-		// Check if there is a piece on the right. 
-		else if(_BoardPieces[currIndex + 1].controller)
-			return false;
-
-		// If neither then the space is free.
-		return true;
-	}
-
-	private bool CheckFreeBelow()
-	{
-		// Check if the piece is at bottom.
-		if(_BoardPieces[currIndex].position.y  == rows - 1)
-			return false;
-		// Check if there is a piece below. 
-		else if(_BoardPieces[(_BoardPieces[currIndex].position.y + 1)* (rows ) + ( _BoardPieces[currIndex].position.x)].controller)
-			return false;
-
-		// If neither then the space is free.
-		return true;
-	}
-
 }

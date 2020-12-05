@@ -1,68 +1,48 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// The SequenceButton scripts deals the button puzzle piece behaviour.
 public class SequenceButton : MonoBehaviour, IInteractable 
 {
-	// Material to breifly flash.
-	[SerializeField] private Material FlashMat;
+	[SerializeField] private SequenceController sequenceController;
+	[SerializeField] private Color flashColour;
 
-	// Reference to the sequence controller component (the puzzle manager).
-	[SerializeField] private SequenceController _SequenceController;
+	private MeshRenderer meshRenderer;
+	private Color defaultColour;
+	private bool isCoroutineRunning = false;
 
-	// Position of the button, 0 being left and 1 being right (in this case, could go on to 3 or 4..)
-	[SerializeField] private int position;
-
-	// The original material of the button.
-	private Material _OriginalMat;
-
-	// When true input/pushing is prevented.
-	// An example of when this would be the case is when the sequence is beng shown.
-	private bool busy;
-
-	void Awake()
+	private void Awake()
 	{
-		_OriginalMat = this.GetComponent<MeshRenderer> ().material;
+		this.meshRenderer = this.GetComponent<MeshRenderer>();
+		this.defaultColour = this.meshRenderer.material.color;
 	}
-
 
 	public void OnInteract(GameObject interactor)
 	{
-		if(!this.GetBusy())
-			this.UserPush();
+		if(this.CanAddAttempt())
+		{
+			this.Flash();
+			this.sequenceController.AddButtonAttempt(this);
+		}
 	}
 
-	public void UserPush()
+	private bool CanAddAttempt()
 	{
-		// If not bust then add the press to the attempt sequence.
-		if (!busy)
-			_SequenceController.AttemptAdd(position);
-
-		// Flash the button (show that it has been presented).
-		Flash ();
+		return (this.sequenceController.CanAddAttempt() && !this.isCoroutineRunning);
 	}
 
-	public bool Flash()
+	public void Flash()
 	{
-		StartCoroutine ("FlashRou");
-		return true;
+		this.StartCoroutine(this.FlashRou());
 	}
 
-	// Change material to the flash material breifly, and then return back.
-	IEnumerator FlashRou()
+	private IEnumerator FlashRou()
 	{
-		this.GetComponent<MeshRenderer> ().material = FlashMat;
+		this.isCoroutineRunning = true;
+
+		this.meshRenderer.material.color = this.flashColour;
 		yield return new WaitForSeconds(0.4f);
-		this.GetComponent<MeshRenderer> ().material = _OriginalMat;
-	}
+		this.meshRenderer.material.color = this.defaultColour;
 
-	public void SetBusy(bool val)
-	{
-		busy = val;
-	}
-
-	public bool GetBusy()
-	{
-		return busy;
+		this.isCoroutineRunning = false;
 	}
 }

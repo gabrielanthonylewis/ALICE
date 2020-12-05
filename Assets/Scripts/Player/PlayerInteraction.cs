@@ -8,7 +8,7 @@ public class PlayerInteraction : MonoBehaviour
 	private void Update() 
 	{
 		RaycastHit hit;
-		if (Physics.Raycast (this.transform.position, this.transform.forward, out hit, this.rayDistance, this.layermask))
+		if(Physics.Raycast(this.transform.position, this.transform.forward, out hit, this.rayDistance, this.layermask))
 		{
 			if(Input.GetKey(KeyCode.F))
 				hit.transform.GetComponent<IInteractable>()?.OnInteract(this.gameObject);

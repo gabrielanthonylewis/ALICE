@@ -1,63 +1,48 @@
 ﻿using UnityEngine;
-using System.Collections;
 
-// The FlashingLight script provides an ambient flashing of a light component.
 [RequireComponent(typeof (Light))]
 public class FlashingLight : MonoBehaviour 
 {
-	// The speed multiplier of the transition.
-	[SerializeField] private float _SpeedMultiplier = 1f;
+	[SerializeField] private float duration = 1.0f;
+	[SerializeField] private float minIntensity = 0.0f;
+	[SerializeField] private float minRange = 10.0f;
 
-	// The maximum intensity to transition to.
-	[SerializeField] private float _MaxIntensity = 1f;
+	private new Light light = null;
+	private float maxIntensity;
+	private float maxRange;
+	private float targetIntensity;
+	private float targetRange;
+	private float lerpT;
+	private float halfDuration;
 
-	// The initial intensity to return back to.
-	private float _InitialIntensity = 0f;
-
-	// The amount of range (plus the inital range) to transition to.
-	private float _AdditionalRange = 0.5f;
-
-	// The inital range to return back to.
-	private float _InitialRange = 0f;
-
-	// Reference to the light component (optimisation).
-	private Light _Light = null;
-
-	// When true increase intensity and range;
-	// otherwise, decrease back to the intial state.
-	private bool _Increase = true;
-
-	void Awake()
+	private void Start()
 	{
-		_Light = this.GetComponent<Light> ();
-
-		// Initalisation.
-		_InitialIntensity = _Light.intensity;
-		_InitialRange = _Light.range;
-		_AdditionalRange += _Light.range;
+		this.light = this.GetComponent<Light>();
+		this.maxIntensity = this.light.intensity;
+		this.maxRange = this.light.range;
+		this.targetIntensity = this.maxIntensity;
+		this.targetRange = this.maxRange;
+		this.lerpT = Random.Range(0.0f, 1.0f);
+		this.halfDuration = this.duration / 2.0f;
 	}
 
-	void Update()
+	private void Update()
 	{
-		if (_Increase) 
-		{
-			// Increase intensity and range of the Light component.
-			_Light.intensity = Mathf.Lerp (_Light.intensity, _MaxIntensity, Time.deltaTime * _SpeedMultiplier);
-			_Light.range = Mathf.Lerp (_Light.range, _AdditionalRange, Time.deltaTime * _SpeedMultiplier);
+		// Lerp intensity and range.
+		this.lerpT = Mathf.Min(this.lerpT + (Time.deltaTime / this.halfDuration), 1.0f);
+		this.light.intensity = Mathf.Lerp(this.light.intensity, this.targetIntensity, this.lerpT);
+		this.light.range = Mathf.Lerp(this.light.range, this.targetRange, this.lerpT);
 
-			// When the target intensity is reached, stop increasing the intensity and range (and begin decreasing).
-			if(_Light.intensity >= _MaxIntensity - 0.01f)
-				_Increase = false;
-		}
-		else 
+		// If finished lerping then switch targets.
+		if(this.lerpT == 1.0f)
 		{
-			// Decrease intensity and range of the Light component.
-			_Light.intensity = Mathf.Lerp (_Light.intensity, _InitialIntensity, Time.deltaTime * _SpeedMultiplier);
-			_Light.range = Mathf.Lerp (_Light.range, _InitialRange, Time.deltaTime * _SpeedMultiplier);
-
-			// When the initial intensity is reached, stop decreasing the intensity and range (and begin increasing).
-			if(_Light.intensity <= _InitialIntensity + 0.01f)
-				_Increase = true;
+			this.targetIntensity = (this.targetIntensity == this.maxIntensity)
+				? this.minIntensity : this.maxIntensity;
+		
+			this.targetRange = (this.targetRange == this.maxRange)
+				? this.minRange : this.maxRange;
+		
+			this.lerpT = 0.0f;
 		}
 	}
 

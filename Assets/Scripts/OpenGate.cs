@@ -8,6 +8,11 @@ public class OpenGate : MonoBehaviour, IInteractable
 
 	public void OnInteract(GameObject interactor)
 	{
+		this.Open();
+	}
+
+	public void Open()
+	{
 		if (!this.isOpened) 
 		{
 			if(this.openAnimation != null)
