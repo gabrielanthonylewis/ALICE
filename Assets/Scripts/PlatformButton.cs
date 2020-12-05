@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class ButtonBehaviour : MonoBehaviour, IInteractable 
+public class PlatformButton : MonoBehaviour, IInteractable 
 {
 	[SerializeField] private Platform platform = null;
 
@@ -14,8 +14,6 @@ public class ButtonBehaviour : MonoBehaviour, IInteractable
 	public void OnInteract(GameObject interactor)
 	{
 		this.animation?.Play(); 
-
-		if(this.platform) 
-			this.platform.Activate();
+		this.platform?.Activate();
 	}
 }

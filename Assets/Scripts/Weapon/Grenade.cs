@@ -48,6 +48,7 @@ public class Grenade : MonoBehaviour
 		// to the surrounding objects.
 		yield return new WaitForSeconds(0.5f);
 
+		// TODO: This causes a bug where the elevator will be destroyed if you throw it in there
 		// If object has a parent (e.g. in the case of the exploding arrow),
 		// delete it (and therefore the grenade aswell)
 		if(this.transform.parent != null)

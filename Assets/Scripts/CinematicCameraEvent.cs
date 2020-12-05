@@ -8,7 +8,7 @@ public class CinematicCameraEvent : MonoBehaviour
 
 	public void InvokeFunction()
 	{
-		this.events.Invoke ();
+		this.events.Invoke();
 		
         GameObject.Destroy(this.gameObject);
 	}
