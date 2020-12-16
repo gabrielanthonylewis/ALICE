@@ -93,7 +93,7 @@ public class PiecePuzzleController : PuzzleBase, IInteractable
 		}
 	}
 
-	public void OnInteract(GameObject interactor)
+	public void OnInteract(GameObject interactor, bool isDownOnce)
 	{
 		if(this.isComplete)
 			return;

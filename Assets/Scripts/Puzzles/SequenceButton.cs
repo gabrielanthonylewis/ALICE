@@ -16,7 +16,7 @@ public class SequenceButton : MonoBehaviour, IInteractable
 		this.defaultColour = this.meshRenderer.material.color;
 	}
 
-	public void OnInteract(GameObject interactor)
+	public void OnInteract(GameObject interactor, bool isDownOnce)
 	{
 		if(this.CanAddAttempt())
 		{

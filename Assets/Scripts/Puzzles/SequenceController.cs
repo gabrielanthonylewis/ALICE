@@ -28,7 +28,7 @@ public class SequenceController : PuzzleBase, IInteractable
 			this.sequence[i] = this.sequenceButtons[Random.Range(0, this.sequenceButtons.Length)];
 	}
 
-	public void OnInteract(GameObject interactor)
+	public void OnInteract(GameObject interactor, bool isDownOnce)
 	{
 		if(this.isComplete)
 			return;

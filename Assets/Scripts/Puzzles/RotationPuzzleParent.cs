@@ -1,64 +1,87 @@
 ﻿using UnityEngine;
-using System.Collections;
 
-// The RotationPuzzleParent script deals with the puzzle logic of the Rotation Puzzle.
-public class RotationPuzzleParent : MonoBehaviour 
+public enum WheelSegment
 {
-	// The sequence to be achieved.
-	[SerializeField] private int[] Sequence= new int[3];
+	Inner = 0,
+	Middle = 1,
+	Outer = 2
+};
 
-	// The attempted sequence made by the player.
-	[SerializeField] private int[] attempt = new int[3];
+public enum WheelInput
+{
+	North = 0,
+	East = 1,
+	South = 2,
+	West = 3
+}
 
-	// Reference to an _Animation that will be played upon completion.
-	[SerializeField] private Animation PlayAnim;
+public class RotationPuzzleParent : PuzzleBase 
+{
+	[SerializeField] private RotationPuzzlePiece[] wheelPieces;
+	[SerializeField] private Animation openDoorAnim;
 
+	private WheelInput[] sequence;
+	private WheelInput[] attempt;
 
-	void Awake () 
+	private void Awake() 
 	{
-		// Generate the sequence.
-		GenerateSequence ();
-		// By slim chance, the sequence may have already been solved.
-		CheckSequence ();
+		this.sequence = new WheelInput[this.wheelPieces.Length];
+		this.attempt = new WheelInput[this.wheelPieces.Length];
+
+		foreach(RotationPuzzlePiece piece in this.wheelPieces)
+			piece.onRotate.AddListener(this.OnRotate);
+
+		this.GenerateSequence();
 	}
 	
-
 	private void GenerateSequence()
 	{
-		// Generate a random sequence.
-		for(int i = 0; i < Sequence.Length; i++)
-			Sequence[i] = Random.Range(0, 4 );
-	}
-
-	private void CheckSequence()
-	{
-		bool correct = true;
-		// Compare the sequence and the attemted sequence for correctness..
-		for(int i = 0; i < Sequence.Length; i++)
+		for(int i = 0; i < this.sequence.Length; i++)
 		{
-			if(Sequence[i] != attempt[i])
-				correct = false;
-		}
+			/* Removes the possibility of the sequence being correct already by
+			 * avoiding the use of the first value on the first wheel. */
+			int minValue = 0;
+			if(i == 0)
+				minValue = 1;
 
-		// If the attempted sequence is correct then play the _Animation (open door).
-		if(correct) 
-		{
-			if(PlayAnim)
-				PlayAnim.Play();
+			this.sequence[i] = (WheelInput)Random.Range(minValue,
+				System.Enum.GetNames(typeof(WheelInput)).Length);
 		}
 	}
 
-	// Updates the attempted sequence depending on the piece (inner, middle, outer) and value (North, East, South, West).
-	public void Rotate(int piece, int val)
+	private void TryComplete()
 	{
-		attempt [piece] = val;
-		// Check to see if the sequence is right.
-		CheckSequence ();
+		// Compare the sequence and the attempt.
+		for(int i = 0; i < this.sequence.Length; i++)
+		{
+			if(this.attempt[i] != this.sequence[i])
+				return;
+		}
+
+		this.OnComplete();
 	}
-	
-	public int[] GetSequence()
+
+    protected override void OnComplete()
+    {
+        base.OnComplete();
+
+		foreach(RotationPuzzlePiece piece in this.wheelPieces)
+			piece.gameObject.layer = 0;
+
+		if(this.openDoorAnim != null)
+			this.openDoorAnim.Play();
+    }
+
+	private void OnRotate(WheelSegment piece, WheelInput input)
 	{
-		return Sequence;
+		this.attempt[(int)piece] = input;
+		this.TryComplete();
+	}
+
+	public Material GetSequenceMaterial(int index)
+	{
+		GameObject wheelInput = this.wheelPieces[index].getInputs()[(int)this.sequence[index]];
+		return wheelInput.GetComponent<MeshRenderer>().material;
 	}
 
 }

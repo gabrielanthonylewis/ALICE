@@ -6,7 +6,7 @@ public class OpenGate : MonoBehaviour, IInteractable
 
 	private bool isOpened = false;
 
-	public void OnInteract(GameObject interactor)
+	public void OnInteract(GameObject interactor, bool isDownOnce)
 	{
 		this.Open();
 	}

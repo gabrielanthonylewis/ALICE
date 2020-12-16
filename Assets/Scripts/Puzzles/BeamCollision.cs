@@ -1,45 +1,37 @@
 ﻿using UnityEngine;
-using System.Collections;
 
-// The BeamCollision script deals with beam chaining upon collision.
 public class BeamCollision : MonoBehaviour 
 {
-	// The length of the ray in units.
-	[SerializeField] private float _RayLength = 6.0F;
+	[SerializeField] private float rayDistance = 6.0f;
 
-	// Reference to the hit object's Beamcontroller component.
-	private BeamController _HitBeamController;
+	private BeamTowerController hitTower = null;
 
-	void LateUpdate()
+	private void Update()
 	{
 		RaycastHit hit;
-		if (Physics.Raycast (this.transform.position, this.transform.forward, out hit, _RayLength))
-		{
-			// If the hit object has a beam controller component...
-			if (hit.transform.gameObject.GetComponent<BeamController> ()) 
-			{
-				// Return if the hit object's children contrain a beam collision component.
-				if(hit.transform.gameObject.GetComponentInChildren<BeamCollision>())
-					return;
 
-				_HitBeamController = hit.transform.gameObject.GetComponent<BeamController> ();
-				// Activate it's beam.
-				_HitBeamController.ActivateBeam ();	
-			}
-		}
-		else 
-		{
-			// If no tower is being hit then stop it.
-			Stop();
-		}
+		bool hasHit = Physics.Raycast(this.transform.position, this.transform.forward,
+			out hit, this.rayDistance);
+		
+		this.SetHitTower(hasHit ? hit.transform.GetComponent<BeamTowerController>() : null);
 	}
 
-	public void Stop()
+	private void SetHitTower(BeamTowerController tower)
 	{
-		// Deacivate the hit towers beam.
-		if( _HitBeamController)
-			_HitBeamController.DeactivateBeam ();
+		if(this.hitTower == tower)
+			return;
 
-		_HitBeamController = null;
+		// If the tower is already powered ignore it.
+		if(tower != null && tower.IsPowered())
+			return;
+
+		// When switching targets turn off the old one.
+		if(this.hitTower != null && this.hitTower != tower)
+			this.hitTower.SetPoweredState(false);
+
+		this.hitTower = tower;
+
+		if(this.hitTower != null)
+			this.hitTower.SetPoweredState(true);
 	}
 }

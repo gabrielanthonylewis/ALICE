@@ -11,7 +11,7 @@ public class PlatformButton : MonoBehaviour, IInteractable
 		this.animation = this.GetComponent<Animation>();
 	}
 	
-	public void OnInteract(GameObject interactor)
+	public void OnInteract(GameObject interactor, bool isDownOnce)
 	{
 		this.animation?.Play(); 
 		this.platform?.Activate();

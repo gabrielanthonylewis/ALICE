@@ -9,7 +9,7 @@ public class Pickup: MonoBehaviour, IPickup
 {
 	[SerializeField] private AudioClip pickupSound;
 
-	public void OnInteract(GameObject interactor)
+	public void OnInteract(GameObject interactor, bool isDownOnce)
 	{
 		this.OnPickup(interactor);
 	}
