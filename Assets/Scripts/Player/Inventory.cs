@@ -1,7 +1,6 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
-using ALICE.Weapon;
 using ALICE.Checkpoint;
 
 [RequireComponent(typeof(WeaponController))]

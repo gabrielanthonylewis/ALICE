@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using ALICE.Weapon;
 
 public class AIWeaponController : MonoBehaviour 
 {

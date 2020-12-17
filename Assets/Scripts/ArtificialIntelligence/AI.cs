@@ -15,7 +15,7 @@ public class AI : MonoBehaviour
 	{
 		this.movementBase = this.GetComponent<AIMovementBase>();
 		this.detectionCollider = this.GetComponent<SphereCollider>();
-		this.detectionCollider.radius = this.detectionDiameter / 2.0f; // radius is half the diameter of a circle
+		this.detectionCollider.radius = this.detectionDiameter / 2.0f;
 	}
 
 	private void Update () 
@@ -54,7 +54,8 @@ public class AI : MonoBehaviour
 	private bool IsTargetSeen(Vector3 targetPosition)
     {
 		bool isTargetWithinFOV = this.IsWithinFOV(targetPosition);
-		bool isTargetObstruced = !Physics.Linecast(this.transform.position, targetPosition, this.targetLayerMask);
+		bool isTargetObstruced = !Physics.Linecast(this.transform.position,
+			targetPosition, this.targetLayerMask);
 
 		return (isTargetWithinFOV && !isTargetObstruced);
     }

@@ -1,4 +1,1 @@
-﻿namespace ALICE.Weapon.Gun
-{
-    public class Crossbow : Gun {}
-}
+﻿public class Crossbow : Gun {}

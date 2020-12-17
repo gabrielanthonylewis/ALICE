@@ -1,59 +1,61 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// The Grenade script "explodes" the object after a specified amount of time.
-// The damage is done by activating a trigger collider that deals damage to any objects inside it.
 public class Grenade : MonoBehaviour 
 {
-	// Time until explosion.
-	[SerializeField] private float waitTime = 5f;
-
-	[SerializeField] private SphereCollider triggerCollider = null;
+	[SerializeField] private int damage = 10;
+	[SerializeField] private float explosionDelay = 5f;
+	[SerializeField] private SphereCollider damageZone = null;
 	
-	void Start()
+	private void Awake()
 	{
-		// Start the explotion coroutine.
-		StartCoroutine(WaitThenExplode(waitTime));	
-
-		triggerCollider = this.GetComponent<SphereCollider> ();
-		triggerCollider.enabled = false;
-	}
-	
-	void OnTriggerEnter(Collider other)
-	{
-		// Add and explosion force to the object within the trigger.
-		if(other.GetComponent<Rigidbody>())
-			other.GetComponent<Rigidbody>().AddExplosionForce(1000f * Time.deltaTime, this.transform.position, 2f);
-
-		// Damage the object within the trigger by 10.
-		if(other.GetComponent<Destructable>())
-			other.GetComponent<Destructable>().ManipulateHealth(-10);
+		this.damageZone = this.GetComponent<SphereCollider>();
+		this.damageZone.enabled = false;
 	}
 
-	// Wait "seconds" seconds and the explode the grenade.
-	IEnumerator WaitThenExplode(float seconds)
+	private void Start()
 	{
-		triggerCollider.enabled = false;
+		this.StartCoroutine(this.WaitThenExplode(this.explosionDelay));
+	}
 
+	private IEnumerator WaitThenExplode(float seconds)
+	{
 		yield return new WaitForSeconds(seconds);
 
 		// Play the explosion sound clip.
 		if(this.GetComponent<AudioSource>())
 			this.GetComponent<AudioSource>().Play();
 
-		// enable trigger collider so that objects inside it can take damage.
-		triggerCollider.enabled = true;
+		// Enable trigger collider so that objects inside it can take damage.
+		this.damageZone.enabled = true;
 
-		// Wait a small period of time so that the trigger can deal damage and force
-		// to the surrounding objects.
-		yield return new WaitForSeconds(0.5f);
+		/* Wait a small period of time so that the trigger
+		 * can deal damage and force to the surrounding objects. */
+		yield return new WaitForSeconds(0.1f);
 
 		// TODO: This causes a bug where the elevator will be destroyed if you throw it in there
-		// If object has a parent (e.g. in the case of the exploding arrow),
-		// delete it (and therefore the grenade aswell)
+		/* If object has a parent (e.g. in the case of the exploding arrow),
+		 & delete it (and therefore the grenade aswell). */
 		if(this.transform.parent != null)
-			Destroy(this.transform.parent.gameObject);
+			GameObject.Destroy(this.transform.parent.gameObject);
 		
-		Destroy(this.gameObject);
+		GameObject.Destroy(this.gameObject);
+	}
+
+	private void OnTriggerEnter(Collider other)
+	{
+		if(other.isTrigger)
+			return;
+
+		// Add and explosion force to the object within the trigger.
+		if(other.GetComponent<Rigidbody>())
+		{
+			other.GetComponent<Rigidbody>().AddExplosionForce(1000.0f * Time.deltaTime,
+				this.transform.position, this.damageZone.radius);
+		}
+
+		// Damage the object within the trigger.
+		if(other.GetComponent<Destructable>())
+			other.GetComponent<Destructable>().ManipulateHealth(-this.damage);
 	}
 }

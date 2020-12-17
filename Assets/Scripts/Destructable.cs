@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 public class Destructable : MonoBehaviour 
 {
@@ -11,6 +12,7 @@ public class Destructable : MonoBehaviour
 	[SerializeField] private AnimationClip deathAnimation = null;
 	[SerializeField] private AnimationClip hitAnimation = null;
 	[SerializeField] private Text worldHealth = null;
+	[SerializeField] private UnityEvent onDeath = new UnityEvent();
 
 	private new Animation animation = null;
 	private int pickupLayer = 8;
@@ -39,8 +41,8 @@ public class Destructable : MonoBehaviour
 
 	public bool ManipulateHealth(float val)
 	{
-		if((currentHealth == maxHealth && val >= 0.0f) ||
-			(currentHealth == 0.0f && val <= 0.0f))
+		if((this.currentHealth == this.maxHealth && val >= 0.0f) ||
+			(this.currentHealth == 0.0f && val <= 0.0f))
 		{
 			return false;
 		}
@@ -92,6 +94,8 @@ public class Destructable : MonoBehaviour
 			
 			drop.layer = this.pickupLayer;
 		}
+
+		this.onDeath.Invoke();
 
 		GameObject.Destroy(this.gameObject);
 	}

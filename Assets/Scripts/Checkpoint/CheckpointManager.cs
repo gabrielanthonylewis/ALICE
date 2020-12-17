@@ -8,11 +8,11 @@ namespace ALICE.Checkpoint
     {
         private static CheckpointManager _instance;
         public static CheckpointManager instance { get { return _instance;  } }
-                
-        private CheckpointData lastCheckPoint = new CheckpointData();
 
         [SerializeField] private Animator checkpointReachedAnimator = null;
         [SerializeField] private bool shouldSpawnPlayerOnNewLevel = false;
+
+        private CheckpointData lastCheckPoint = new CheckpointData();
 
         private readonly string enemyTag = "Enemy";
         private readonly string playerTag = "Player";
@@ -38,13 +38,10 @@ namespace ALICE.Checkpoint
                         
             DontDestroyOnLoad(this.gameObject);
 
-            /* Start will only get called once as this is a singleton.
-             * I need to find all the remaining checkpoints every time a level is loaded. */
             SceneManager.sceneLoaded += this.OnSceneLoaded;
         }
 
-        /* Like Start except called every time 
-         * a scene is loaded (as this is a singleton) */
+        // Like Start except called every time a scene is loaded.
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             this.AddCheckpointListeners();

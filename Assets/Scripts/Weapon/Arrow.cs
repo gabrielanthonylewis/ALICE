@@ -1,39 +1,36 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// The Arrow script deal with the projectile behaviour of an arrow,
-// stopping when it hits an object and dealing damage.
 public class Arrow : MonoBehaviour
 {
-	
-	// Reference to Rigidbody component (optimisation)
-	private Rigidbody _Rigidbody = null;
+	[SerializeField] private int damage = 5;
 
-	private bool hasCollided = false;
-
-	void Start()
+	private void OnTriggerEnter(Collider other)
 	{
-		// Assign reference to Rigidbody component.
-		_Rigidbody = this.GetComponent<Rigidbody> ();
-	}
-
-	void OnTriggerEnter(Collider other)
-	{
-		if(this.hasCollided)
+		if(other.isTrigger)
 			return;
 
 		if(other.tag == "IgnoreCollision")
 			return;
-
-		this.hasCollided = true;
 	
-		this.GetComponent<Collider> ().enabled = false;
+		// Stick the arrow into the object.
+		Rigidbody rigidbody = this.GetComponent<Rigidbody>();
+		rigidbody.isKinematic = true;
+		rigidbody.useGravity = false;
 
-		// Stick the arrow in the hit object.
-		_Rigidbody.isKinematic = true;
-		_Rigidbody.useGravity = false;
-			
-		if (other.GetComponent<Destructable>()) 
-			other.GetComponent<Destructable>().ManipulateHealth(-5);
+		// Deal damage.	
+		if(other.GetComponent<Destructable>()) 
+			other.GetComponent<Destructable>().ManipulateHealth(-this.damage);
+
+		this.GetComponent<Collider>().enabled = false;
+
+		this.StartCoroutine(this.WaitThenDestroy(5.0f));
+	}
+
+	private IEnumerator WaitThenDestroy(float delay)
+	{
+		yield return new WaitForSeconds(delay);
+
+		GameObject.Destroy(this.gameObject);
 	}
 }
