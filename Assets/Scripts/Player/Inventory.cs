@@ -1,438 +1,207 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
+using ALICE.Checkpoint;
 
-// The Inventory script is a Singleton implementation that holds the ammo count, an array of guns, grenade count etc.
-// Also providing Accessors to these values and functionality to drop, add or equipt a weapon.
-public class Inventory 
-{
-	// Singleton pattern implementation so that there can only be ONE inventory used throughout the game.
-	#region Singleton Pattern implementation
-	protected Inventory() { }
-	
-	private static Inventory _instance = null;
-	
-	public static Inventory instance
+[RequireComponent(typeof(WeaponController))]
+public class Inventory: MonoBehaviour 
+{	
+	[SerializeField] private int ammoCount = 300;
+	[SerializeField] private int grenadeCount = 3;
+	[SerializeField] private int magSize = 30;
+	[SerializeField] private Text grenadeCountText = null;
+	[SerializeField] private Text clipCountText = null;
+    [SerializeField] private float dropWeaponStrength = 10.0f;
+
+	private WeaponController weaponController = null;
+	private Weapon[] weapons = new Weapon[3];
+
+	private void Awake()
 	{
-		get
-		{
-			if (Inventory._instance == null)
-			{
-				Inventory._instance = new Inventory();
-			}
-			return Inventory._instance;
-		}
-	}
-	#endregion
-	
-	// List of guns (maximum of 3)
-	private GameObject[] Guns = new GameObject[3];
-
-	// Total ammount of Assault Rifle ammo (NOTE that this represents all ammo at this point).
-	private int _AR_ammo = 300;
-
-	// Reference to the Player's WeaponController component.
-	private WeaponController _WeaponController = null;
-
-	// Ammount of grenades (default at 3)
-	private int _Grenades = 3;
-
-	// Reference to the Main Camera's Transform component (optimisation purposes).
-	private Transform _MainCamera = null;
-
-	// Reference to the Grendades UI text component (to show the player how many grenades they have).
-	private Text _GrenadesUIText = null;
-
-	// Reference to the Clips UI text component (to show the player how many clips/mags they have).
-	private Text _ClipsUIText = null;
-
-	// Initalisation function (cannot use Start() or Awake() as not inherited from MonoBehaviour)  
-	public void Initialise()
-	{
-		// Default Values.
-		_AR_ammo = 300;
-		_Grenades = 3;
-
-		// Get reference to the Grenades UI Text component.
-		if (!_GrenadesUIText)
-			_GrenadesUIText = GameObject.FindGameObjectWithTag ("GrenadesText").GetComponent<Text>();
-
-		// Get reference to the Clips UI Text component.
-		if (!_ClipsUIText)
-			_ClipsUIText = GameObject.FindGameObjectWithTag ("ClipsText").GetComponent<Text>();
-
-		UpdateUI ();
+		this.weaponController = this.GetComponent<WeaponController>();
+		this.RefreshUI();
 	}
 
-	public void UpdateUI()
+	private void Update()
 	{
-		// Get reference to the Grenades UI Text component.
-		if (!_GrenadesUIText)
-			_GrenadesUIText = GameObject.FindGameObjectWithTag ("GrenadesText").GetComponent<Text>();
+		if(Input.GetKeyDown(KeyCode.Alpha1))
+            this.EquipWeapon(0);
+        else if(Input.GetKeyDown(KeyCode.Alpha2))
+            this.EquipWeapon(1);
+        else if(Input.GetKeyDown(KeyCode.Alpha3))
+            this.EquipWeapon(2);
 
-		// Get reference to the Clips UI Text component.
-		if (!_ClipsUIText)
-			_ClipsUIText = GameObject.FindGameObjectWithTag ("ClipsText").GetComponent<Text>();
+		if(Input.GetKeyDown(KeyCode.X))
+			this.DropWeapon(this.weaponController.GetCurrentWeapon(), true);
+	}
 
-		// Display how many grenades the player has.
-		_GrenadesUIText.text = _Grenades.ToString();
-
-        // Calculates how many full clips there are..
-        _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+	private void RefreshUI()
+	{
+		this.grenadeCountText.text = this.grenadeCount.ToString();
+        this.clipCountText.text = this.GetClipCount().ToString();
     }
 
-	public bool EquipWeapon(int slotIndex)
+	private int GetClipCount()
 	{
-		// If no gun exists in requested slot then return.
-		if (Guns [slotIndex] == null)
-			return false;
-
-		// If the gun is already active then return.
-		if (Guns [slotIndex].activeSelf == true)
-			return false;
-	
-		// If a reference to the Main Camera is non-existant then get it (optimisation reasons).
-		if (_MainCamera == null)
-			_MainCamera = Camera.main.transform;
-
-		// Turn off held guns and re-parent (to avoid a potential bug).
-		for (int i = 0; i < Guns.Length; i++) 
-		{
-			if(Guns [i] != null)
-			{
-				Guns[i].transform.gameObject.SetActive (false);
-				Guns[i].transform.SetParent(_MainCamera.parent);
-			}
-		}
-
-		// Optimisation reasons as ".GetComponent<Weapon>()" is called multiple times. 
-		Weapon gunWeaponComponent = Guns [slotIndex].GetComponent<Weapon> ();
-
-		// Activate/show new gun, parenting and positioning the gun in the correct position.
-		Guns[slotIndex].transform.gameObject.SetActive(true);
-		Guns[slotIndex].transform.SetParent(_MainCamera);
-		Guns [slotIndex].transform.localPosition = Vector3.zero;
-		Guns [slotIndex].transform.localPosition = gunWeaponComponent.GetPickUpPosition();
-		Guns [slotIndex].transform.localRotation = Quaternion.Euler (Vector3.zero);
-
-		// If a reference to the player's WeaponController doesn't exist, get it.
-		if (_WeaponController == null)
-			_WeaponController = _MainCamera.GetComponent<WeaponController> ();
-
-		// Set the current weapon to the new one.
-		_WeaponController.SetCurrentWeapon (gunWeaponComponent);
-	
-		// "Refresh" the camera to avoid a past animation bug.
-		_MainCamera.gameObject.SetActive (false);
-		_MainCamera.gameObject.SetActive (true);
-
-		return true;
+		return Mathf.Max(Mathf.CeilToInt(this.ammoCount / this.magSize), 0);
 	}
 
-	public bool AddWeapon(GameObject weapon)
-	{
-		// If a reference to the Main Camera is non-existant then get it (optimisation reasons).
-		if (_MainCamera == null)
-			_MainCamera = Camera.main.transform;
+    public bool TryAddWeapon(Weapon weapon)
+    {
+        if(weapon == null || this.HasWeapon(weapon))
+            return false;
 
-		// If the weapon is already in the Inventory then don't add it!
-		for (int i = 0; i < Guns.Length; i++) {
-			if(Guns[i] == weapon) return false;
-		}
+		int availableIndex = Array.IndexOf<Weapon>(this.weapons, null);
+		bool hasAvailableIndex = (availableIndex > -1);
 
-		// Check through all of the Guns until an empty spot is found.
-		for(int i = 0; i < Guns.Length; i++)
-		{
-			// If spot in Inventory is empty.
-			if(Guns[i] == null)
-			{
-				// Add weapon to spot, parent it and position it correctly.
-				Guns[i] = weapon;
+		if(hasAvailableIndex)
+			this.AddWeapon(weapon, availableIndex);
 
-				weapon.transform.SetParent(_MainCamera.transform);
-			
-				weapon.transform.rotation = Guns[0].transform.rotation;
-				weapon.transform.SetParent(Guns[0].transform.parent);
-				weapon.transform.position = Guns[0].transform.position;
-
-				weapon.name = "Gun";
-
-				// Set weapon's position to custom position (was implemented due to the Sniper having to be positioned uniquely).
-				weapon.transform.localPosition = weapon.GetComponent<Weapon>().GetPickUpPosition();
-	
-				// Turn off colliders and physics.
-				if(weapon.transform.GetComponent<BoxCollider>())
-					weapon.transform.GetComponent<BoxCollider>().enabled = false;
-				if(weapon.transform.GetComponent<Rigidbody>())
-					weapon.transform.GetComponent<Rigidbody>().isKinematic = true;
-
-				// Assign reference to the Player's animation component.
-				weapon.GetComponent<Weapon>().SetAnimation(_MainCamera.GetComponent<Animation>());
-
-				// Set the weapon's children's layers to "GunLayer" so that the gun will not clip through objects (from the player's perspective).
-				Transform[] children = weapon.GetComponentsInChildren<Transform>();
-				for(int j = 0; j < children.Length; j++)
-				{
-					children[j].gameObject.layer = 10;
-				}
-
-				// Hide weapon (not equiped on default).
-				weapon.SetActive(false);
-
-				// Automatically equip weapon if the Player hasn't already got a weapon equipted.
-				bool isEmpty = true; // Records whether or not the Inventory is empty.
-				for(int j = 1; j < Guns.Length; j++)
-				{
-					if(Guns[j] != null)
-						isEmpty = false;
-				}
-
-				if(isEmpty && i == 0) // If no weapon in the inventory and first spot free, equip weapon.
-					EquipWeapon(0);
-
-				return true;
-			}
-		}
-
-		// An empty spot hasn't been found so return false (weapon not added).
-		return false;
-	}
-	
-	public bool DropWeapon(GameObject weapon)
-	{
-		// If the weapon doesn't exist, it can't be dropped, so return false.
-		if(weapon == null) return false;
-
-		// If a reference to the Main Camera is non-existant then get it (optimisation reasons).
-		if (_MainCamera == null)
-			_MainCamera = Camera.main.transform;
-
-		// Check guns in the Inventory for the corresponding weapon.
-		int idx = -1; // "-1" acts as out of range.
-		for(int i = 0; i < Guns.Length; i++)
-		{
-			if(Guns[i] == weapon)
-			{
-				// Deparent the weapon and re-enable the colliders and physics.
-				weapon.transform.SetParent(null);
-			
-				if(weapon.transform.GetComponent<BoxCollider>())
-					weapon.transform.GetComponent<BoxCollider>().enabled = true;
-
-				if(weapon.transform.GetComponent<Rigidbody>())
-				{
-					weapon.transform.GetComponent<Rigidbody>().isKinematic = false;
-					// "Throw" weapon forwards.
-					weapon.transform.GetComponent<Rigidbody>().AddForce(_MainCamera.forward * 10000f * Time.deltaTime);
-				}
-
-				// Set the weapon's children's layers to 0 (default) so that the player cannot see the weapon through objects.
-				Transform[] children = weapon.GetComponentsInChildren<Transform>();
-				for(int j = 0; j < children.Length; j++)
-				{
-					children[j].gameObject.layer = 0;
-				}
-
-				// Sets the weapon's layer to "PickUp" so that the player can pick it back up.
-				weapon.layer = 8;
-
-				// Inventory slot is empty.
-				Guns[i] = null;
-
-				// Keep track of the slot emptied.
-				idx = i;
-			}
-			
-		}
-
-		// If no corresponding gun was found in the Inventory then return false (couldn't drop). 
-		if(idx == -1)
-			return false;
-
-		// If another gun is in the Inventory then equip it.
-		for(int i = 0; i < Guns.Length; i++)
-		{
-			if(Guns[i] != null)
-			{
-				// possible TODO ?: Move all guns to the left/right.. (fill in the gap in the array)
-				EquipWeapon(i);
-				return true;
-			}
-		}
-
-		// If no reference to the player's WeaponController component is present, get it. 
-		if (_WeaponController == null)
-			_WeaponController = _MainCamera.GetComponent<WeaponController> ();
-
-		// No weapon was found in the Inventory.
-		_WeaponController.SetCurrentWeapon (null);
-		
-		return true;
-	}
-
-	public int GetAmmo(Weapon.WeaponType weaponType)
-	{	// Calculates how many full clips there are..
-		if(_ClipsUIText)
-            _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
-        switch (weaponType) {
-		case Weapon.WeaponType.AssaultRifle:
-			return _AR_ammo;
-			
-		case Weapon.WeaponType.Pistol:
-			Debug.Log("Inventory.cs/GetAmmo(): TODO - Pistol Case");
-			break;
-			
-		case Weapon.WeaponType.Shotgun:
-			Debug.Log("Inventory.cs/GetAmmo(): TODO - Shotgun Case");
-			break;
-			
-		case Weapon.WeaponType.Sniper:
-			Debug.Log("Inventory.cs/SetAmmo(): TODO - Sniper Case");
-			return _AR_ammo;
-			
-			
-		default:
-			Debug.LogError("Inventory.cs/GetAmmo(): Invalid Weapon Type!");
-			return -1;
-		}
-
-		return -1;
-	}
-
-	public void SetAmmo(Weapon.WeaponType weaponType, int value)
-	{
-		switch (weaponType) {
-		case Weapon.WeaponType.AssaultRifle:
-
-			_AR_ammo = value;
-
-			// Enforce lower bound limit.
-			if(_AR_ammo < 0)
-				_AR_ammo = 0;
-
-			break;
-			
-		case Weapon.WeaponType.Pistol:
-			Debug.Log("Inventory.cs/SetAmmo(): TODO - Pistol Case");
-			break;
-			
-		case Weapon.WeaponType.Shotgun:
-			Debug.Log("Inventory.cs/SetAmmo(): TODO - Shotgun Case");
-			break;
-			
-		case Weapon.WeaponType.Sniper:
-			Debug.Log("Inventory.cs/SetAmmo(): TODO - Sniper Case");
-
-			_AR_ammo = value;
-
-			// Enforce lower bound limit.
-			if(_AR_ammo < 0)
-				_AR_ammo = 0;
-
-			break;
-			
-		default:
-			Debug.LogError("Inventory.cs/SetAmmo(): Invalid Weapon Type!");
-			break;
-		}
-
-		// Get reference to the Clips UI Text component.
-		if (!_ClipsUIText)
-			_ClipsUIText = GameObject.FindGameObjectWithTag ("ClipsText").GetComponent<Text>();
-
-        // Calculates how many full clips there are..
-        _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+        return hasAvailableIndex;
     }
 
-	public void ManipulateAmmo(Weapon.WeaponType weaponType, int value)
+	private bool HasWeapon(Weapon weapon)
+    {
+		return (weapon == null) ? false :
+			Array.Exists<Weapon>(this.weapons, element => element == weapon);
+    }	
+
+	private void AddWeapon(Weapon weapon, int slotIndex)
 	{
+		if(slotIndex < 0 || slotIndex >= this.weapons.Length)
+			return;
 
-		switch (weaponType) 
-		{
-			case Weapon.WeaponType.AssaultRifle:
-		
-				_AR_ammo += value;
+		this.weapons[slotIndex] = weapon;
+		this.weapons[slotIndex].OnPickedUp();
 
-                _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+		// Equip weapon if the Player isn't holding a weapon.
+		if (this.weaponController.GetCurrentWeapon() == null)
+			this.EquipWeapon(slotIndex);
+	}
 
-                // Enforce lower bound limit.
-                if (_AR_ammo < 0)
-				{
-					_AR_ammo = 0;
-					_ClipsUIText.text = "0"; // Ensure Clips Text displays 0.
-				}
-
-				break;
-				
-			case Weapon.WeaponType.Pistol:
-				Debug.Log("Inventory.cs/ManupulateAmmo(): TODO - Pistol Case");
-				break;
-				
-			case Weapon.WeaponType.Shotgun:
-				Debug.Log("Inventory.cs/ManupulateAmmo(): TODO - Shotgun Case");
-				break;
-				
-			case Weapon.WeaponType.Sniper:
-				//Debug.Log("Inventory.cs/ManupulateAmmo(): TODO - Sniper Case");
-
-				_AR_ammo += value;
-
-				// Enforce lower bound limit.
-				if (_AR_ammo < 0)
-				{
-					_AR_ammo = 0;
-					_ClipsUIText.text = "0"; // Ensure Clips Text displays 0.
-				}
-				break;
-				
-			default:
-				Debug.LogError("Inventory.cs/ManupulateAmmo(): Invalid Weapon Type!");
-				break;
-		}
-
-		// Get reference to the Clips UI Text component.
-		if (!_ClipsUIText) 
-		{
-			if(GameObject.FindGameObjectWithTag ("ClipsText"))
-				_ClipsUIText = GameObject.FindGameObjectWithTag ("ClipsText").GetComponent<Text> ();
-		}
-
-		// Calculates how many full clips there are..
-		if(_ClipsUIText)
-            _ClipsUIText.text = Mathf.Max(Mathf.CeilToInt(_AR_ammo / 30f), 0).ToString();
+	private void EquipWeapon(int slotIndex)
+	{
+        this.weaponController.EquipWeapon(this.weapons[slotIndex]);
     }
+
+	private void DropWeapon(Weapon weapon, bool shouldEquipNextWeapon = false)
+	{
+		if(weapon == null)
+			return;
+
+		// Throw weapon forwards.
+		Rigidbody weaponRigidbody = weapon.transform.GetComponent<Rigidbody>();
+		if (weaponRigidbody != null)
+			weaponRigidbody.AddForce(Camera.main.transform.forward * this.dropWeaponStrength);
+
+		weapon.OnDropped();
+
+		for (int i = 0; i < this.weapons.Length; i++)
+		{
+			if(this.weapons[i] != weapon)
+				continue;
+
+			this.weapons[i] = null;
+
+			if(shouldEquipNextWeapon)
+				this.EquipNextHeldGun(i);
+
+			break;
+		}
+	}
+
+	private void EquipNextHeldGun(int slotIndex)
+    {
+        // Check index after.
+        for(int i = slotIndex + 1; i < this.weapons.Length; i++)
+        {
+            if(this.weapons[i] != null)
+				this.EquipWeapon(i);
+        }
+
+        // If not found loop around and check from start.
+        for(int i = 0; i < slotIndex; i++)
+        {
+            if (this.weapons[i] != null)
+            	this.EquipWeapon(i);
+        }
+    }
+
+	public InventoryData GetInventoryData()
+	{
+		string[] weaponNames = new string[this.weapons.Length];
+		for(int i = 0; i < this.weapons.Length; i++)
+		{
+			weaponNames[i] = (this.weapons[i] == null) ? "" :
+				this.weapons[i].GetResourceName();
+		}
+
+		return new InventoryData(this.ammoCount, this.grenadeCount, weaponNames);
+	}
+
+	public void LoadInventory(InventoryData data)
+	{
+		// Create and add weapons.
+		for(int i = 0; i < data.weaponNames.Length; i++)
+		{
+			if(data.weaponNames[i] == "")
+				continue;
+
+			GameObject newWeapon = GameObject.Instantiate<GameObject>(
+				Resources.Load<GameObject>("Weapons/" + data.weaponNames[i]));
+			if(!this.TryAddWeapon(newWeapon.GetComponent<Weapon>()))
+				GameObject.Destroy(newWeapon);
+		}
+
+		this.ammoCount = data.ammo;
+		this.grenadeCount = data.grenades;
+		this.RefreshUI();
+	}
+
+    public int GetAmmo()
+	{	
+		return this.ammoCount;
+	}
+
+	private void SetAmmo(int value)
+	{
+		this.ammoCount = Mathf.Max(value, 0);
+		this.RefreshUI();
+    }
+
+	public void ManipulateAmmo(int value)
+	{
+		this.SetAmmo(this.ammoCount + value);
+    }
+
+	/**
+	 * Will attempt to take the desired ammo from the inventory.
+	 * If there is not enough ammo it will take as much as possible.
+	 */
+	public int TryTakeAmmo(int ammo)
+	{
+		int diff = Mathf.Abs(this.ammoCount - ammo);
+		int ammoToTake = Mathf.Min(diff, ammo);
+
+		this.ManipulateAmmo(-ammoToTake);
+
+		return ammoToTake;
+	}
 	
 	public int GetGrenades()
 	{
-		return _Grenades;
-	}
+		return this.grenadeCount;
+	}	
 	
-	public void SetGrenades(int value)
+	private void SetGrenades(int value)
 	{
-		_Grenades = value;
-
-		// Get reference to the Grenades UI Text component.
-		if (!_GrenadesUIText)
-			_GrenadesUIText = GameObject.FindGameObjectWithTag ("GrenadesText").GetComponent<Text>();
-		
-		// Display how many grenades the player has.
-		_GrenadesUIText.text = _Grenades.ToString();
+		this.grenadeCount = Mathf.Max(value, 0);
+		this.RefreshUI();	
 	}
 	
 	public void ManipulateGrenades(int value)
 	{
-		_Grenades += value;
-
-		// Enforce lower bound limit.
-		if(_Grenades < 0)
-			_Grenades = 0;
-
-		// Get reference to the Grenades UI Text component.
-		if (!_GrenadesUIText)
-			_GrenadesUIText = GameObject.FindGameObjectWithTag ("GrenadesText").GetComponent<Text>();
-		
-		// Display how many grenades the player has.
-		_GrenadesUIText.text = _Grenades.ToString();
+		this.SetGrenades(this.grenadeCount + value);
 	}
 	
 }

@@ -1,18 +1,28 @@
 ﻿using UnityEngine;
 
-namespace ALICE.Utils.Animation
+class AnimationUtils
 {
-    class AnimationUtils
+    public static void SetTrigger(Animator animator, string name)
     {
-        public static void SetTrigger(Animator animator, string name)
+        if (animator == null)
         {
-            if (animator == null)
-            {
-                Debug.LogWarning("ALICE Warning: animator is null");
-                return;
-            }
-
-            animator.SetTrigger(name);
+            Debug.LogWarning("ALICE Warning: animator is null");
+            return;
         }
+
+        animator.SetTrigger(name);
+    }
+
+    public static void PlayAnimationClip(Animation animation, AnimationClip clip)
+    {
+        if(animation == null || clip == null)
+        {
+            Debug.LogWarning("ALICE Warning: animation or clip is null");
+            return;
+        }
+
+        animation.clip = clip;
+        animation.Play();
     }
 }
+

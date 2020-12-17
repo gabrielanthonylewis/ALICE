@@ -1,61 +1,48 @@
 ﻿using UnityEngine;
 
-// The PlayerMovement script moves the object depending on the player inputs, also providing crouch and prone functionality.
 public class PlayerMovement : MonoBehaviour
 {
-	// Vertical Speed multiplier
-    [SerializeField] private float _VerticalSpeed = 6f;
-    
-	// Horizontal Speed multiplier
-	[SerializeField] private float _HorizontalSpeed = 6f;
+    [SerializeField] private float verticalSpeedMultiplier = 3.5f;
+	[SerializeField] private float horizontalSpeedMultiplier = 3.5f;
+    [SerializeField] private float sprintMultiplier = 1.5f;
 
-    [SerializeField] private float _sprintMultiplier = 2.0f;
-
-	// Is the Player Crouched?
+	private new CapsuleCollider collider = null;
 	private bool isCrouching = false;
+    private bool isSprinting = false;
 
-    private bool _isSprinting = false;
-
-	void Update()
+	private void Start() 
 	{
-        // Sprint
-        _isSprinting = Input.GetKey(KeyCode.LeftShift);
-
-		// Crouch/Stand back up depending on the current stance.
-		if (Input.GetKeyDown(KeyCode.C))
-		{
-			if(isCrouching)
-			{
-				// return to original size
-				this.GetComponent<CapsuleCollider>().center = new Vector3(0f,0f,0f);
-				this.GetComponent<CapsuleCollider>().height = 2f;
-				isCrouching = false;
-				return;
-			}
-
-			// New size (Crouch)
-			// NOTE: Crouching works by simply changing the size of the collider and moving it up 
-			// letting the player fall beneath the floor more so than before.
-			this.GetComponent<CapsuleCollider>().height = 1.6f;
-			this.GetComponent<CapsuleCollider>().center = new Vector3(0f,0.2f,0f);
-			isCrouching = true;
-		}		
+		this.collider = this.GetComponent<CapsuleCollider>();	
 	}
 
-    void FixedUpdate()
-    {
-		// Record horizontal and vertical movement multiplying each by their corresponding multiplier.
-        float horizontal = Input.GetAxis("Horizontal") * _HorizontalSpeed;
-        float vertical = Input.GetAxis("Vertical") * _VerticalSpeed;
+	private void Update()
+	{
+        this.isSprinting = Input.GetKey(KeyCode.LeftShift);
 
-        // Sprint
-        float sprintMulti = 1.0f;
-        if (_isSprinting)
-            sprintMulti = _sprintMultiplier;
+		// Crouch Input
+		if (Input.GetKeyDown(KeyCode.C) ||Input.GetKeyDown(KeyCode.LeftControl)
+				|| Input.GetKeyUp(KeyCode.LeftControl))
+		{
+			this.Crouch(!this.isCrouching);
+		}
+	}	
+
+	private void FixedUpdate()
+    {
+        float horizontal = Input.GetAxis("Horizontal") * this.horizontalSpeedMultiplier;
+        float vertical = Input.GetAxis("Vertical") * this.verticalSpeedMultiplier;
+		float sprintMulti = (this.isSprinting) ? this.sprintMultiplier : 1.0f;
 
 		// Move/Translate the player on each axis.
-        transform.Translate(new Vector3(horizontal, 0f, 0f) * Time.fixedDeltaTime * sprintMulti); 
-        transform.Translate(new Vector3(0, 0f, vertical) * Time.fixedDeltaTime * sprintMulti);
+        this.transform.Translate(Vector3.right * horizontal * sprintMulti * Time.fixedDeltaTime); 
+        this.transform.Translate(Vector3.forward * vertical * sprintMulti * Time.fixedDeltaTime);
     }
-	
+
+	private void Crouch(bool shouldCrouch)
+	{
+		this.collider.center = (shouldCrouch) ? new Vector3(0.0f, 0.2f, 0.0f) : Vector3.zero;
+		this.collider.height = (shouldCrouch) ? 1.6f : 2.0f;
+
+		this.isCrouching = shouldCrouch;
+	}
 }

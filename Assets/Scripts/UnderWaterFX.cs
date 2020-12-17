@@ -1,61 +1,49 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-// Manages the underwater effect 
-// dependent on the player entering/leaving the trigger zone
+// Manages the underwater effect when entering/leaving the trigger collider.
 public class UnderWaterFX : MonoBehaviour
 {
-    [SerializeField] private Color _underwaterColor;
+    [SerializeField] private Color underwaterFogColour;
+    [SerializeField] private float underwaterFogDensity = 0.66f;
+    [SerializeField] private string targetTag = "Player";
 
-    // default settings to revert back to
-    private Color _defaultColor;
-    private float _defaultFogDensity;
-    private bool _defaultFogState;
+    private Color defaultFogColour;
+    private float defaultFogDensity;
+    private bool defaultFogVisibility;
     
-
-    void Start()
+    private void Start()
     {
-        _defaultColor = RenderSettings.fogColor;
-        _defaultFogDensity = RenderSettings.fogDensity;
-        _defaultFogState = RenderSettings.fog;
+        this.defaultFogColour = RenderSettings.fogColor;
+        this.defaultFogDensity = RenderSettings.fogDensity;
+        this.defaultFogVisibility = RenderSettings.fog;
     }
 
-    void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        if (other.tag != "Player")
+        if (other.tag != this.targetTag)
             return;
 
-        UnderWater();
+        this.SetFXState(true);
     }
 
-    void OnTriggerExit(Collider other)
+    private void OnTriggerExit(Collider other)
     {
-        if (other.tag != "Player")
+        if (other.tag != this.targetTag)
             return;
 
-        AboveWater();
+        this.SetFXState(false);
     }
 
-    void OnDisable()
+    private void SetFXState(bool state)
     {
-        AboveWater();
+        RenderSettings.fogColor = (state) ? this.underwaterFogColour : this.defaultFogColour;
+        RenderSettings.fogDensity = (state) ? this.underwaterFogDensity : this.defaultFogDensity;
+        RenderSettings.fog = (state) ? true : this.defaultFogVisibility;
     }
 
-
-    private void UnderWater()
+    private void OnDisable()
     {
-        RenderSettings.fog = true;
-        RenderSettings.fogColor = _underwaterColor;
-        RenderSettings.fogDensity = 0.66f;
+        this.SetFXState(false);
     }
-
-    private void AboveWater()
-    {
-        RenderSettings.fogColor = _defaultColor;
-        RenderSettings.fogDensity = _defaultFogDensity;
-        RenderSettings.fog = _defaultFogState;
-    }
-
  
 }

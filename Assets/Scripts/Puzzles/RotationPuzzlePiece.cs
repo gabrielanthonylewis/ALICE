@@ -1,28 +1,40 @@
 ﻿using UnityEngine;
-using System.Collections;
+using UnityEngine.Events;
 
-// The RotationPuzzlePiece script deals with the clock-wise rotation of the object.
-public class RotationPuzzlePiece : MonoBehaviour 
+public class RotationPuzzlePiece : MonoBehaviour, IInteractable
 {
-	// ID of the piece/ring (0 = inner, 1 = middle, 2 = outer)
-	[SerializeField] private int id = -1;
+	[SerializeField] private WheelSegment segmentType;
+	[SerializeField] private GameObject[] inputs;
+	[SerializeField] private WheelInput currentInput;
 
-	// Currection direction (0 = North, 1 = East, 2 = South, 3 = West)
-	[SerializeField] private int rotation = 0;
+	[HideInInspector] public UnityEvent<WheelSegment, WheelInput> onRotate 
+		= new UnityEvent<WheelSegment, WheelInput>();
 
-	// Reference to the RotationPuzzleParent (manager of the puzzle)
-	[SerializeField] RotationPuzzleParent _RotPuzzleParent;
+	private int inputCount;
+	private float rotationStep;
 
-	public void Rotate()
+	private void Awake()
 	{
-		// Theoretically rotate the piece (increase the rotation).
-		rotation++;
+		this.inputCount = System.Enum.GetValues(typeof(WheelInput)).Length;
+		this.rotationStep = (this.inputCount > 0) ? 360.0f / this.inputCount : 0.0f;
+	}
 
-		// Reset to North if passed West.
-		if(rotation > 3)
-			rotation = 0;
+	public void OnInteract(GameObject interactor, bool isDownOnce)
+	{
+		this.Rotate();
+	}
 
-		// Call the Rotation on the manager (to deal with puzzle logic)
-		_RotPuzzleParent.Rotate (id, rotation);
+	private void Rotate()
+	{
+		this.transform.Rotate(0.0f, 0.0f, -this.rotationStep, Space.World);
+
+		this.currentInput = (WheelInput)Mathf.Repeat((int)this.currentInput - 1, this.inputCount);
+
+		this.onRotate.Invoke(this.segmentType, this.currentInput);
+	}
+
+	public GameObject[] getInputs()
+	{
+		return this.inputs;
 	}
 }

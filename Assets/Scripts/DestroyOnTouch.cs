@@ -1,24 +1,37 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
-// The DestroyOnTouch script damages objects with health when they are inside the trigger.
 public class DestroyOnTouch : MonoBehaviour 
 {
-    // Speed at which a destructable object will lose health
     [SerializeField] private float _killSpeedMultiplier = 25.0f;
 
+    private List<Destructable> touched = new List<Destructable>();
 
-	void OnTriggerStay(Collider other)
-	{
-        // Only affect objects that have health...
+    private void Update()
+    {
+        foreach(Destructable destructable in this.touched)
+		    destructable.ManipulateHealth(-(_killSpeedMultiplier * Time.deltaTime));
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.isTrigger)
+            return;
+
         if (!other.GetComponent<Destructable>())
             return;
 
-        // If the object has an animation component and it's not playing return.
-        // (Used in the case of the boss level where damage should only be dealt when the water rises)
-        if (this.GetComponent<Animation>() && !this.GetComponent<Animation>().isPlaying)
-			return;
+        this.touched.Add(other.GetComponent<Destructable>());
+    }
 
-		other.gameObject.GetComponent<Destructable> ().ManipulateHealth (_killSpeedMultiplier * Time.deltaTime);
-	}
+    private void OnTriggerExit(Collider other)
+    {
+        if(other.isTrigger)
+            return;
+
+        if (!other.GetComponent<Destructable>())
+            return;
+
+        this.touched.Remove(other.GetComponent<Destructable>());
+    }
 }

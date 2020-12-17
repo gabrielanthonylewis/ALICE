@@ -1,24 +1,24 @@
 ﻿using UnityEngine;
-using System.Collections;
 
-// The OpenGate script plays an animation to open a "gate" type object when the function is called.
-public class OpenGate : MonoBehaviour 
+public class OpenGate : MonoBehaviour, IInteractable 
 {
-	// Open gate animation.
-	[SerializeField] private Animation OpenGateAnim;
+	[SerializeField] private Animation openAnimation;
 
-	// Is the gate opened?
 	private bool isOpened = false;
+
+	public void OnInteract(GameObject interactor, bool isDownOnce)
+	{
+		this.Open();
+	}
 
 	public void Open()
 	{
-		// Open gate if not already opened.
-		if (!isOpened) 
+		if (!this.isOpened) 
 		{
-			if(OpenGateAnim)
-				OpenGateAnim.Play ();
+			if(this.openAnimation != null)
+				this.openAnimation.Play();
 
-			isOpened = true;
+			this.isOpened = true;
 		}
 	}
 }
