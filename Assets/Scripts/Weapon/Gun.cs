@@ -50,7 +50,7 @@ public class Gun : Weapon
         int bulletsToShoot = (this.fireType == FireType.Semi) ? this.semiFireBulletCount : 1;
         for(int i = 0; i < bulletsToShoot; i++)
         {
-            if(this.remainingMagAmmo <= 0)
+            if(!this.IsPowerupActive() && this.remainingMagAmmo <= 0)
                 break;
 
             this.FireBullet(this.GetFireVector(),
@@ -94,24 +94,26 @@ public class Gun : Weapon
                     if(this.GetActivePowerup().TryAffectObject(hit.transform))
                         hasHitObject = true;
                 }
-
-                // Forward force to the hit object (that isn't a character).
-                if (hit.transform.tag != "Enemy" && hit.transform.tag != "Player")
+                else
                 {
-                    Rigidbody hitRigidbody = hit.transform.GetComponent<Rigidbody>();
-                    if(hitRigidbody != null)
+                    // Forward force to the hit object (that isn't a character).
+                    if (hit.transform.tag != "Enemy" && hit.transform.tag != "Player")
                     {
-                        hitRigidbody.AddForce(this.transform.forward * this.bulletForce);
+                        Rigidbody hitRigidbody = hit.transform.GetComponent<Rigidbody>();
+                        if(hitRigidbody != null)
+                        {
+                            hitRigidbody.AddForce(this.transform.forward * this.bulletForce);
+                            hasHitObject = true;
+                        }
+                    }
+
+                    // Damage.
+                    Destructable hitDestructable = hit.transform.GetComponent<Destructable>();
+                    if(hitDestructable != null)
+                    {
+                        hit.transform.GetComponent<Destructable>().ManipulateHealth(-this.damage);
                         hasHitObject = true;
                     }
-                }
-
-                // Damage.
-                Destructable hitDestructable = hit.transform.GetComponent<Destructable>();
-                if(hitDestructable != null)
-                {
-                    hit.transform.GetComponent<Destructable>().ManipulateHealth(-this.damage);
-                    hasHitObject = true;
                 }
 
                 if(hasHitObject)
@@ -119,7 +121,8 @@ public class Gun : Weapon
             }
         }
 
-        this.SetRemainingAmmo(this.remainingMagAmmo - 1);
+        if(!this.IsPowerupActive())
+            this.SetRemainingAmmo(this.remainingMagAmmo - 1);
     }
 
     public void NextFireType()
@@ -162,6 +165,11 @@ public class Gun : Weapon
 
         if (this.ammoText)
             this.ammoText.text = this.remainingMagAmmo.ToString();
+    }
+
+    public int GetRemainingAmmo()
+    {
+        return this.remainingMagAmmo;
     }
 
     private void EnableMuzzleFlash(bool enable)

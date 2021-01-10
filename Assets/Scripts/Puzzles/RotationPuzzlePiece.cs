@@ -21,7 +21,8 @@ public class RotationPuzzlePiece : MonoBehaviour, IInteractable
 
 	public void OnInteract(GameObject interactor, bool isDownOnce)
 	{
-		this.Rotate();
+		if(isDownOnce)
+			this.Rotate();
 	}
 
 	private void Rotate()

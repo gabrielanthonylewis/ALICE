@@ -5,7 +5,7 @@ namespace ALICE.Checkpoint
     [System.Serializable]
     public class CheckpointData
     {
-        public Vector3[] enemyPositions = new Vector3[0];
+        public ActorData[] enemies = new ActorData[0];
         public Vector3 playerPosition;
         public Quaternion playerRotation;
         public float health;
@@ -28,4 +28,12 @@ namespace ALICE.Checkpoint
             this.weaponNames = weaponNames;
         }
     };
+
+    [System.Serializable]
+    public class ActorData
+    {
+        public ulong objectID;
+        public Vector3 position;
+        public Quaternion rotation;
+    }
 }

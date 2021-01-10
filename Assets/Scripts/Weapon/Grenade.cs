@@ -33,10 +33,8 @@ public class Grenade : MonoBehaviour
 		 * can deal damage and force to the surrounding objects. */
 		yield return new WaitForSeconds(0.1f);
 
-		// TODO: This causes a bug where the elevator will be destroyed if you throw it in there
-		/* If object has a parent (e.g. in the case of the exploding arrow),
-		 & delete it (and therefore the grenade aswell). */
-		if(this.transform.parent != null)
+		// If grenade is attatched to an arrow then destroy it as well.
+		if(this.GetComponentInParent<Arrow>() != null)
 			GameObject.Destroy(this.transform.parent.gameObject);
 		
 		GameObject.Destroy(this.gameObject);

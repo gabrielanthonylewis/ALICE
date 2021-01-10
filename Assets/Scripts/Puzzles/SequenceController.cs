@@ -8,11 +8,8 @@ public class SequenceController : PuzzleBase, IInteractable
 	[SerializeField] private int sequenceLength;
 
 	private bool isCoroutineRunning = false;
-
-	// TODO: Dont make serialized
-	[SerializeField] private SequenceButton[] sequence = new SequenceButton[0];
-	// TODO: Dont make serialized
-	[SerializeField] private int currAttemptIdx = 0;
+	private SequenceButton[] sequence = new SequenceButton[0];
+	private int currAttemptIdx = 0;
 
 	private void Start()
 	{

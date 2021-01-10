@@ -13,9 +13,9 @@ public class Destructable : MonoBehaviour
 	[SerializeField] private AnimationClip hitAnimation = null;
 	[SerializeField] private Text worldHealth = null;
 	[SerializeField] private UnityEvent onDeath = new UnityEvent();
+	[SerializeField] private int pickupLayer = 8;
 
 	private new Animation animation = null;
-	private int pickupLayer = 8;
 
 	private void Awake()
 	{
@@ -77,9 +77,9 @@ public class Destructable : MonoBehaviour
 	{
 		if(this.onDestroyedFragments != null) 
 		{
-			GameObject.Instantiate(onDestroyedFragments, transform.position,
-				transform.rotation).transform.DetachChildren();	
-		}
+			GameObject.Instantiate(this.onDestroyedFragments,
+				this.transform.position, this.transform.rotation);
+		}	
 
 		// Drop all objects in the Droplist and add physics.
 		foreach(GameObject drop in this.dropList)

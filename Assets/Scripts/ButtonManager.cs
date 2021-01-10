@@ -5,6 +5,14 @@ using ALICE.Checkpoint;
 // Provides many different functions that will be used upon a UI button press.
 public class ButtonManager : MonoBehaviour 
 {
+	[SerializeField] private GameObject checkpointButton = null;
+
+	private void OnEnable()
+	{
+		if(this.checkpointButton != null)
+			this.checkpointButton.SetActive(CheckpointManager.instance.HasCheckpoint());
+	}
+
     public void LoadLevel(int levelIndex)
 	{
 		Time.timeScale = 1.0f;

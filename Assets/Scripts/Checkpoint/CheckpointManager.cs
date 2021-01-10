@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEditor;
 
 namespace ALICE.Checkpoint
 {
@@ -10,9 +10,8 @@ namespace ALICE.Checkpoint
         public static CheckpointManager instance { get { return _instance;  } }
 
         [SerializeField] private Animator checkpointReachedAnimator = null;
-        [SerializeField] private bool shouldSpawnPlayerOnNewLevel = false;
 
-        private CheckpointData lastCheckPoint = new CheckpointData();
+        private CheckpointData lastCheckPoint = null;
 
         private readonly string enemyTag = "Enemy";
         private readonly string playerTag = "Player";
@@ -21,6 +20,7 @@ namespace ALICE.Checkpoint
         private Transform player = null;
         private Inventory playerInventory = null;
         private int currentSceneIndex = -1;
+        private bool waitForCameraEvent = false;
         private bool skipNextCheckpoint = false;
 
         /* Singleton pattern */
@@ -46,32 +46,47 @@ namespace ALICE.Checkpoint
         {
             this.AddCheckpointListeners();
 
-            bool hasReloaded = (scene.buildIndex == this.currentSceneIndex);
-            this.skipNextCheckpoint = hasReloaded;
+            bool isNewLevel = (scene.buildIndex != this.currentSceneIndex);
+            this.skipNextCheckpoint = !isNewLevel;
+            this.currentSceneIndex = scene.buildIndex;
 
-            if (hasReloaded)
-                this.LoadLastCheckpoint();
-            else
+            this.waitForCameraEvent = (GameObject.FindObjectOfType<CinematicCameraEvent>() != null);
+            if(!this.waitForCameraEvent)
             {
-                // New level
-                this.currentSceneIndex = scene.buildIndex;
-                this.ClearLastCheckpoint();
-
-                if(this.shouldSpawnPlayerOnNewLevel)
-                    this.SpawnPlayer();
-            }                
+                if(this.lastCheckPoint != null)
+                    this.LoadLastCheckpoint();
+                else
+                    this.SpawnPlayerOnSpawnPoint();
+            }
         }
 
-        public void SpawnPlayer()
+        public void SpawnPlayerOnSpawnPoint()
         {
             this.player = GameObject.FindObjectOfType<PlayerSpawnPoint>().SpawnPlayer().transform;
             this.playerInventory = this.player.GetComponentInChildren<Inventory>();
+
+            // Load inventory but reset the rest as new spawn.
+            if(this.lastCheckPoint != null)
+            {
+                this.lastCheckPoint.enemies = new ActorData[0];
+                this.lastCheckPoint.playerPosition = this.player.position;
+                this.lastCheckPoint.playerRotation = this.player.rotation;
+
+                this.player.GetComponent<Destructable>().SetHealth(this.lastCheckPoint.health);
+                this.player.GetComponent<SlowmoController>().SetRemainingTime(this.lastCheckPoint.slowmo);
+                this.LoadInventory();
+            }
         }
 
         public void OnRestartLevel()
         {
             this.ClearLastCheckpoint();
             this.currentSceneIndex = -1;
+        }
+
+        public bool HasCheckpoint()
+        {
+            return (this.lastCheckPoint != null);
         }
 
         private void AddCheckpointListeners()
@@ -92,31 +107,43 @@ namespace ALICE.Checkpoint
             }
 
             this.SaveLastCheckpoint();
-            AnimationUtils.SetTrigger(this.checkpointReachedAnimator,
-                this.checkpointReachedAnimationParam);
         }
 
-        private void SaveLastCheckpoint()
+        public void SaveLastCheckpoint(bool showNotification = true)
         {
             this.lastCheckPoint = new CheckpointData
             {
-                enemyPositions = this.GetEnemyPositions(),
+                enemies = this.GetEnemiesActorData(),
                 playerPosition = this.player.position,
                 playerRotation = this.player.rotation,
                 health = this.player.GetComponent<Destructable>().GetHealth(),
                 slowmo = this.player.GetComponent<SlowmoController>().remainingTime,
                 inventory = this.playerInventory.GetInventoryData()
             };
+
+            if(showNotification)
+            {
+                AnimationUtils.SetTrigger(this.checkpointReachedAnimator,
+                    this.checkpointReachedAnimationParam);
+            }
         }
 
-        private Vector3[] GetEnemyPositions()
+        private ActorData[] GetEnemiesActorData()
         {
-            GameObject[] enemies = GameObject.FindGameObjectsWithTag(this.enemyTag);
-            Vector3[] enemyPositions = new Vector3[enemies.Length];
-            for (int i = 0; i < enemies.Length; i++)
-                enemyPositions[i] = enemies[i].transform.position;
+             GameObject[] enemies = GameObject.FindGameObjectsWithTag(this.enemyTag);
 
-            return enemyPositions;
+             ActorData[] actorData = new ActorData[enemies.Length];
+             for(int i = 0; i < actorData.Length; i++)
+             {
+                 actorData[i] = new ActorData
+                 {
+                     objectID = GlobalObjectId.GetGlobalObjectIdSlow(enemies[i]).targetObjectId,
+                     position = enemies[i].transform.position,
+                     rotation = enemies[i].transform.rotation
+                 };
+             }
+
+             return actorData;
         }
 
         private void LoadLastCheckpoint()
@@ -143,26 +170,27 @@ namespace ALICE.Checkpoint
 
         private void LoadEnemies()
         {
-            // Ensure only desired amount of enemies are alive
             GameObject[] enemies = GameObject.FindGameObjectsWithTag(this.enemyTag);
-            for (int i = 0; i < (enemies.Length - this.lastCheckPoint.enemyPositions.Length); i++)
+            for(int i = 0; i < enemies.Length; i++)
             {
-                Destroy(enemies[i]);
-                enemies[i] = null;
-            }
-            // Remove null objects
-            List<GameObject> unassignedEnemies = new List<GameObject>();
-            for (int i = 0; i < enemies.Length; i++)
-            {
-                if (enemies[i] == null)
-                    continue;
+                bool shouldDestroy = true;
+                for(int j = 0; j < this.lastCheckPoint.enemies.Length; j++)
+                {
+                    if(GlobalObjectId.GetGlobalObjectIdSlow(enemies[i]).targetObjectId ==
+                        this.lastCheckPoint.enemies[j].objectID)
+                    {
+                        shouldDestroy = false;
+                    
+                        enemies[i].transform.position = this.lastCheckPoint.enemies[j].position;
+                        enemies[i].transform.rotation = this.lastCheckPoint.enemies[j].rotation;
+                    
+                        break;
+                    }
+                }
 
-                unassignedEnemies.Add(enemies[i]);
+                if(shouldDestroy)
+                    GameObject.Destroy(enemies[i]);
             }
-
-            // Assign enemy positions
-            for (int i = 0; i < unassignedEnemies.Count; i++)
-                unassignedEnemies[i].transform.position = this.lastCheckPoint.enemyPositions[i];
         }
 
         private void ClearLastCheckpoint()

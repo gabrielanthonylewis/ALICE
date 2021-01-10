@@ -3,14 +3,17 @@
 public class WeaponController : MonoBehaviour
 {
 	[SerializeField] private Weapon	currentWeapon = null;
-    [SerializeField] private RectTransform hitMarker = null;
+    [SerializeField] private RectTransform weaponMarker = null;
+    [SerializeField] private GameObject handMarker = null;
     
     public Inventory inventory { get; private set; }
     private Vector2 minHitMarkerSize;
 
     private void Start()
     {
-        this.minHitMarkerSize = this.hitMarker.sizeDelta;
+        this.minHitMarkerSize = this.weaponMarker.sizeDelta;
+        this.weaponMarker.gameObject.SetActive(this.currentWeapon != null);
+        this.handMarker.SetActive(!this.weaponMarker.gameObject.activeSelf);
         this.inventory = this.GetComponent<Inventory>();
     }
 
@@ -20,7 +23,7 @@ public class WeaponController : MonoBehaviour
            return;
 
         // Return the hitMarker's size back to its orginal size. 
-        this.hitMarker.sizeDelta = Vector2.Lerp(this.hitMarker.sizeDelta,
+        this.weaponMarker.sizeDelta = Vector2.Lerp(this.weaponMarker.sizeDelta,
             this.minHitMarkerSize, Time.deltaTime * 20.0f);
 
         this.HandleWeaponInput();
@@ -28,7 +31,7 @@ public class WeaponController : MonoBehaviour
 
     private void OnHit()
     {
-        this.hitMarker.sizeDelta = this.minHitMarkerSize * 2.0f;
+        this.weaponMarker.sizeDelta = this.minHitMarkerSize * 0.5f;
     }
 
     private void HandleWeaponInput()
@@ -43,7 +46,10 @@ public class WeaponController : MonoBehaviour
             this.currentWeapon.OnFireInput(isFireDownOnce);
 
         if(Input.GetKeyDown(KeyCode.Mouse1))
+        {
+            this.weaponMarker.gameObject.SetActive(!this.weaponMarker.gameObject.activeSelf);
             this.currentWeapon.OnAimInput();
+        }
 
         if(Input.GetKeyDown(KeyCode.R))
             this.currentWeapon.OnReloadInput();
@@ -59,12 +65,15 @@ public class WeaponController : MonoBehaviour
     }
 
     public void EquipWeapon(Weapon weapon)
-    {    
-        if (this.currentWeapon == weapon)
+    {
+        if(weapon == null)
+            return;
+
+        if(this.currentWeapon == weapon)
             return;
 
         // If already using a weapon turn it off.
-        if (this.currentWeapon != null)
+        if(this.currentWeapon != null)
         {
             this.currentWeapon.StopAllActivity();
             this.currentWeapon.gameObject.SetActive(false);
@@ -76,11 +85,15 @@ public class WeaponController : MonoBehaviour
         this.currentWeapon.onHitEvent.AddListener(this.OnHit);
         this.currentWeapon.onDroppedEvent.AddListener(this.OnWeaponDropped);
         this.currentWeapon.gameObject.SetActive(true);
+        this.weaponMarker.gameObject.SetActive(true);
+        this.handMarker.SetActive(false);
     }
 
     private void OnWeaponDropped()
     {
         this.currentWeapon = null;
+        this.weaponMarker.gameObject.SetActive(false);
+        this.handMarker.SetActive(true);
     }
 
     public Weapon GetCurrentWeapon()

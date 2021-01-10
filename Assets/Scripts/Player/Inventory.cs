@@ -60,11 +60,32 @@ public class Inventory: MonoBehaviour
         return hasAvailableIndex;
     }
 
-	private bool HasWeapon(Weapon weapon)
+	public bool HasWeapon(Weapon weapon)
     {
 		return (weapon == null) ? false :
 			Array.Exists<Weapon>(this.weapons, element => element == weapon);
-    }	
+    }
+
+	public bool HasWeaponType(Weapon weapon)
+	{		
+		if(weapon == null)
+			return false;
+		
+		if(Array.Exists<Weapon>(this.weapons, element => Type.Equals(element, weapon)))
+			return true;
+		
+		string weaponTypeName = weapon.GetType().FullName.Replace("Enemy", "");
+		for(int i = 0; i < this.weapons.Length; i++)
+		{
+			if(this.weapons[i] == null)
+				continue;
+				
+			if(this.weapons[i].GetType().FullName.Replace("Enemy", "") == weaponTypeName)
+				return true;
+		}
+
+		return false;
+	}
 
 	private void AddWeapon(Weapon weapon, int slotIndex)
 	{

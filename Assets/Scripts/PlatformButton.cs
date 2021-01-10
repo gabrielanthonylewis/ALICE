@@ -13,7 +13,10 @@ public class PlatformButton : MonoBehaviour, IInteractable
 	
 	public void OnInteract(GameObject interactor, bool isDownOnce)
 	{
-		this.animation?.Play(); 
-		this.platform?.Activate();
+		if(this.animation != null)
+			this.animation.Play();
+			 
+		if(this.platform != null)
+			this.platform.Activate();
 	}
 }
