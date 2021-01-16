@@ -16,10 +16,7 @@ class AnimationUtils
     public static void PlayAnimationClip(Animation animation, AnimationClip clip)
     {
         if(animation == null || clip == null)
-        {
-            Debug.LogWarning("ALICE Warning: animation or clip is null");
             return;
-        }
 
         animation.clip = clip;
         animation.Play();

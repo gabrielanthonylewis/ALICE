@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+[RequireComponent(typeof(Inventory))]
 public class WeaponController : MonoBehaviour
 {
 	[SerializeField] private Weapon	currentWeapon = null;

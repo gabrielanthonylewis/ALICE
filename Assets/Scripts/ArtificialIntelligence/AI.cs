@@ -35,9 +35,9 @@ public class AI : MonoBehaviour
 	private void Update() 
 	{
 		this.wasSpotted = isTargetSpotted;
-		this.isTargetSpotted = (this.target != null && this.IsTargetSeen(this.target.position));
+		this.isTargetSpotted = (this.target != null && this.IsTargetSeen(this.target));
 
-		if(!isTargetSpotted)
+		if(!this.isTargetSpotted)
 		{
 			// If target no longer spotted then continue looking from current position.
 			if(this.wasSpotted)
@@ -51,17 +51,17 @@ public class AI : MonoBehaviour
 		}
 
 		if(this.movementBase != null)
-			this.movementBase.SetTarget((isTargetSpotted) ? this.target : null);
+			this.movementBase.SetTarget((this.isTargetSpotted) ? this.target : null);
 
 		if(this.weaponController != null)
-			this.weaponController.SetTarget((isTargetSpotted) ? this.target : null);
+			this.weaponController.SetTarget((this.isTargetSpotted) ? this.target : null);
 
 		if(isTargetSpotted)
 		{
 			// Look towards the target (whilst preventing the body rotating upwards and downwards) 
 			Vector3 targetPos = target.transform.position;
 			targetPos.y = this.transform.position.y;
-			this.transform.LookAt (targetPos, transform.up);
+			this.transform.LookAt(targetPos, transform.up);
 		}
 	}
 
@@ -94,13 +94,18 @@ public class AI : MonoBehaviour
 			this.target = null;
 	}
 
-	private bool IsTargetSeen(Vector3 targetPosition)
+	private bool IsTargetSeen(Transform target)
     {
-		bool isTargetWithinFOV = this.IsWithinFOV(targetPosition);
-		bool isTargetObstruced = !Physics.Linecast(this.transform.position,
-			targetPosition, this.targetLayerMask);
+		bool isTargetWithinFOV = this.IsWithinFOV(target.position);
+		if(!isTargetWithinFOV)
+			return false;
 
-		return (isTargetWithinFOV && !isTargetObstruced);
+		RaycastHit hit;
+		bool rayIntersectsWithTarget = Physics.Linecast(this.transform.position,
+			target.position, out hit, ~0, QueryTriggerInteraction.Ignore);
+		bool hasHitTarget = (hit.transform == target.transform);
+
+		return (isTargetWithinFOV && hasHitTarget);
     }
 
 	private bool IsWithinFOV(Vector3 position)

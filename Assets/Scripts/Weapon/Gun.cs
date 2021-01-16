@@ -11,7 +11,7 @@ public class Gun : Weapon
         Single = 2
     };
 
-    [SerializeField] private int magSize = 30;
+    [SerializeField] protected int magSize = 30;
     [SerializeField] private ParticleSystem muzzleFlashPS = null;
     [SerializeField] private Text ammoText = null;
     [SerializeField] private FireType fireType = FireType.Auto;
@@ -149,14 +149,17 @@ public class Gun : Weapon
         // If there is ammo, add it to the clip (even if can't fill).
         int newAmmo = this.weaponController.inventory.TryTakeAmmo(this.magSize);
         if(newAmmo > 0)
-        {
-            this.StopCoroutine(this.Fire());
+            this.Reload(newAmmo);
+    }
 
-            this.animator.SetTrigger("reload");
-            this.audioSource.PlayOneShot(this.reloadSound);
+    protected void Reload(int newAmmo)
+    {
+        this.StopCoroutine(this.Fire());
 
-            this.SetRemainingAmmo(newAmmo);
-        }
+        this.animator.SetTrigger("reload");
+        this.audioSource.PlayOneShot(this.reloadSound);
+
+        this.SetRemainingAmmo(newAmmo);
     }
 
     private void SetRemainingAmmo(int ammo)
