@@ -8,16 +8,20 @@ public class PlayerInteraction : MonoBehaviour
 
 	private void Update() 
 	{
+		// Checks if an interactable object has been hit.
 		RaycastHit hit;
-		bool hasHit = Physics.Raycast(this.transform.position, this.transform.forward,
-			out hit, this.rayDistance, this.layermask); 
-		
+		bool hasRayHit = Physics.Raycast(this.transform.position, this.transform.forward,
+			out hit, this.rayDistance, ~0, QueryTriggerInteraction.Ignore);
+		bool hasInteractableLayer = (hasRayHit && (this.layermask == (layermask |
+			(1 << hit.transform.gameObject.layer)))); 
+		bool hasHit = (hasRayHit && hasInteractableLayer);
+
 		this.interactPrompt.SetActive(hasHit);
 				
 		if(hasHit && Input.GetKey(KeyCode.F))
 		{
 			bool isDownOnce = Input.GetKeyDown(KeyCode.F);
-			hit.transform.GetComponent<IInteractable>()?.OnInteract(this.gameObject, isDownOnce);
+			hit.transform.GetComponent<IInteractable>().OnInteract(this.gameObject, isDownOnce);
 		}
 	}
 }

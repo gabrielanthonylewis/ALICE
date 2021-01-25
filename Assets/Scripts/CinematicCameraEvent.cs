@@ -1,20 +1,20 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
-using ALICE.Checkpoint;
 
 // The CinematicCameraEvent script is to be soley used by an Animation event. 
 public class CinematicCameraEvent : MonoBehaviour
 {
-	[SerializeField] private UnityEvent events = null;
+	public UnityEvent onCinematicFinished = new UnityEvent();
 
-	public void SpawnPlayer()
+	private void Update()
 	{
-		CheckpointManager.instance.SpawnPlayerOnSpawnPoint();		
+		if(Input.GetKeyUp(KeyCode.Escape))
+			this.InvokeFunction();
 	}
 
 	public void InvokeFunction()
 	{
-		this.events.Invoke();
+		this.onCinematicFinished.Invoke();
 		
         GameObject.Destroy(this.gameObject);
 	}

@@ -47,17 +47,34 @@ namespace ALICE.Checkpoint
             this.AddCheckpointListeners();
 
             bool isNewLevel = (scene.buildIndex != this.currentSceneIndex);
+            this.currentSceneIndex = scene.buildIndex;            
             this.skipNextCheckpoint = !isNewLevel;
-            this.currentSceneIndex = scene.buildIndex;
 
-            this.waitForCameraEvent = (GameObject.FindObjectOfType<CinematicCameraEvent>() != null);
-            if(!this.waitForCameraEvent)
+            CinematicCameraEvent cinematic = GameObject.FindObjectOfType<CinematicCameraEvent>();
+            if(cinematic != null)
+            {
+                if(this.HasCheckpoint())
+                {
+                    // If there is a checkpoint we don't want to play the cinematic again.
+			        GameObject.Destroy(cinematic.gameObject);
+                    this.LoadLastCheckpoint(isNewLevel);
+                }
+                else
+                    cinematic.onCinematicFinished.AddListener(this.SpawnPlayer);
+            }
+            else
             {
                 if(this.lastCheckPoint != null)
-                    this.LoadLastCheckpoint();
+                    this.LoadLastCheckpoint(isNewLevel);
                 else
-                    this.SpawnPlayerOnSpawnPoint();
+                    this.SpawnPlayer();
             }
+        }
+
+        private void SpawnPlayer()
+        {
+		    this.SpawnPlayerOnSpawnPoint();		
+            this.SaveLastCheckpoint();
         }
 
         public void SpawnPlayerOnSpawnPoint()
@@ -146,21 +163,32 @@ namespace ALICE.Checkpoint
              return actorData;
         }
 
-        private void LoadLastCheckpoint()
+        public void LoadLastCheckpoint(bool isNewLevel)
         {
             if (this.lastCheckPoint == null)
                 return;
 
-            this.LoadEnemies();
+            // If new level we want to ignore the position of last checkpoint and spawn on the point.
+            if(isNewLevel)
+            {
+                this.player = GameObject.FindObjectOfType<PlayerSpawnPoint>().SpawnPlayer().transform;  
+            }
+            else
+            {
+                this.player = GameObject.FindObjectOfType<PlayerSpawnPoint>().SpawnPlayer(
+                    this.lastCheckPoint.playerPosition, this.lastCheckPoint.playerRotation).transform;
 
-            this.player = GameObject.FindObjectOfType<PlayerSpawnPoint>().SpawnPlayer(
-                this.lastCheckPoint.playerPosition, this.lastCheckPoint.playerRotation).transform;
+                this.LoadEnemies();
+            }          
 
             this.playerInventory = this.player.GetComponentInChildren<Inventory>();
             this.player.GetComponent<Destructable>().SetHealth(this.lastCheckPoint.health);
             this.player.GetComponent<SlowmoController>().SetRemainingTime(this.lastCheckPoint.slowmo);
 
             this.LoadInventory();
+
+            if(isNewLevel)
+                this.SaveLastCheckpoint();
         }
 
         private void LoadInventory()

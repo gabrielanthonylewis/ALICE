@@ -3,7 +3,6 @@ using UnityEngine;
 public class AutoPickup : MonoBehaviour
 {
     [SerializeField] private int pickupLayer = 8;
-    [SerializeField] private GameObject interactor = null;
     [SerializeField] private Inventory inventory = null;
 
     private void OnTriggerEnter(Collider other)
@@ -25,6 +24,6 @@ public class AutoPickup : MonoBehaviour
             }
         }
         else
-            other.gameObject.GetComponent<Pickup>().OnPickup(this.interactor);
+            other.gameObject.GetComponent<Pickup>().OnPickup(this.inventory.gameObject);
     }
 }
