@@ -14,9 +14,8 @@ public class AI : MonoBehaviour
 	private SphereCollider detectionCollider = null;
 	private bool wasSpotted = false;
 	private bool isTargetSpotted = false;
-	private Quaternion initialRotation;
-	private Quaternion targetRotation;
-	private float currentRotationAngle;
+	private Quaternion fromRotation;
+	private Quaternion toRotation;
 	private float rotationTime = 0.0f;
 	
 	private void Start()
@@ -25,10 +24,12 @@ public class AI : MonoBehaviour
 		this.detectionCollider = this.GetComponent<SphereCollider>();
 		this.detectionCollider.radius = this.detectionDiameter / 2.0f;
 
-		this.currentRotationAngle = this.rotationAngle;
-		this.initialRotation = this.transform.localRotation;
-		this.targetRotation = this.initialRotation *
-			Quaternion.AngleAxis(this.currentRotationAngle, Vector3.up);
+		this.fromRotation = this.transform.rotation *
+			Quaternion.AngleAxis(-(this.rotationAngle / 2.0f), Vector3.up);
+		this.toRotation = this.transform.rotation *
+			Quaternion.AngleAxis(this.rotationAngle / 2.0f, Vector3.up);
+		
+		// Divide by 2 as will be directly inbetween these two rotation points.
 		this.rotationTime = this.rotationDuration / 2.0f;
 	}
 
@@ -42,7 +43,6 @@ public class AI : MonoBehaviour
 			// If target no longer spotted then continue looking from current position.
 			if(this.wasSpotted)
 			{
-				this.initialRotation = this.transform.localRotation;
 				this.rotationTime = 0.0f;
 			}
 
@@ -69,15 +69,14 @@ public class AI : MonoBehaviour
 	{
 		this.rotationTime += Time.deltaTime;
 
-		this.transform.localRotation = Quaternion.Lerp(this.initialRotation,
-			this.targetRotation, this.rotationTime / this.rotationDuration);
+		this.transform.rotation = Quaternion.Lerp(this.fromRotation,
+			this.toRotation, this.rotationTime / this.rotationDuration);
 
 		if(this.rotationTime >= this.rotationDuration)
 		{
-			this.currentRotationAngle = - this.currentRotationAngle;
-			this.initialRotation = this.transform.localRotation;
-			this.targetRotation =  this.initialRotation * 
-				Quaternion.AngleAxis(this.currentRotationAngle * 2.0f, Vector3.up);
+			Quaternion tempToRotation = this.toRotation;
+			this.toRotation = this.fromRotation;
+			this.fromRotation = tempToRotation;
 			this.rotationTime = 0.0f;
 		}
 	}
@@ -96,8 +95,10 @@ public class AI : MonoBehaviour
 
 	private bool IsTargetSeen(Transform target)
     {
+		float distance = Vector3.Distance(this.transform.position, target.position);
+		bool isCloseProximity = distance <= 2.0f;
 		bool isTargetWithinFOV = this.IsWithinFOV(target.position);
-		if(!isTargetWithinFOV)
+		if(!isTargetWithinFOV && !isCloseProximity)
 			return false;
 
 		RaycastHit hit;
@@ -105,7 +106,7 @@ public class AI : MonoBehaviour
 			target.position, out hit, ~0, QueryTriggerInteraction.Ignore);
 		bool hasHitTarget = (hit.transform == target.transform);
 
-		return (isTargetWithinFOV && hasHitTarget);
+		return hasHitTarget;
     }
 
 	private bool IsWithinFOV(Vector3 position)
