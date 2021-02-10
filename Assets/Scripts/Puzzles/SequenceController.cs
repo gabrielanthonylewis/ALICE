@@ -45,7 +45,7 @@ public class SequenceController : PuzzleBase, IInteractable
 	{
 		this.isCoroutineRunning = true;
 
-		yield return new WaitForSeconds(1.0f);
+		yield return new WaitForSeconds(0.25f);
 
 		// Flash the buttons in order of the sequence.
 		foreach(SequenceButton sequenceButton in this.sequence)
