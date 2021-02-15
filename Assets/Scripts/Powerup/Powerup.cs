@@ -29,6 +29,9 @@ public class Powerup : MonoBehaviour
 
     protected virtual void OnActionComplete(Transform target = null)
     {
+        if(audioSource == null)
+            this.audioSource = Camera.main.GetComponent<AudioSource>();
+
         if (this.actionCompleteSound != null && this.audioSource != null)
             this.audioSource.PlayOneShot(this.actionCompleteSound);
     }

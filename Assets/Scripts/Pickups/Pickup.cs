@@ -16,6 +16,11 @@ public class Pickup: MonoBehaviour, IPickup
 
 	public virtual void OnPickup(GameObject interactor)
 	{
+		this.OnPickupComplete();
+	}
+
+	public void OnPickupComplete()
+	{
 		Camera.main.GetComponent<AudioSource>().PlayOneShot(this.pickupSound);
 	}
 }

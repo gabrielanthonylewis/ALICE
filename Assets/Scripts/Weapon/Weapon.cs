@@ -47,8 +47,16 @@ public class Weapon: Pickup
 
     public override void OnPickup(GameObject interactor)
     {
-        if(interactor.GetComponent<Inventory>() != null)
-            interactor.GetComponent<Inventory>().TryAddWeapon(this);
+        Inventory inventory = interactor.GetComponent<Inventory>();
+        if(inventory == null)
+            return;
+
+        // Add weapon to inventory if the player doesn't already have the same type.
+        if(!inventory.HasWeaponType(this))
+        {
+            if(inventory.TryAddWeapon(this))
+                base.OnPickupComplete();
+        }
     }
 
     public void OnPickedUp()

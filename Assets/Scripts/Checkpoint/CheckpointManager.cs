@@ -168,15 +168,19 @@ namespace ALICE.Checkpoint
             if (this.lastCheckPoint == null)
                 return;
 
+            PlayerSpawnPoint spawnPoint = GameObject.FindObjectOfType<PlayerSpawnPoint>();
+            if(spawnPoint == null)
+                return;
+
             // If new level we want to ignore the position of last checkpoint and spawn on the point.
             if(isNewLevel)
             {
-                this.player = GameObject.FindObjectOfType<PlayerSpawnPoint>().SpawnPlayer().transform;  
+                this.player = spawnPoint.SpawnPlayer().transform;  
             }
             else
             {
-                this.player = GameObject.FindObjectOfType<PlayerSpawnPoint>().SpawnPlayer(
-                    this.lastCheckPoint.playerPosition, this.lastCheckPoint.playerRotation).transform;
+                this.player = spawnPoint.SpawnPlayer(this.lastCheckPoint.playerPosition,
+                    this.lastCheckPoint.playerRotation).transform;
 
                 this.LoadEnemies();
             }          

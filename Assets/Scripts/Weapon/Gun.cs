@@ -35,6 +35,21 @@ public class Gun : Weapon
         this.SetRemainingAmmo(this.magSize);
     }
 
+    public void TryTakeAmmo(GameObject interactor)
+    {
+        Inventory inventory = interactor.GetComponent<Inventory>();
+        if(inventory == null)
+            return;
+
+        // If gun type exists then add ammo and destroy gun.
+        if(inventory.HasWeaponType(this))
+        {
+            base.OnPickupComplete();
+            inventory.ManipulateAmmo(this.GetRemainingAmmo());
+            GameObject.Destroy(this.gameObject);
+        }
+    }
+
     public override void OnFireInput(bool isDownOnce)
     {
         base.OnFireInput(isDownOnce);

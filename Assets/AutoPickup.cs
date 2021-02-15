@@ -10,20 +10,13 @@ public class AutoPickup : MonoBehaviour
         if(other.gameObject.layer != pickupLayer)
             return;
 
-        if(other.gameObject.GetComponent<Pickup>() == null)
-            return;
-
-        Gun gun = other.gameObject.GetComponent<Gun>(); 
-        if(gun != null)
+        Pickup pickup = other.gameObject.GetComponent<Pickup>();
+        if(pickup != null)
         {
-            // If gun type exists then add ammo, otherwise do nothing.
-            if(this.inventory.HasWeaponType(gun))
-            {
-                this.inventory.ManipulateAmmo(gun.GetRemainingAmmo());
-                GameObject.Destroy(gun.gameObject);
-            }
-        }
-        else
-            other.gameObject.GetComponent<Pickup>().OnPickup(this.inventory.gameObject);
+            if(other.gameObject.GetComponent<Gun>())
+                other.gameObject.GetComponent<Gun>().TryTakeAmmo(this.inventory.gameObject);
+            else
+                pickup.OnPickup(this.inventory.gameObject);
+        }        
     }
 }

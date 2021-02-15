@@ -11,7 +11,7 @@ public class BeamCollision : MonoBehaviour
 		RaycastHit hit;
 
 		bool hasHit = Physics.Raycast(this.transform.position, this.transform.forward,
-			out hit, this.rayDistance);
+			out hit, this.rayDistance, ~0, QueryTriggerInteraction.Ignore);
 		
 		this.SetHitTower(hasHit ? hit.transform.GetComponent<BeamTowerController>() : null);
 	}
