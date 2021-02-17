@@ -32,7 +32,7 @@ namespace ALICE.Checkpoint
     [System.Serializable]
     public class ActorData
     {
-        public ulong objectID;
+        public string objectID;
         public Vector3 position;
         public Quaternion rotation;
     }

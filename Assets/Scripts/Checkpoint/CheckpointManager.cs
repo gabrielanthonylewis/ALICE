@@ -154,7 +154,7 @@ namespace ALICE.Checkpoint
              {
                  actorData[i] = new ActorData
                  {
-                     objectID = GlobalObjectId.GetGlobalObjectIdSlow(enemies[i]).targetObjectId,
+                     objectID = enemies[i].name,
                      position = enemies[i].transform.position,
                      rotation = enemies[i].transform.rotation
                  };
@@ -208,8 +208,7 @@ namespace ALICE.Checkpoint
                 bool shouldDestroy = true;
                 for(int j = 0; j < this.lastCheckPoint.enemies.Length; j++)
                 {
-                    if(GlobalObjectId.GetGlobalObjectIdSlow(enemies[i]).targetObjectId ==
-                        this.lastCheckPoint.enemies[j].objectID)
+                    if(enemies[i].name == this.lastCheckPoint.enemies[j].objectID)
                     {
                         shouldDestroy = false;
                     
